@@ -1,0 +1,4 @@
+storeFile = file("key.jks")
+storePassword = "xerinpass"
+keyAlias = "xerinkey"
+keyPassword = "xerinpass"
