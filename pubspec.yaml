@@ -57,6 +57,9 @@ dependencies:
   logger: ^2.4.0
   dartz: ^0.10.1
 
+  # Fonts & typography
+  google_fonts: ^6.2.1
+
   # SVG rendering
   flutter_svg: ^2.0.18
 

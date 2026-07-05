@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../shared/widgets/app_icon.dart';
 import '../../data/models/address_model.dart';
 
 class AddressesPage extends StatefulWidget {
@@ -64,16 +65,9 @@ class _AddressesPageState extends State<AddressesPage> {
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  GestureDetector(
+                  BackIconButton(
                     onTap: () => context.pop(),
-                    child: Container(
-                      width: 44, height: 44,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(Icons.arrow_back_rounded, color: colorScheme.primary, size: 22),
-                    ),
+                    color: colorScheme.primary,
                   ),
                   const SizedBox(width: 16),
                   Text('Addresses',
@@ -90,7 +84,7 @@ class _AddressesPageState extends State<AddressesPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.location_off_rounded, size: 72, color: colorScheme.onSurface.withValues(alpha: 0.2)),
+                      EmptyStateIcon(icon: Icons.location_off_rounded),
                       const SizedBox(height: 16),
                       Text('No addresses yet',
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.5)),
@@ -151,13 +145,11 @@ class _AddressesPageState extends State<AddressesPage> {
         children: [
           Row(
             children: [
-              Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.location_on_rounded, color: colorScheme.primary, size: 20),
+              IconContainer(
+                icon: Icons.location_on_rounded,
+                color: colorScheme.primary,
+                size: 40,
+                iconSize: AppIconSize.md,
               ),
               const SizedBox(width: 12),
               Expanded(

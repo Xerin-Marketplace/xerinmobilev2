@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../config/constants/app_constants.dart';
+import '../../../../../shared/widgets/app_icon.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../../core/theme/app_theme_cubit.dart';
 import '../cubit/home_cubit.dart';
@@ -28,16 +29,9 @@ class SettingsPage extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      GestureDetector(
+                      BackIconButton(
                         onTap: () => context.pop(),
-                        child: Container(
-                          width: 44, height: 44,
-                          decoration: BoxDecoration(
-                            color: colorScheme.primary.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Icon(Icons.arrow_back_rounded, color: colorScheme.primary, size: 22),
-                        ),
+                        color: colorScheme.primary,
                       ),
                       const SizedBox(width: 16),
                       Text('Settings',
@@ -121,7 +115,7 @@ class SettingsPage extends StatelessWidget {
                           iconColor: const Color(0xFF3B82F6),
                           title: 'Personal Information',
                           subtitle: 'View and edit your profile',
-                          trailing: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: colorScheme.onSurface.withValues(alpha: 0.3)),
+                          trailing: TrailingChevron(color: colorScheme.onSurface.withValues(alpha: 0.3)),
                           colorScheme: colorScheme,
                           onTap: () => context.push(AppConstants.profileInfoRoute),
                         ),
@@ -131,7 +125,7 @@ class SettingsPage extends StatelessWidget {
                           iconColor: const Color(0xFF06B6D4),
                           title: 'Language',
                           subtitle: 'English',
-                          trailing: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: colorScheme.onSurface.withValues(alpha: 0.3)),
+                          trailing: TrailingChevron(color: colorScheme.onSurface.withValues(alpha: 0.3)),
                           colorScheme: colorScheme,
                         ),
                         _buildDivider(colorScheme),
@@ -140,7 +134,7 @@ class SettingsPage extends StatelessWidget {
                           iconColor: const Color(0xFFF59E0B),
                           title: 'Currency',
                           subtitle: 'TZS - Tanzanian Shilling',
-                          trailing: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: colorScheme.onSurface.withValues(alpha: 0.3)),
+                          trailing: TrailingChevron(color: colorScheme.onSurface.withValues(alpha: 0.3)),
                           colorScheme: colorScheme,
                         ),
                       ],
@@ -165,7 +159,7 @@ class SettingsPage extends StatelessWidget {
                           icon: Icons.description_outlined,
                           iconColor: colorScheme.primary,
                           title: 'Terms of Service',
-                          trailing: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: colorScheme.onSurface.withValues(alpha: 0.3)),
+                          trailing: TrailingChevron(color: colorScheme.onSurface.withValues(alpha: 0.3)),
                           colorScheme: colorScheme,
                         ),
                         _buildDivider(colorScheme),
@@ -173,7 +167,7 @@ class SettingsPage extends StatelessWidget {
                           icon: Icons.shield_outlined,
                           iconColor: colorScheme.primary,
                           title: 'Privacy Policy',
-                          trailing: Icon(Icons.arrow_forward_ios_rounded, size: 14, color: colorScheme.onSurface.withValues(alpha: 0.3)),
+                          trailing: TrailingChevron(color: colorScheme.onSurface.withValues(alpha: 0.3)),
                           colorScheme: colorScheme,
                         ),
                       ],
@@ -240,7 +234,7 @@ class SettingsPage extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, color: Colors.white.withValues(alpha: 0.7), size: 16),
+            TrailingChevron(color: Colors.white.withValues(alpha: 0.7)),
           ],
         ),
       ),
@@ -286,13 +280,11 @@ class SettingsPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: iconColor, size: 20),
+            IconContainer(
+              icon: icon,
+              color: iconColor,
+              size: 40,
+              iconSize: AppIconSize.md,
             ),
             const SizedBox(width: 14),
             Expanded(
