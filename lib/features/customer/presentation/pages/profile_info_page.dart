@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../config/di/service_locator.dart';
 import '../../../auth/data/datasources/auth_remote_datasource.dart';
+import '../../../../shared/widgets/app_icon.dart';
 import '../../presentation/cubit/home_cubit.dart';
 import '../../presentation/cubit/home_state.dart';
 
@@ -98,16 +99,9 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
               children: [
                 Row(
                   children: [
-                    GestureDetector(
+                    BackIconButton(
                       onTap: () => context.pop(),
-                      child: Container(
-                        width: 44, height: 44,
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(Icons.arrow_back_rounded, color: colorScheme.primary, size: 22),
-                      ),
+                      color: colorScheme.primary,
                     ),
                     const SizedBox(width: 16),
                     Text('Profile Information',

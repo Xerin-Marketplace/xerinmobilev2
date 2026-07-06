@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../shared/widgets/app_icon.dart';
+
 class HelpSupportPage extends StatefulWidget {
   const HelpSupportPage({super.key});
 
@@ -70,7 +72,7 @@ class _HelpSupportPageState extends State<HelpSupportPage>
                   children: [
                     Row(
                       children: [
-                        GestureDetector(
+                        BackIconButton(
                           onTap: () {
                             if (context.canPop()) {
                               context.pop();
@@ -78,14 +80,7 @@ class _HelpSupportPageState extends State<HelpSupportPage>
                               context.go('/');
                             }
                           },
-                          child: Container(
-                            width: 44, height: 44,
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Icon(Icons.arrow_back_rounded, color: colorScheme.primary, size: 22),
-                          ),
+                          color: colorScheme.primary,
                         ),
                         const SizedBox(width: 16),
                         Text('Help & Support',
@@ -247,13 +242,11 @@ class _HelpSupportPageState extends State<HelpSupportPage>
       ),
       child: Row(
         children: [
-          Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 22),
+          IconContainer(
+            icon: icon,
+            color: color,
+            size: 44,
+            iconSize: AppIconSize.lg,
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -270,7 +263,7 @@ class _HelpSupportPageState extends State<HelpSupportPage>
               ],
             ),
           ),
-          Icon(Icons.arrow_forward_ios_rounded, size: 16, color: colorScheme.onSurface.withValues(alpha: 0.3)),
+          TrailingChevron(color: colorScheme.onSurface.withValues(alpha: 0.3)),
         ],
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
@@ -192,7 +193,7 @@ class _RegisterPageState extends State<RegisterPage>
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              GestureDetector(
+                              BackIconButton(
                                 onTap: () {
                                   if (context.canPop()) {
                                     context.pop();
@@ -200,20 +201,7 @@ class _RegisterPageState extends State<RegisterPage>
                                     context.go(AppConstants.signInRoute);
                                   }
                                 },
-                                child: Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary
-                                        .withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  child: Icon(
-                                    Icons.arrow_back_rounded,
-                                    color: colorScheme.primary,
-                                    size: 22,
-                                  ),
-                                ),
+                                color: colorScheme.primary,
                               ),
                               const SizedBox(width: 12),
                               Expanded(child: _buildSellerToggle(colorScheme)),

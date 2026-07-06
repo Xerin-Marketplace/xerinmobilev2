@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../shared/widgets/app_icon.dart';
 
 class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
@@ -54,7 +55,7 @@ class _ReportsPageState extends State<ReportsPage>
                   children: [
                     Row(
                       children: [
-                        GestureDetector(
+                        BackIconButton(
                           onTap: () {
                             if (context.canPop()) {
                               context.pop();
@@ -62,19 +63,7 @@ class _ReportsPageState extends State<ReportsPage>
                               context.go(AppConstants.sellerDashboardRoute);
                             }
                           },
-                          child: Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Icon(
-                              Icons.arrow_back_rounded,
-                              color: colorScheme.primary,
-                              size: 22,
-                            ),
-                          ),
+                          color: colorScheme.primary,
                         ),
                         const SizedBox(width: 16),
                         Text(

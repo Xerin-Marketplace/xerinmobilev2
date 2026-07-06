@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../shared/widgets/app_icon.dart';
 
 class ShopDetailsPage extends StatefulWidget {
   const ShopDetailsPage({super.key});
@@ -67,7 +68,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                   children: [
                     Row(
                       children: [
-                        GestureDetector(
+                        BackIconButton(
                           onTap: () {
                             if (context.canPop()) {
                               context.pop();
@@ -75,19 +76,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                               context.go(AppConstants.sellerDashboardRoute);
                             }
                           },
-                          child: Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Icon(
-                              Icons.arrow_back_rounded,
-                              color: colorScheme.primary,
-                              size: 22,
-                            ),
-                          ),
+                          color: colorScheme.primary,
                         ),
                         const SizedBox(width: 16),
                         Text(

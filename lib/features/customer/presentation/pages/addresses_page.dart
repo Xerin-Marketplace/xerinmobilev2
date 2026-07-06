@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/widgets/app_icon.dart';
+import '../../../../shared/widgets/app_icon.dart';
 import '../../data/models/address_model.dart';
 
 class AddressesPage extends StatefulWidget {

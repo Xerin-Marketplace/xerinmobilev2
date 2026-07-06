@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../config/constants/app_constants.dart';
-import '../../../../../shared/widgets/app_icon.dart';
+import '../../../../shared/widgets/app_icon.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../../core/theme/app_theme_cubit.dart';
 import '../cubit/home_cubit.dart';

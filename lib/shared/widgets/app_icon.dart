@@ -42,7 +42,7 @@ class IconContainer extends StatelessWidget {
       ),
       child: Icon(icon, color: color, size: iconSize),
     );
-  );
+  }
 }
 
 /// Tappable back button with consistent styling.

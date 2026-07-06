@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../shared/widgets/app_icon.dart';
 import '../../data/models/payment_method_model.dart';
 
 class PaymentMethodsPage extends StatefulWidget {
@@ -178,16 +179,9 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  GestureDetector(
+                  BackIconButton(
                     onTap: () => context.pop(),
-                    child: Container(
-                      width: 44, height: 44,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(Icons.arrow_back_rounded, color: colorScheme.primary, size: 22),
-                    ),
+                    color: colorScheme.primary,
                   ),
                   const SizedBox(width: 16),
                   Text('Payment Methods',
