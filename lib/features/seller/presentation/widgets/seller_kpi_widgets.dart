@@ -24,14 +24,14 @@ class GradientKpiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: gradientColors,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: gradientColors.first.withValues(alpha: 0.3),
@@ -56,8 +56,10 @@ class GradientKpiCard extends StatelessWidget {
             ),
           ),
           // Content
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Positioned.fill(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -86,7 +88,7 @@ class GradientKpiCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
@@ -112,6 +114,7 @@ class GradientKpiCard extends StatelessWidget {
                 ),
               ],
             ],
+          ),
           ),
         ],
       ),
@@ -147,7 +150,7 @@ class WhiteKpiCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: colorScheme.onSurface.withValues(alpha: 0.06),
         ),
@@ -243,7 +246,7 @@ class RevenueBarChart extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: colorScheme.onSurface.withValues(alpha: 0.06),
         ),
@@ -458,7 +461,7 @@ class SellerDonutChart extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: colorScheme.onSurface.withValues(alpha: 0.06),
         ),
@@ -663,7 +666,7 @@ class TopProductsList extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: colorScheme.onSurface.withValues(alpha: 0.06),
         ),

@@ -63,7 +63,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       elevation: 0,
                     ),
                     child: const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
@@ -78,7 +78,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: colorScheme.primary,
                       side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.3)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                     child: const Text('Create Account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   ),
@@ -341,7 +341,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
       child: Container(
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected
                 ? colorScheme.primary

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../common/presentation/widgets/modern_bottom_nav.dart';
 import '../controllers/cart_controller.dart';
+import 'tabs/customer_analytics_page.dart';
 import 'tabs/customer_cart_page.dart';
 import 'tabs/customer_explore_page.dart';
 import 'tabs/customer_home_page.dart';
@@ -24,6 +25,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     CustomerExplorePage(),
     CustomerCartPage(),
     CustomerWishlistPage(),
+    CustomerAnalyticsPage(),
     CustomerProfilePage(),
   ];
 
@@ -53,6 +55,10 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
               icon: Icons.favorite_outline_rounded,
               activeIcon: Icons.favorite_rounded,
               label: 'Wishlist'),
+          const NavItem(
+              icon: Icons.bar_chart_outlined,
+              activeIcon: Icons.bar_chart_rounded,
+              label: 'Stats'),
           const NavItem(
               icon: Icons.person_outline_rounded,
               activeIcon: Icons.person_rounded,

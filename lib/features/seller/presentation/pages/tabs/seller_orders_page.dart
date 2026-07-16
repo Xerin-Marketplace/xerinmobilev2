@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../cubit/seller_cubit.dart';
 import '../../cubit/seller_state.dart';
-import '../../data/models/seller_order_model.dart';
+import '../../../data/models/seller_order_model.dart';
 
 class SellerOrdersPage extends StatefulWidget {
   const SellerOrdersPage({super.key});
@@ -86,7 +86,7 @@ class _SellerOrdersPageState extends State<SellerOrdersPage> {
                               color: isActive
                                   ? colorScheme.primary
                                   : colorScheme.onSurface.withValues(alpha: 0.06),
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               filter,
@@ -147,7 +147,7 @@ class _SellerOrdersPageState extends State<SellerOrdersPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
       ),
       child: Column(

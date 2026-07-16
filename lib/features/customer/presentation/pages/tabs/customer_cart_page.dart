@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../../config/constants/app_constants.dart';
 import '../../controllers/cart_controller.dart';
 
 class CustomerCartPage extends StatefulWidget {
@@ -78,7 +80,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
                                     color: colorScheme.surface,
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
                                       color: colorScheme.onSurface
                                           .withValues(alpha: 0.06),
@@ -210,12 +212,12 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                       width: double.infinity,
                       height: 54,
                       child: ElevatedButton(
-                        onPressed: items.isEmpty ? null : () {},
+                        onPressed: items.isEmpty ? null : () => context.push(AppConstants.checkoutRoute),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: colorScheme.primary,
                           foregroundColor: colorScheme.onPrimary,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           elevation: 0,
                         ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../widgets/auth_text_field.dart' show AuthPrimaryButton;
 
 class RegistrationSuccessPage extends StatefulWidget {
   final bool isSeller;
@@ -254,48 +255,16 @@ class _RegistrationSuccessPageState extends State<RegistrationSuccessPage>
             ),
           ),
           const SizedBox(height: 36),
-          SizedBox(
-            width: double.infinity,
-            height: 54,
-            child: ElevatedButton(
-              onPressed: () {
-                context.go(
-                  isSeller
-                      ? AppConstants.sellerDashboardRoute
-                      : AppConstants.homeRoute,
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 0,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    isSeller
-                        ? 'Go to Dashboard'
-                        : 'Start Shopping',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Icon(
-                    isSeller
-                        ? Icons.dashboard_rounded
-                        : Icons.shopping_bag_rounded,
-                    size: 20,
-                  ),
-                ],
-              ),
-            ),
+          AuthPrimaryButton(
+            label: isSeller ? 'Go to Dashboard' : 'Start Shopping',
+            onPressed: () {
+              context.go(
+                isSeller
+                    ? AppConstants.sellerDashboardRoute
+                    : AppConstants.homeRoute,
+              );
+            },
+            icon: isSeller ? Icons.dashboard_rounded : Icons.shopping_bag_rounded,
           ),
           const SizedBox(height: 16),
           TextButton(

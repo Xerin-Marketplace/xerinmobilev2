@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -468,6 +469,8 @@ class _RegisterPageState extends State<RegisterPage>
                                           color: colorScheme.primary,
                                           fontWeight: FontWeight.w600,
                                         ),
+                                        recognizer: TapGestureRecognizer()
+                                          ..onTap = () => context.push(AppConstants.termsRoute),
                                       ),
                                       const TextSpan(text: ' & '),
                                       TextSpan(
@@ -476,6 +479,8 @@ class _RegisterPageState extends State<RegisterPage>
                                           color: colorScheme.primary,
                                           fontWeight: FontWeight.w600,
                                         ),
+                                        recognizer: TapGestureRecognizer()
+                                          ..onTap = () => context.push(AppConstants.privacyRoute),
                                       ),
                                     ],
                                   ),
@@ -484,46 +489,10 @@ class _RegisterPageState extends State<RegisterPage>
                             ],
                           ),
                           const SizedBox(height: 28),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 54,
-                            child: AnimatedOpacity(
-                              opacity: _agree ? 1.0 : 0.5,
-                              duration: const Duration(milliseconds: 200),
-                              child: ElevatedButton(
-                                onPressed: isLoading ? null : _onRegister,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: colorScheme.primary,
-                                  foregroundColor: colorScheme.onPrimary,
-                                  disabledBackgroundColor: colorScheme.primary
-                                      .withValues(alpha: 0.6),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                child: isLoading
-                                    ? SizedBox(
-                                        width: 22,
-                                        height: 22,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.5,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                            colorScheme.onPrimary,
-                                          ),
-                                        ),
-                                      )
-                                    : Text(
-                                        _isSeller ? 'Next' : 'Create Account',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 0.3,
-                                        ),
-                                      ),
-                              ),
-                            ),
+                          AuthPrimaryButton(
+                            label: _isSeller ? 'Next' : 'Create Account',
+                            onPressed: isLoading ? null : _onRegister,
+                            isLoading: isLoading,
                           ),
                           const SizedBox(height: 24),
                           Center(

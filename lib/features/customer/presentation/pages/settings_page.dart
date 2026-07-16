@@ -45,6 +45,7 @@ class SettingsPage extends StatelessWidget {
                   _buildSectionTitle('Appearance', colorScheme),
                   const SizedBox(height: 12),
                   _buildSettingCard(
+                    context,
                     colorScheme,
                     child: BlocBuilder<AppThemeCubit, AppThemeState>(
                       builder: (context, themeState) {
@@ -71,6 +72,7 @@ class SettingsPage extends StatelessWidget {
                   _buildSectionTitle('Notifications', colorScheme),
                   const SizedBox(height: 12),
                   _buildSettingCard(
+                    context,
                     colorScheme,
                     child: Column(
                       children: [
@@ -107,6 +109,7 @@ class SettingsPage extends StatelessWidget {
                   _buildSectionTitle('Account', colorScheme),
                   const SizedBox(height: 12),
                   _buildSettingCard(
+                    context,
                     colorScheme,
                     child: Column(
                       children: [
@@ -144,6 +147,7 @@ class SettingsPage extends StatelessWidget {
                   _buildSectionTitle('About', colorScheme),
                   const SizedBox(height: 12),
                   _buildSettingCard(
+                    context,
                     colorScheme,
                     child: Column(
                       children: [
@@ -197,7 +201,7 @@ class SettingsPage extends StatelessWidget {
             colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.75)],
             begin: Alignment.topLeft, end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
         ),
         child: Row(
@@ -244,8 +248,26 @@ class SettingsPage extends StatelessWidget {
   Widget _buildSectionTitle(String title, ColorScheme colorScheme) {
     return Row(
       children: [
-        Container(width: 4, height: 18, decoration: BoxDecoration(color: colorScheme.primary, borderRadius: BorderRadius.circular(2))),
-        const SizedBox(width: 8),
+        Container(
+          width: 32, height: 32,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.7)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.primary.withValues(alpha: 0.2),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(Icons.tune_rounded, color: Colors.white, size: 16),
+        ),
+        const SizedBox(width: 10),
         Text(title,
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
         ),
@@ -253,12 +275,20 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingCard(ColorScheme colorScheme, {required Widget child}) {
+  Widget _buildSettingCard(BuildContext context, ColorScheme colorScheme, {required Widget child}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        color: isDark ? const Color(0xFF252525) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: child,
     );
@@ -275,7 +305,7 @@ class SettingsPage extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(10),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(

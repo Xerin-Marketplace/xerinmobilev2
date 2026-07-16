@@ -83,7 +83,7 @@ class SellerProfilePage extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Column(
                       children: [
@@ -174,7 +174,7 @@ class SellerProfilePage extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
                       ),
                       child: Row(
@@ -222,7 +222,7 @@ class SellerProfilePage extends StatelessWidget {
                   Container(
                     decoration: BoxDecoration(
                       color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
                     ),
                     child: Column(

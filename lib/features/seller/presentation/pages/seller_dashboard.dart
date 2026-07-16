@@ -79,7 +79,7 @@ class _SellerDashboardState extends State<SellerDashboard>
       builder: (dialogContext) {
         return Dialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(14),
           ),
           child: Padding(
             padding: const EdgeInsets.all(28),
@@ -137,7 +137,7 @@ class _SellerDashboardState extends State<SellerDashboard>
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       elevation: 0,
                     ),

@@ -1,6 +1,6 @@
 /// API-related constants.
 abstract class ApiConstants {
-    static const String _defaultBaseUrl = 'https://187.124.32.94:8080';
+    static const String _defaultBaseUrl = 'http://187.124.32.94:8080';
     static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
 
     static String get baseUrl => _resolveBaseUrl(_envBaseUrl);
@@ -9,15 +9,11 @@ abstract class ApiConstants {
         final raw = candidate.trim();
         if (raw.isEmpty) return _defaultBaseUrl;
 
-        final withScheme = raw.contains('://') ? raw : 'https://$raw';
+        final withScheme = raw.contains('://') ? raw : 'http://$raw';
         final parsed = Uri.tryParse(withScheme);
         if (parsed == null || parsed.host.isEmpty) return _defaultBaseUrl;
 
-        final secureUri = parsed.scheme == 'http'
-                ? parsed.replace(scheme: 'https')
-                : parsed;
-
-        return secureUri.toString().replaceFirst(RegExp(r'/$'), '');
+        return parsed.toString().replaceFirst(RegExp(r'/$'), '');
     }
 
   // Auth endpoints
@@ -39,7 +35,6 @@ abstract class ApiConstants {
   static String addressById(String id) => '/addresses/$id';
 
   // Seller endpoints
-  static const String sellerRegister = '/sellers/register';
   static const String sellerProfile = '/sellers/me';
   static const String sellerBusinessProfile = '/sellers/profile';
   static const String sellerKycDocuments = '/sellers/kyc-documents';
@@ -49,14 +44,49 @@ abstract class ApiConstants {
   static String sellerPayoutAccountById(String id) =>
       '/sellers/payout-accounts/$id';
 
-  // Store endpoints
+  // Seller admin endpoints
+  static const String adminPendingSellers = '/sellers/admin/pending';
+  static String adminSellerDocuments(String sellerId) =>
+      '/sellers/admin/$sellerId/documents';
+  static String adminApproveSeller(String sellerId) =>
+      '/sellers/admin/$sellerId/approve';
+  static String adminRejectSeller(String sellerId) =>
+      '/sellers/admin/$sellerId/reject';
+
+  // Admin endpoints
+  static const String adminUsers = '/admin/users';
+  static String adminUserById(String id) => '/admin/users/$id';
+  static const String adminCreateAdmin = '/admin/admins';
+  static const String adminBusinessCategories = '/admin/business-categories';
+  static String adminBusinessCategoryById(String id) =>
+      '/admin/business-categories/$id';
+  static const String adminProductCategories = '/admin/product-categories';
+  static String adminProductCategoryById(String id) =>
+      '/admin/product-categories/$id';
+  static const String adminBrands = '/admin/brands';
+  static String adminBrandById(String id) => '/admin/brands/$id';
+  static const String adminSellers = '/admin/sellers';
+  static const String adminSellersPending = '/admin/sellers/pending';
+  static String adminSellerById(String id) => '/admin/sellers/$id';
+  static String adminSellerDocs(String id) => '/admin/sellers/$id/documents';
+  static String adminApproveSellerById(String id) =>
+      '/admin/sellers/$id/approve';
+  static String adminRejectSellerById(String id) =>
+      '/admin/sellers/$id/reject';
+  static const String adminProductsPending = '/admin/products/pending';
+  static String adminApproveProduct(String id) =>
+      '/admin/products/$id/approve';
+  static String adminRejectProduct(String id) =>
+      '/admin/products/$id/reject';
+
+  // Store endpoints (used by seller datasource)
   static const String myStore = '/stores/me';
   static const String myStoreLogo = '/stores/me/logo';
   static const String myStoreBanner = '/stores/me/banner';
   static const String publicStores = '/stores';
   static String publicStoreBySlug(String slug) => '/stores/$slug';
 
-  // Inventory endpoints
+  // Inventory endpoints (used by seller datasource)
   static const String inventory = '/inventory';
   static const String myInventory = '/inventory/my-inventory';
   static const String lowStockInventory = '/inventory/low-stock';

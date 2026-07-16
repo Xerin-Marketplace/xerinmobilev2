@@ -177,7 +177,7 @@ class _ReportsPageState extends State<ReportsPage> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
         boxShadow: [
           BoxShadow(

@@ -97,7 +97,7 @@ class _HelpSupportPageState extends State<HelpSupportPage>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
                             color: colorScheme.primary.withValues(alpha: 0.3),
@@ -181,7 +181,7 @@ class _HelpSupportPageState extends State<HelpSupportPage>
                     Container(
                       decoration: BoxDecoration(
                         color: colorScheme.onSurface.withValues(alpha: 0.03),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.08)),
                       ),
                       child: TextField(
@@ -210,7 +210,7 @@ class _HelpSupportPageState extends State<HelpSupportPage>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: colorScheme.primary,
                           foregroundColor: colorScheme.onPrimary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           elevation: 0,
                         ),
                         child: const Text('Send Message',
@@ -234,7 +234,7 @@ class _HelpSupportPageState extends State<HelpSupportPage>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 3)),
@@ -313,7 +313,7 @@ class _FaqItemState extends State<_FaqItem>
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: widget.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: widget.colorScheme.onSurface.withValues(alpha: 0.06)),
       ),
       child: Column(

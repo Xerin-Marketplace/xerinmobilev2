@@ -297,7 +297,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                     ? Colors.white
                                     : colorScheme.onSurface,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 elevation: 0,
                               ),
@@ -347,7 +347,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 backgroundColor: colorScheme.primary,
                                 foregroundColor: colorScheme.onPrimary,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 elevation: 0,
                               ),

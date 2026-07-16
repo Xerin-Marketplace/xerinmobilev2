@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:logger/logger.dart';
@@ -55,14 +57,25 @@ Future<void> initServiceLocator({bool reset = false}) async {
       () => AppThemeCubit(sharedPreferences));
 
   sl.registerLazySingleton<Dio>(
-    () => Dio(
-      BaseOptions(
-        baseUrl: ApiConstants.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        headers: {'Content-Type': ApiConstants.contentType},
-      ),
-    ),
+    () {
+      final dio = Dio(
+        BaseOptions(
+          baseUrl: ApiConstants.baseUrl,
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+          headers: {'Content-Type': ApiConstants.contentType},
+        ),
+      );
+      // Allow self-signed certificates for development/staging servers
+      dio.httpClientAdapter = IOHttpClientAdapter(
+        createHttpClient: () {
+          final client = HttpClient()
+            ..badCertificateCallback = (cert, host, port) => true;
+          return client;
+        },
+      );
+      return dio;
+    },
   );
 
   // Core

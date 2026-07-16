@@ -205,7 +205,7 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
                               backgroundColor: colorScheme.primary,
                               foregroundColor: colorScheme.onPrimary,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               elevation: 0,
                             ),

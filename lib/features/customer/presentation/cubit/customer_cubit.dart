@@ -55,11 +55,14 @@ class CustomerCubit extends Cubit<CustomerState> {
   }
 
   Future<void> refreshOrders() async {
-    final current = state;
-    if (current is! CustomerLoaded) return;
     try {
       final orders = await _dataSource.getOrders(limit: 50);
-      emit(current.copyWith(orders: orders));
+      final current = state;
+      if (current is CustomerLoaded) {
+        emit(current.copyWith(orders: orders));
+      } else {
+        emit(CustomerLoaded(orders: orders));
+      }
     } on ServerException catch (e) {
       _logger.e('❌ Failed to refresh orders: ${e.message}');
     } catch (e) {
@@ -68,11 +71,20 @@ class CustomerCubit extends Cubit<CustomerState> {
   }
 
   Future<void> refreshAddresses() async {
-    final current = state;
-    if (current is! CustomerLoaded) return;
     try {
       final addresses = await _dataSource.getAddresses();
-      emit(current.copyWith(addresses: addresses));
+      final current = state;
+      if (current is CustomerLoaded) {
+        emit(current.copyWith(addresses: addresses));
+      } else {
+        final prev = current is CustomerLoaded ? current : null;
+        emit(CustomerLoaded(
+          orders: prev?.orders ?? [],
+          addresses: addresses,
+          paymentMethods: prev?.paymentMethods ?? [],
+          notifications: prev?.notifications ?? [],
+        ));
+      }
     } on ServerException catch (e) {
       _logger.e('❌ Failed to refresh addresses: ${e.message}');
     } catch (e) {
@@ -81,11 +93,14 @@ class CustomerCubit extends Cubit<CustomerState> {
   }
 
   Future<void> refreshPaymentMethods() async {
-    final current = state;
-    if (current is! CustomerLoaded) return;
     try {
       final methods = await _dataSource.getPaymentMethods();
-      emit(current.copyWith(paymentMethods: methods));
+      final current = state;
+      if (current is CustomerLoaded) {
+        emit(current.copyWith(paymentMethods: methods));
+      } else {
+        emit(CustomerLoaded(paymentMethods: methods));
+      }
     } on ServerException catch (e) {
       _logger.e('❌ Failed to refresh payment methods: ${e.message}');
     } catch (e) {
@@ -94,11 +109,14 @@ class CustomerCubit extends Cubit<CustomerState> {
   }
 
   Future<void> refreshNotifications() async {
-    final current = state;
-    if (current is! CustomerLoaded) return;
     try {
       final notifications = await _dataSource.getNotifications();
-      emit(current.copyWith(notifications: notifications));
+      final current = state;
+      if (current is CustomerLoaded) {
+        emit(current.copyWith(notifications: notifications));
+      } else {
+        emit(CustomerLoaded(notifications: notifications));
+      }
     } on ServerException catch (e) {
       _logger.e('❌ Failed to refresh notifications: ${e.message}');
     } catch (e) {

@@ -61,7 +61,7 @@ abstract class AppTheme {
         elevation: 2,
         shadowColor: isDark ? Colors.black54 : Colors.black12,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
         ),
         margin: EdgeInsets.zero,
       ),

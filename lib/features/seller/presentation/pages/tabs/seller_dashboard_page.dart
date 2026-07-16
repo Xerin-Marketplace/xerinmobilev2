@@ -217,7 +217,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
         if (existing != null) {
           productMap[name] = TopProductItem(
             name: name,
-            qty: existing.qty + item.quantity,
+            qty: existing.qty + (item.quantity as int),
             revenue: existing.revenue + (item.unitPrice * item.quantity),
           );
         } else {
@@ -381,7 +381,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
           ),
           child: Row(
@@ -469,7 +469,7 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: const Color(0xFFF59E0B).withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.2)),
           ),
           child: Row(

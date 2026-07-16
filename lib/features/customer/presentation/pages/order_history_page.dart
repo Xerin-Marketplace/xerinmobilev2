@@ -3,10 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../shared/widgets/app_icon.dart';
-import '../../cubit/customer_cubit.dart';
-import '../../cubit/customer_state.dart';
+import '../cubit/customer_cubit.dart';
+import '../cubit/customer_state.dart';
 import '../../data/models/order_model.dart';
-import '../widgets/seller_kpi_widgets.dart';
+import '../../../seller/presentation/widgets/seller_kpi_widgets.dart';
 
 class OrderHistoryPage extends StatefulWidget {
   const OrderHistoryPage({super.key});
@@ -124,7 +124,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                               decoration: BoxDecoration(
                                 color: isSelected ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.04),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(filter,
                                 style: TextStyle(
@@ -219,7 +219,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
         boxShadow: [
           BoxShadow(

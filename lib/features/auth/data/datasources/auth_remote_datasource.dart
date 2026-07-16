@@ -43,7 +43,7 @@ class AuthRemoteDataSource {
     required String phone,
     required String password,
     required String businessName,
-    String? businessCategory,
+    required List<String> businessCategoryIds,
     String? contactEmail,
     String? contactPhone,
   }) async {
@@ -57,7 +57,7 @@ class AuthRemoteDataSource {
           'phone': phone,
           'password': password,
           'business_name': businessName,
-          'business_category': ?businessCategory,
+          'business_category_ids': businessCategoryIds,
           'contact_email': ?contactEmail,
           'contact_phone': ?contactPhone,
           'agreement_accepted': true,

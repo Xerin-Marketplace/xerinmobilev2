@@ -122,7 +122,7 @@ class CategoryProductsPage extends StatelessWidget {
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
                               color: colorScheme.surface,
-                              borderRadius: BorderRadius.circular(18),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: colorScheme.onSurface.withValues(alpha: 0.06),
                               ),
@@ -141,7 +141,7 @@ class CategoryProductsPage extends StatelessWidget {
                                   height: 56,
                                   decoration: BoxDecoration(
                                     color: colorScheme.primary.withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Icon(
                                     product['icon'] as IconData,

@@ -213,54 +213,23 @@ class _SignInPageState extends State<SignInPage>
                       ],
                     ),
                     const SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: ElevatedButton(
-                        onPressed: isLoading ? null : _onSignIn,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
-                          disabledBackgroundColor: colorScheme.primary
-                              .withValues(alpha: 0.6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: isLoading
-                            ? SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    colorScheme.onPrimary,
-                                  ),
-                                ),
-                              )
-                            : const Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.3,
-                                ),
-                              ),
-                      ),
+                    AuthPrimaryButton(
+                      label: 'Sign In',
+                      onPressed: isLoading ? null : _onSignIn,
+                      isLoading: isLoading,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
                     SizedBox(
                       width: double.infinity,
                       height: 50,
                       child: OutlinedButton.icon(
                         onPressed: isLoading ? null : () => context.read<AuthCubit>().continueAsGuest(),
-                        icon: Icon(Icons.person_outline_rounded, color: colorScheme.primary, size: 20),
-                        label: const Text('Continue as Guest', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                        icon: Icon(Icons.person_outline_rounded, color: colorScheme.primary, size: 18),
+                        label: const Text('Continue as Guest', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: colorScheme.primary,
                           side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.3), width: 1.5),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           elevation: 0,
                         ),
                       ),

@@ -97,6 +97,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                     'Categories',
                     'See all',
                     colorScheme,
+                    icon: Icons.category_rounded,
                     onActionTap: () => context.go(AppConstants.categoriesRoute),
                   ),
                   const SizedBox(height: 14),
@@ -106,12 +107,13 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                     'Featured',
                     'See all',
                     colorScheme,
+                    icon: Icons.star_rounded,
                     onActionTap: () => context.go(AppConstants.exploreProductsRoute),
                   ),
                   const SizedBox(height: 14),
                   _buildFeaturedProducts(colorScheme, featured, isLoadingData),
                   const SizedBox(height: 24),
-                  _buildSectionTitle('Recent Orders', '', colorScheme),
+                  _buildSectionTitle('Recent Orders', '', colorScheme, icon: Icons.shopping_bag_rounded),
                   const SizedBox(height: 14),
                   _buildRecentOrders(colorScheme, orders),
                   const SizedBox(height: 24),
@@ -463,7 +465,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                           backgroundColor: colorScheme.primary,
                           foregroundColor: colorScheme.onPrimary,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           elevation: 0,
                         ),
@@ -499,42 +501,46 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   }
 
   Widget _buildSearchBar(ColorScheme colorScheme) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      height: 54,
+      height: 46,
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        color: isDark ? const Color(0xFF252525) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: _searchNode.hasFocus
               ? colorScheme.primary
               : colorScheme.onSurface.withValues(alpha: 0.08),
-          width: _searchNode.hasFocus ? 2 : 1,
+          width: _searchNode.hasFocus ? 1.5 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withValues(
-              alpha: _searchNode.hasFocus ? 0.15 : 0.05,
-            ),
-            blurRadius: _searchNode.hasFocus ? 16 : 8,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Row(
         children: [
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Icon(
             Icons.search_rounded,
             color: _searchNode.hasFocus
                 ? colorScheme.primary
                 : colorScheme.onSurface.withValues(alpha: 0.35),
-            size: 22,
+            size: 18,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: _searchCtrl,
               focusNode: _searchNode,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: colorScheme.onSurface,
+              ),
               onChanged: (v) {
                 final q = v.trim();
                 setState(() => _searchQuery = q.toLowerCase());
@@ -544,12 +550,14 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 hintText: 'Search products...',
                 hintStyle: TextStyle(
                   color: colorScheme.onSurface.withValues(alpha: 0.3),
-                  fontSize: 15,
+                  fontSize: 13,
                   fontWeight: FontWeight.w400,
                 ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
               ),
             ),
           ),
@@ -559,19 +567,22 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 _searchCtrl.clear();
                 setState(() => _searchQuery = '');
               },
-              child: Icon(
-                Icons.close_rounded,
-                color: colorScheme.onSurface.withValues(alpha: 0.4),
-                size: 20,
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Icon(
+                  Icons.close_rounded,
+                  color: colorScheme.onSurface.withValues(alpha: 0.4),
+                  size: 16,
+                ),
               ),
             ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
           GestureDetector(
             onTap: () => _showFilterSheet(context, colorScheme),
             child: Container(
-              margin: const EdgeInsets.all(6),
-              width: 40,
-              height: 40,
+              margin: const EdgeInsets.all(4),
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -579,18 +590,19 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                     colorScheme.primary.withValues(alpha: 0.8),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 8,
+                    color: colorScheme.primary.withValues(alpha: 0.25),
+                    blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: const Icon(Icons.tune_rounded, color: Colors.white, size: 20),
+              child: const Icon(Icons.tune_rounded, color: Colors.white, size: 16),
             ),
           ),
+          const SizedBox(width: 4),
         ],
       ),
     );
@@ -615,7 +627,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: colorScheme.onSurface.withValues(alpha: 0.06),
           ),
@@ -683,7 +695,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: colorScheme.onSurface.withValues(alpha: 0.06),
                   ),
@@ -763,6 +775,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   }
 
   void _showFilterSheet(BuildContext context, ColorScheme colorScheme) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final homeState = context.read<HomeCubit>().state;
     final categoryNames = homeState is HomeLoaded
         ? homeState.categories.map((c) => c.name).toList()
@@ -775,198 +788,186 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
       '500k+',
     ];
 
-    showGeneralDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      barrierColor: Colors.black.withValues(alpha: 0.3),
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (_, _, _) {
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalContext) {
         return StatefulBuilder(
           builder: (modalContext, setModalState) {
-            return Align(
-              alignment: Alignment.centerRight,
-              child: Material(
-                color: Colors.transparent,
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.88,
-                  height: double.infinity,
-                  padding: const EdgeInsets.only(
-                    top: 16,
-                    left: 20,
-                    right: 20,
-                    bottom: 20,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface,
-                    borderRadius: const BorderRadius.horizontal(
-                      left: Radius.circular(28),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 24,
-                        offset: const Offset(-4, 0),
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40, height: 4,
+                          decoration: BoxDecoration(
+                            color: colorScheme.onSurface.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Container(
+                            width: 36, height: 36,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  colorScheme.primary,
+                                  colorScheme.primary.withValues(alpha: 0.7),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: colorScheme.primary.withValues(alpha: 0.2),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Icon(Icons.tune_rounded,
+                                color: Colors.white, size: 18),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Filter Products',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Flexible(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildFilterSection(
+                                'Category',
+                                categoryNames,
+                                _selectedCategory,
+                                (value) => setModalState(() {
+                                  _selectedCategory =
+                                      _selectedCategory == value ? null : value;
+                                }),
+                                colorScheme,
+                              ),
+                              const SizedBox(height: 20),
+                              _buildFilterSection(
+                                'Region / Location',
+                                const ['Dar es Salaam', 'Arusha', 'Mwanza', 'Kilimanjaro', 'Dodoma', 'Zanzibar'],
+                                _selectedRegion,
+                                (value) => setModalState(() {
+                                  _selectedRegion =
+                                      _selectedRegion == value ? null : value;
+                                }),
+                                colorScheme,
+                              ),
+                              const SizedBox(height: 20),
+                              _buildFilterSection(
+                                'Price Range (TZS)',
+                                priceRanges,
+                                _selectedPriceRange,
+                                (value) => setModalState(() {
+                                  _selectedPriceRange =
+                                      _selectedPriceRange == value ? null : value;
+                                }),
+                                colorScheme,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 46,
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  setModalState(() {
+                                    _selectedCategory = null;
+                                    _selectedRegion = null;
+                                    _selectedPriceRange = null;
+                                  });
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(
+                                    color: colorScheme.onSurface.withValues(alpha: 0.15),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Clear',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: SizedBox(
+                              height: 46,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(modalContext);
+                                  final q = _searchCtrl.text.trim();
+                                  setState(() => _searchQuery = q.toLowerCase());
+                                  context.read<HomeCubit>().searchProducts(q);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: colorScheme.primary,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  elevation: 0,
+                                  shadowColor: colorScheme.primary.withValues(alpha: 0.3),
+                                ),
+                                child: const Text(
+                                  'Apply Filters',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                  child: SafeArea(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary.withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(Icons.tune_rounded,
-                                      color: colorScheme.primary, size: 22),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  'Filter Products',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.onSurface,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            GestureDetector(
-                              onTap: () => Navigator.pop(modalContext),
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.onSurface.withValues(alpha: 0.06),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.close_rounded,
-                                  size: 20,
-                                  color: colorScheme.onSurface.withValues(alpha: 0.5),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildFilterSection(
-                                  'Category',
-                                  categoryNames,
-                                  _selectedCategory,
-                                  (value) => setModalState(() {
-                                    _selectedCategory =
-                                        _selectedCategory == value ? null : value;
-                                  }),
-                                  colorScheme,
-                                ),
-                                const SizedBox(height: 24),
-                                _buildFilterSection(
-                                  'Region / Location',
-                                  const ['Dar es Salaam', 'Arusha', 'Mwanza', 'Kilimanjaro', 'Dodoma', 'Zanzibar'],
-                                  _selectedRegion,
-                                  (value) => setModalState(() {
-                                    _selectedRegion =
-                                        _selectedRegion == value ? null : value;
-                                  }),
-                                  colorScheme,
-                                ),
-                                const SizedBox(height: 24),
-                                _buildFilterSection(
-                                  'Price Range (TZS)',
-                                  priceRanges,
-                                  _selectedPriceRange,
-                                  (value) => setModalState(() {
-                                    _selectedPriceRange =
-                                        _selectedPriceRange == value ? null : value;
-                                  }),
-                                  colorScheme,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 54,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pop(modalContext);
-                              final q = _searchCtrl.text.trim();
-                              setState(() => _searchQuery = q.toLowerCase());
-                              context.read<HomeCubit>().searchProducts(q);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: colorScheme.primary,
-                              foregroundColor: colorScheme.onPrimary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: const Text(
-                              'Apply Filters',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        SizedBox(
-                          width: double.infinity,
-                          child: TextButton(
-                            onPressed: () {
-                              setModalState(() {
-                                _selectedCategory = null;
-                                _selectedRegion = null;
-                                _selectedPriceRange = null;
-                              });
-                            },
-                            style: TextButton.styleFrom(
-                              foregroundColor:
-                                  colorScheme.onSurface.withValues(alpha: 0.6),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                            child: const Text(
-                              'Clear Filters',
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ),
             );
           },
-        );
-      },
-      transitionBuilder: (_, animation, _, child) {
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(1, 0),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-          )),
-          child: child,
         );
       },
     );
@@ -982,73 +983,71 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: colorScheme.onSurface,
-          ),
+        Row(
+          children: [
+            Container(
+              width: 28, height: 28,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    colorScheme.primary.withValues(alpha: 0.8),
+                    colorScheme.primary.withValues(alpha: 0.5),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                title.contains('Category') ? Icons.category_rounded
+                  : title.contains('Region') ? Icons.location_on_rounded
+                  : Icons.attach_money_rounded,
+                color: Colors.white, size: 14,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 10),
-        Column(
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: options.map((option) {
             final isSelected = selectedValue == option;
             return GestureDetector(
               onTap: () => onSelected(option),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? colorScheme.primary.withValues(alpha: 0.08)
-                      : colorScheme.onSurface.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(14),
+                      ? colorScheme.primary
+                      : colorScheme.onSurface.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: isSelected
                         ? colorScheme.primary
                         : colorScheme.onSurface.withValues(alpha: 0.08),
-                    width: isSelected ? 1.5 : 1,
+                    width: 1,
                   ),
                 ),
-                child: Row(
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: isSelected ? colorScheme.primary : Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: isSelected
-                              ? colorScheme.primary
-                              : colorScheme.onSurface.withValues(alpha: 0.3),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: isSelected
-                          ? Icon(
-                              Icons.check_rounded,
-                              color: colorScheme.onPrimary,
-                              size: 16,
-                            )
-                          : null,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        option,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                          color: isSelected
-                              ? colorScheme.primary
-                              : colorScheme.onSurface.withValues(alpha: 0.75),
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  option,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected
+                        ? Colors.white
+                        : colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
                 ),
               ),
             );
@@ -1064,17 +1063,45 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     String action,
     ColorScheme colorScheme, {
     VoidCallback? onActionTap,
+    IconData icon = Icons.dashboard_rounded,
   }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface,
-          ),
+        Row(
+          children: [
+            Container(
+              width: 28, height: 28,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    colorScheme.primary,
+                    colorScheme.primary.withValues(alpha: 0.6),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withValues(alpha: 0.15),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 14),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ],
         ),
         if (action.isNotEmpty)
           GestureDetector(
@@ -1082,7 +1109,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
             child: Text(
               action,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: colorScheme.primary,
               ),
@@ -1447,7 +1474,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: colorScheme.onSurface.withValues(alpha: 0.06),
           ),
@@ -1490,7 +1517,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: colorScheme.onSurface.withValues(alpha: 0.06),
             ),

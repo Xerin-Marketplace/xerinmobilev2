@@ -172,7 +172,7 @@ class _SellerProductsPageState extends State<SellerProductsPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: isActive ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   filter,
@@ -214,7 +214,7 @@ class _SellerProductsPageState extends State<SellerProductsPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
       ),
       child: Row(

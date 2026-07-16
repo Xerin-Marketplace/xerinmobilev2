@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../shared/widgets/app_icon.dart';
+import '../cubit/customer_cubit.dart';
+import '../cubit/customer_state.dart';
 import '../../data/models/payment_method_model.dart';
 
 class PaymentMethodsPage extends StatefulWidget {
@@ -12,12 +15,12 @@ class PaymentMethodsPage extends StatefulWidget {
 }
 
 class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
-  final List<PaymentMethodModel> _methods = [];
-
   @override
   void initState() {
     super.initState();
-    _methods.addAll(_sampleMethods);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CustomerCubit>().refreshPaymentMethods();
+    });
   }
 
   void _deleteMethod(PaymentMethodModel method) async {
@@ -36,7 +39,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
       ),
     );
     if (confirm == true && mounted) {
-      setState(() => _methods.remove(method));
+      context.read<CustomerCubit>().deletePaymentMethod(method.id);
     }
   }
 
@@ -98,16 +101,14 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                   child: ElevatedButton(
                     onPressed: () {
                       if (providerCtrl.text.isNotEmpty && nameCtrl.text.isNotEmpty && numberCtrl.text.isNotEmpty) {
-                        final method = PaymentMethodModel(
-                          id: DateTime.now().toString(),
+                        Navigator.pop(ctx);
+                        context.read<CustomerCubit>().addPaymentMethod(
                           type: selectedType,
                           provider: providerCtrl.text.trim(),
                           accountName: nameCtrl.text.trim(),
                           accountNumber: numberCtrl.text.trim(),
-                          isDefault: _methods.isEmpty,
+                          isDefault: false,
                         );
-                        setState(() => _methods.add(method));
-                        Navigator.pop(ctx);
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -169,58 +170,68 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  BackIconButton(
-                    onTap: () => context.pop(),
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(width: 16),
-                  Text('Payment Methods',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                  ),
-                ],
-              ),
-            ),
-            if (_methods.isEmpty)
-              Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+        child: BlocBuilder<CustomerCubit, CustomerState>(
+          builder: (context, state) {
+            final methods = state is CustomerLoaded ? state.paymentMethods : <PaymentMethodModel>[];
+            final isLoading = state is CustomerLoading;
+
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
                     children: [
-                      Icon(Icons.credit_card_off_rounded, size: 72, color: colorScheme.onSurface.withValues(alpha: 0.2)),
-                      const SizedBox(height: 16),
-                      Text('No payment methods',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                      BackIconButton(
+                        onTap: () => context.pop(),
+                        color: colorScheme.primary,
                       ),
-                      const SizedBox(height: 8),
-                      Text('Add a payment method for faster checkout',
-                        style: TextStyle(fontSize: 14, color: colorScheme.onSurface.withValues(alpha: 0.3)),
+                      const SizedBox(width: 16),
+                      Text('Payment Methods',
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
                       ),
                     ],
                   ),
                 ),
-              )
-            else
-              Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: _methods.length,
-                  itemBuilder: (context, index) {
-                    final method = _methods[index];
-                    return _buildMethodCard(method, colorScheme);
-                  },
-                ),
-              ),
-          ],
+                if (isLoading)
+                  const Expanded(child: Center(child: CircularProgressIndicator()))
+                else if (methods.isEmpty)
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.credit_card_off_rounded, size: 72, color: colorScheme.onSurface.withValues(alpha: 0.2)),
+                          const SizedBox(height: 16),
+                          Text('No payment methods',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('Add a payment method for faster checkout',
+                            style: TextStyle(fontSize: 14, color: colorScheme.onSurface.withValues(alpha: 0.3)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: methods.length,
+                      itemBuilder: (context, index) {
+                        final method = methods[index];
+                        return _buildMethodCard(method, colorScheme, isDark);
+                      },
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -231,7 +242,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
     );
   }
 
-  Widget _buildMethodCard(PaymentMethodModel method, ColorScheme colorScheme) {
+  Widget _buildMethodCard(PaymentMethodModel method, ColorScheme colorScheme, bool isDark) {
     IconData icon;
     Color color;
     switch (method.type) {
@@ -256,13 +267,20 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        color: isDark ? const Color(0xFF252525) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: method.isDefault
               ? colorScheme.primary.withValues(alpha: 0.3)
               : colorScheme.onSurface.withValues(alpha: 0.06),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -271,10 +289,14 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
               Container(
                 width: 44, height: 44,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  gradient: LinearGradient(
+                    colors: [color, color.withValues(alpha: 0.7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 22),
+                child: Icon(icon, color: Colors.white, size: 22),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -339,11 +361,4 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
       ),
     );
   }
-
-  static const List<PaymentMethodModel> _sampleMethods = [
-    PaymentMethodModel(id: '1', type: 'mobile_money', provider: 'M-Pesa', accountName: 'John Doe', accountNumber: '0712345678', isDefault: true),
-    PaymentMethodModel(id: '2', type: 'mobile_money', provider: 'Tigo Pesa', accountName: 'John Doe', accountNumber: '0612345678'),
-    PaymentMethodModel(id: '3', type: 'bank', provider: 'CRDB Bank', accountName: 'John Doe', accountNumber: '0151234567890'),
-    PaymentMethodModel(id: '4', type: 'card', provider: 'Visa', accountName: 'John Doe', accountNumber: '4111111111111111', expiryDate: '12/27'),
-  ];
 }

@@ -154,7 +154,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
                               decoration: BoxDecoration(
                                 color:
                                     colorScheme.primary.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               child: Column(
                                 children: [
@@ -188,50 +188,21 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
                             ),
                           const SizedBox(height: 32),
                           if (_sentEmail == null)
-                            SizedBox(
-                              width: double.infinity,
-                              height: 54,
-                              child: ElevatedButton(
-                                onPressed: isLoading ? null : _onSubmit,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: colorScheme.primary,
-                                  foregroundColor: colorScheme.onPrimary,
-                                  disabledBackgroundColor: colorScheme.primary
-                                      .withValues(alpha: 0.6),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                child: isLoading
-                                    ? const SizedBox(
-                                        width: 22,
-                                        height: 22,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.5,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Text(
-                                        'Send Reset Link',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 0.3,
-                                        ),
-                                      ),
-                              ),
+                            AuthPrimaryButton(
+                              label: 'Send Reset Link',
+                              onPressed: isLoading ? null : _onSubmit,
+                              isLoading: isLoading,
                             )
                           else
                             SizedBox(
                               width: double.infinity,
-                              height: 54,
+                              height: 52,
                               child: OutlinedButton(
                                 onPressed: () =>
                                     context.go(AppConstants.signInRoute),
                                 style: OutlinedButton.styleFrom(
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
                                   side: BorderSide(
                                     color: colorScheme.onSurface

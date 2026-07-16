@@ -1,7 +1,7 @@
 /// General app constants.
 abstract class AppConstants {
   static const String appName = 'XerinMarket';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '1.0.2';
 
   // Routes
   static const String splashRoute = '/splash';
@@ -25,6 +25,8 @@ abstract class AppConstants {
   static const String sellerSupportRoute = '/seller/support';
   static const String sellerKycRoute = '/seller/kyc';
   static const String registrationSuccessRoute = '/registration-success';
+  static const String termsRoute = '/terms';
+  static const String privacyRoute = '/privacy';
 
   // Customer profile routes
   static const String profileInfoRoute = '/profile-info';

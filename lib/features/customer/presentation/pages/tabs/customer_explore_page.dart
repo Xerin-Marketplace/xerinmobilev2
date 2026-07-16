@@ -126,7 +126,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
       height: 50,
       decoration: BoxDecoration(
         color: colorScheme.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         children: [
@@ -171,7 +171,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
         width: double.infinity,
         decoration: BoxDecoration(
           color: colorScheme.primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: const Center(child: CircularProgressIndicator()),
       );
@@ -183,7 +183,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
         ),
         child: Column(
@@ -243,7 +243,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
                       colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.75)],
                       begin: Alignment.topLeft, end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(12),
                     boxShadow: [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 6))],
                   ),
                   child: Row(
@@ -324,7 +324,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
             children: [
               Container(
                 width: 56, height: 56,
-                decoration: BoxDecoration(color: colorScheme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(16)),
+                decoration: BoxDecoration(color: colorScheme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
                 child: Icon(_categoryIcon(cat.name), color: colorScheme.primary, size: 26),
               ),
               const SizedBox(height: 8),
@@ -355,7 +355,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
           child: Container(
             margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: colorScheme.surface, borderRadius: BorderRadius.circular(16),
+              color: colorScheme.surface, borderRadius: BorderRadius.circular(10),
               border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
               boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 3))],
             ),
@@ -439,7 +439,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
           }),
           child: Container(
             decoration: BoxDecoration(
-              color: colorScheme.surface, borderRadius: BorderRadius.circular(16),
+              color: colorScheme.surface, borderRadius: BorderRadius.circular(10),
               border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
               boxShadow: [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.06), blurRadius: 12, offset: const Offset(0, 4))],
             ),

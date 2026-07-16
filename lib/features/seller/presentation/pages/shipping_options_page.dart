@@ -129,7 +129,7 @@ class _ShippingOptionsPageState extends State<ShippingOptionsPage>
                               color: isSelected
                                   ? color.withValues(alpha: 0.08)
                                   : colorScheme.surface,
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: isSelected
                                     ? color
@@ -229,7 +229,7 @@ class _ShippingOptionsPageState extends State<ShippingOptionsPage>
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: colorScheme.onSurface.withValues(alpha: 0.03),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: colorScheme.onSurface.withValues(alpha: 0.08),
                         ),
@@ -287,7 +287,7 @@ class _ShippingOptionsPageState extends State<ShippingOptionsPage>
                           backgroundColor: colorScheme.primary,
                           foregroundColor: colorScheme.onPrimary,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           elevation: 0,
                         ),

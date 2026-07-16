@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
+import '../../features/auth/presentation/pages/legal_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/registration_success_page.dart';
 import '../../features/auth/presentation/pages/sign_in_page.dart';
@@ -153,6 +154,14 @@ class AppRouter {
             shopName: extra?['shopName'] as String? ?? 'XerinMart Store',
           );
         },
+      ),
+      GoRoute(
+        path: AppConstants.termsRoute,
+        builder: (context, state) => LegalPage.termsOfService(),
+      ),
+      GoRoute(
+        path: AppConstants.privacyRoute,
+        builder: (context, state) => LegalPage.privacyPolicy(),
       ),
       // Customer profile sub-pages
       GoRoute(

@@ -587,7 +587,7 @@ class _KycPageState extends State<KycPage>
                                 backgroundColor: colorScheme.primary,
                                 foregroundColor: colorScheme.onPrimary,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 elevation: 0,
                               ),

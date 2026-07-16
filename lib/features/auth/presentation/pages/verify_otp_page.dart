@@ -1,14 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sms_autofill/sms_autofill.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
+import '../widgets/auth_text_field.dart' show AuthPrimaryButton;
 
 class VerifyOtpPage extends StatefulWidget {
   final String phone;
@@ -24,6 +27,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
   final List<TextEditingController> _otpCtls =
       List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  String _autoFilledCode = '';
 
   late final AnimationController _animCtrl;
   late final Animation<Offset> _slideAnim;
@@ -47,6 +51,23 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
     _animCtrl.forward();
     _focusNodes[0].requestFocus();
     _startCountdown();
+    _listenForSmsCode();
+  }
+
+  Future<void> _listenForSmsCode() async {
+    try {
+      await SmsAutoFill().listenForCode;
+      SmsAutoFill().code.listen((code) {
+        if (code.length == 6 && mounted) {
+          _autoFilledCode = code;
+          for (int i = 0; i < 6; i++) {
+            _otpCtls[i].text = code[i];
+          }
+          setState(() {});
+          _autoVerify();
+        }
+      });
+    } catch (_) {}
   }
 
   void _startCountdown() {
@@ -64,6 +85,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
   @override
   void dispose() {
     _timer?.cancel();
+    SmsAutoFill().unregisterListener();
     for (final c in _otpCtls) {
       c.dispose();
     }
@@ -79,6 +101,26 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
       _focusNodes[index + 1].requestFocus();
     } else if (value.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
+    }
+    setState(() {});
+    _checkAutoVerify();
+  }
+
+  void _checkAutoVerify() {
+    final otp = _otpCtls.map((c) => c.text).join();
+    if (otp.length == 6 && !otp.contains(' ')) {
+      _autoVerify();
+    }
+  }
+
+  void _autoVerify() {
+    final otp = _otpCtls.map((c) => c.text).join();
+    if (otp.length == 6) {
+      FocusScope.of(context).unfocus();
+      context.read<AuthCubit>().verifyOtp(
+            phone: widget.phone,
+            otpCode: otp,
+          );
     }
   }
 
@@ -96,6 +138,17 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
           behavior: SnackBarBehavior.floating,
         ),
       );
+    }
+  }
+
+  void _pasteOtp(String value) {
+    final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.isNotEmpty) {
+      for (int i = 0; i < 6 && i < digits.length; i++) {
+        _otpCtls[i].text = digits[i];
+      }
+      setState(() {});
+      _checkAutoVerify();
     }
   }
 
@@ -136,6 +189,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocListener<AuthCubit, AuthState>(
       listener: _onStateChange,
@@ -197,13 +251,13 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
-                          width: 46,
-                          height: 58,
+                          width: 48,
+                          height: 60,
                           decoration: BoxDecoration(
                             color: hasValue
-                                ? colorScheme.primary.withValues(alpha: 0.08)
-                                : colorScheme.surface,
-                            borderRadius: BorderRadius.circular(16),
+                                ? colorScheme.primary.withValues(alpha: 0.06)
+                                : (isDark ? const Color(0xFF1A1A1A) : const Color(0xFFFAFAFA)),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isFocused
                                   ? colorScheme.primary
@@ -211,7 +265,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                                       ? colorScheme.primary
                                           .withValues(alpha: 0.3)
                                       : colorScheme.onSurface
-                                          .withValues(alpha: 0.1),
+                                          .withValues(alpha: 0.08),
                               width: isFocused ? 2 : 1.5,
                             ),
                             boxShadow: isFocused
@@ -233,7 +287,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                             maxLength: 1,
                             style: TextStyle(
                               fontSize: 26,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w800,
                               color: hasValue
                                   ? colorScheme.primary
                                   : colorScheme.onSurface,
@@ -254,38 +308,61 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                       );
                     }),
                   ),
-                  const SizedBox(height: 40),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: ElevatedButton(
-                      onPressed: isLoading ? null : _onVerify,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: isLoading
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text(
-                              'Verify & Continue',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.3,
-                              ),
+                  const SizedBox(height: 16),
+                  if (_autoFilledCode.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.auto_awesome_rounded, size: 14, color: colorScheme.primary.withValues(alpha: 0.6)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Code detected from SMS',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.primary.withValues(alpha: 0.6),
                             ),
+                          ),
+                        ],
+                      ),
                     ),
+                  GestureDetector(
+                    onTap: () async {
+                      final data = await Clipboard.getData('text/plain');
+                      if (data?.text != null) {
+                        _pasteOtp(data!.text!);
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.paste_rounded, size: 14, color: colorScheme.primary.withValues(alpha: 0.7)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Paste code',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.primary.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  AuthPrimaryButton(
+                    label: 'Verify & Continue',
+                    onPressed: isLoading ? null : _onVerify,
+                    isLoading: isLoading,
                   ),
                   const SizedBox(height: 32),
                   Row(
@@ -321,7 +398,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                         horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
                       color: colorScheme.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       _secondsLeft > 0

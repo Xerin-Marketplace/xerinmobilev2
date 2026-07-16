@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
@@ -7,6 +8,7 @@ import '../../../../shared/widgets/app_icon.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
+import '../../../seller/data/datasources/seller_remote_datasource.dart';
 
 class SellerDetailsPage extends StatefulWidget {
   const SellerDetailsPage({super.key});
@@ -24,18 +26,9 @@ class _SellerDetailsPageState extends State<SellerDetailsPage>
   final _shopNameNode = FocusNode();
   final _shopDescNode = FocusNode();
   final _shopAddressNode = FocusNode();
-  String _shopCategory = 'Electronics';
-
-  final List<String> _categories = [
-    'Electronics',
-    'Fashion',
-    'Home & Garden',
-    'Food & Beverages',
-    'Health & Beauty',
-    'Sports',
-    'Books & Media',
-    'Other',
-  ];
+  List<Map<String, dynamic>> _businessCategories = [];
+  String? _selectedCategoryId;
+  bool _loadingCategories = true;
 
   late final AnimationController _animCtrl;
   late final Animation<Offset> _slideAnim;
@@ -54,6 +47,25 @@ class _SellerDetailsPageState extends State<SellerDetailsPage>
     ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic));
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     _animCtrl.forward();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final ds = GetIt.instance<SellerRemoteDataSource>();
+      final cats = await ds.getBusinessCategories();
+      if (mounted) {
+        setState(() {
+          _businessCategories = cats;
+          _selectedCategoryId = cats.isNotEmpty ? cats.first['id']?.toString() : null;
+          _loadingCategories = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loadingCategories = false);
+      }
+    }
   }
 
   @override
@@ -70,6 +82,12 @@ class _SellerDetailsPageState extends State<SellerDetailsPage>
 
   void _onComplete() {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedCategoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a business category')),
+      );
+      return;
+    }
     final cubit = context.read<AuthCubit>();
     cubit.registerSeller(
       firstName: cubit.pendingFirstName ?? '',
@@ -78,7 +96,7 @@ class _SellerDetailsPageState extends State<SellerDetailsPage>
       phone: cubit.pendingPhone ?? '',
       password: cubit.pendingPassword ?? '',
       businessName: _shopNameCtrl.text.trim(),
-      businessCategory: _shopCategory,
+      businessCategoryIds: [_selectedCategoryId!],
       contactEmail: cubit.pendingEmail,
       contactPhone: cubit.pendingPhone,
     );
@@ -148,7 +166,7 @@ class _SellerDetailsPageState extends State<SellerDetailsPage>
                       height: 64,
                       decoration: BoxDecoration(
                         color: colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         Icons.store_rounded,
@@ -186,44 +204,82 @@ class _SellerDetailsPageState extends State<SellerDetailsPage>
                           v == null || v.isEmpty ? 'Enter your shop name' : null,
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      initialValue: _shopCategory,
-                      items: _categories.map((cat) {
-                        return DropdownMenuItem(value: cat, child: Text(cat));
-                      }).toList(),
-                      onChanged: (v) =>
-                          setState(() => _shopCategory = v ?? 'Electronics'),
-                      decoration: InputDecoration(
-                        labelText: 'Shop Category',
-                        filled: true,
-                        fillColor: colorScheme.surface.withValues(alpha: 0.6),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 16),
-                        prefixIcon: Icon(
-                          Icons.category_outlined,
-                          color: colorScheme.onSurface.withValues(alpha: 0.4),
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: colorScheme.onSurface.withValues(alpha: 0.1),
+                    if (_loadingCategories)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: colorScheme.onSurface.withValues(alpha: 0.1),
+                      )
+                    else if (_businessCategories.isNotEmpty)
+                      DropdownButtonFormField<String>(
+                        value: _selectedCategoryId,
+                        decoration: InputDecoration(
+                          labelText: 'Business Category',
+                          labelStyle: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFFFAFAFA),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
+                          prefixIcon: Icon(
+                            Icons.category_outlined,
+                            size: 18,
+                            color: colorScheme.onSurface.withValues(alpha: 0.35),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                              color: colorScheme.onSurface.withValues(alpha: 0.08),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                              color: colorScheme.onSurface.withValues(alpha: 0.08),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                              color: colorScheme.primary,
+                              width: 1.5,
+                            ),
                           ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: colorScheme.primary,
-                            width: 2,
-                          ),
+                        items: _businessCategories.map((cat) {
+                          final id = cat['id']?.toString() ?? '';
+                          final name = cat['name']?.toString() ?? 'Unknown';
+                          return DropdownMenuItem(
+                            value: id,
+                            child: Text(
+                              name,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (v) =>
+                            setState(() => _selectedCategoryId = v),
+                      )
+                    else
+                      Text(
+                        'No categories available',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
                         ),
                       ),
-                    ),
                     const SizedBox(height: 16),
                     AuthTextField(
                       controller: _shopDescCtrl,
@@ -264,7 +320,7 @@ class _SellerDetailsPageState extends State<SellerDetailsPage>
                               disabledBackgroundColor:
                                   colorScheme.primary.withValues(alpha: 0.6),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               elevation: 0,
                             ),

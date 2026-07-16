@@ -44,7 +44,7 @@ class ModernBottomNav extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: backgroundColor ?? colorScheme.surface,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
               color: colorScheme.primary.withValues(alpha: 0.12),
@@ -74,7 +74,7 @@ class ModernBottomNav extends StatelessWidget {
                   color: isActive
                       ? active.withValues(alpha: 0.1)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

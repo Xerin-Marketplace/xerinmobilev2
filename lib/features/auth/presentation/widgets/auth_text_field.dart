@@ -69,6 +69,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,100 +78,215 @@ class _AuthTextFieldState extends State<AuthTextField> {
         Text(
           widget.label,
           style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: colorScheme.onSurface.withValues(alpha: 0.85),
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: _isFocused
+                ? colorScheme.primary
+                : colorScheme.onSurface.withValues(alpha: 0.7),
+            letterSpacing: 0.3,
           ),
         ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: _isFocused
-                    ? colorScheme.primary.withValues(alpha: 0.15)
-                    : Colors.black.withValues(alpha: 0.03),
-                blurRadius: _isFocused ? 6 : 3,
-                offset: const Offset(0, 1),
-              ),
-            ],
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: widget.controller,
+          focusNode: _effectiveFocusNode,
+          keyboardType: widget.keyboardType,
+          textCapitalization: widget.textCapitalization,
+          obscureText: widget.obscureText,
+          validator: widget.validator,
+          maxLength: widget.maxLength,
+          maxLines: widget.maxLines,
+          onChanged: widget.onChanged,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+            letterSpacing: 0.2,
           ),
-          child: TextFormField(
-            controller: widget.controller,
-            focusNode: _effectiveFocusNode,
-            keyboardType: widget.keyboardType,
-            textCapitalization: widget.textCapitalization,
-            obscureText: widget.obscureText,
-            validator: widget.validator,
-            maxLength: widget.maxLength,
-            maxLines: widget.maxLines,
-            onChanged: widget.onChanged,
-            style: TextStyle(
-              fontSize: 14,
-              color: colorScheme.onSurface,
-              letterSpacing: 0.2,
+          decoration: InputDecoration(
+            hintText: widget.hint,
+            counterText: '',
+            filled: true,
+            fillColor: _isFocused
+                ? colorScheme.primary.withValues(alpha: 0.03)
+                : (isDark ? const Color(0xFF1A1A1A) : const Color(0xFFFAFAFA)),
+            contentPadding: widget.contentPadding ??
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            prefixIcon: widget.prefix ??
+                Icon(
+                  widget.icon,
+                  size: 18,
+                  color: _isFocused
+                      ? colorScheme.primary
+                      : colorScheme.onSurface.withValues(alpha: 0.35),
+                ),
+            prefixIconConstraints: widget.prefixIconConstraints,
+            suffixIcon: widget.suffix != null
+                ? Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: widget.suffix,
+                  )
+                : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: colorScheme.onSurface.withValues(alpha: 0.08),
+                width: 1,
+              ),
             ),
-            decoration: InputDecoration(
-              hintText: widget.hint,
-              counterText: '',
-              filled: true,
-              fillColor: colorScheme.surface.withValues(alpha: 0.6),
-              contentPadding: widget.contentPadding ??
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              prefixIcon: widget.prefix ??
-                  Icon(
-                    widget.icon,
-                    size: 20,
-                    color: _isFocused
-                        ? colorScheme.primary
-                        : colorScheme.onSurface.withValues(alpha: 0.4),
-                  ),
-              prefixIconConstraints: widget.prefixIconConstraints,
-              suffixIcon: widget.suffix,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: colorScheme.onSurface.withValues(alpha: 0.1),
-                  width: 1,
-                ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: colorScheme.onSurface.withValues(alpha: 0.08),
+                width: 1,
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: colorScheme.onSurface.withValues(alpha: 0.1),
-                  width: 1,
-                ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: colorScheme.primary,
+                width: 1.5,
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: colorScheme.primary,
-                  width: 2,
-                ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: colorScheme.error,
+                width: 1,
               ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: colorScheme.error,
-                  width: 1,
-                ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: colorScheme.error,
+                width: 1.5,
               ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: colorScheme.error,
-                  width: 2,
-                ),
-              ),
-              hintStyle: TextStyle(
-                fontSize: 14,
-                color: colorScheme.onSurface.withValues(alpha: 0.35),
-              ),
+            ),
+            hintStyle: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: colorScheme.onSurface.withValues(alpha: 0.3),
+            ),
+            errorStyle: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.error,
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class AuthPrimaryButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onPressed;
+  final bool isLoading;
+  final IconData? icon;
+
+  const AuthPrimaryButton({
+    super.key,
+    required this.label,
+    this.onPressed,
+    this.isLoading = false,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return GestureDetector(
+      onTap: isLoading ? null : onPressed,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: double.infinity,
+        height: 52,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              colorScheme.primary,
+              colorScheme.primary.withValues(alpha: 0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: onPressed != null
+              ? [
+                  BoxShadow(
+                    color: colorScheme.primary.withValues(alpha: 0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [],
+        ),
+        child: Center(
+          child: isLoading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (icon != null) ...[
+                      Icon(icon, color: Colors.white, size: 18),
+                      const SizedBox(width: 8),
+                    ],
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+class AuthErrorBanner extends StatelessWidget {
+  final String message;
+  const AuthErrorBanner({super.key, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFFCA5A5)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded,
+              color: Color(0xFFDC2626), size: 16),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFFB91C1C),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

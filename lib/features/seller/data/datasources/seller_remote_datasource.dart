@@ -424,6 +424,16 @@ class SellerRemoteDataSource {
   // CATEGORIES & BRANDS
   // =========================
 
+  Future<List<Map<String, dynamic>>> getBusinessCategories() async {
+    try {
+      final response = await _client.get(ApiConstants.adminBusinessCategories);
+      final list = _extractList(response.data);
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getCategories() async {
     try {
       final response = await _client.get(ApiConstants.productCategories);

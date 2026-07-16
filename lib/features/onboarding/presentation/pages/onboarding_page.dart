@@ -22,25 +22,33 @@ class _OnboardingPageState extends State<OnboardingPage>
   late final AnimationController _animCtrl;
   late final Animation<Offset> _slideAnim;
   late final Animation<double> _fadeAnim;
+  late final AnimationController _arrowCtrl;
+  late final Animation<double> _arrowAnim;
 
   final List<_OnboardingItem> _pages = const [
     _OnboardingItem(
       image: 'assets/onboarding/1stonbaoidng .jpg',
+      icon: Icons.storefront_rounded,
       title: 'Welcome to Xerin',
       description:
           'Discover a marketplace built for everyone. Shop, sell, and connect with trusted vendors from one beautiful app.',
+      gradientColors: [Color(0xFFF47524), Color(0xFFFF8A50)],
     ),
     _OnboardingItem(
       image: 'assets/onboarding/deliveryobaording.jpg',
+      icon: Icons.local_shipping_rounded,
       title: 'Fast Delivery',
       description:
           'From cart to doorstep in record time. We deliver your orders quickly, safely, and reliably — every single time.',
+      gradientColors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
     ),
     _OnboardingItem(
       image: 'assets/onboarding/securepayemtbns.jpg',
+      icon: Icons.lock_rounded,
       title: 'Secure Payments',
       description:
           'Pay with confidence using encrypted, secure transactions. Your data and money are always protected with us.',
+      gradientColors: [Color(0xFF22C55E), Color(0xFF4ADE80)],
     ),
   ];
 
@@ -57,11 +65,20 @@ class _OnboardingPageState extends State<OnboardingPage>
     ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic));
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     _animCtrl.forward();
+
+    _arrowCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+    _arrowAnim = Tween<double>(begin: 0, end: 8).animate(
+      CurvedAnimation(parent: _arrowCtrl, curve: Curves.easeInOut),
+    );
   }
 
   @override
   void dispose() {
     _animCtrl.dispose();
+    _arrowCtrl.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -140,17 +157,7 @@ class _OnboardingPageState extends State<OnboardingPage>
             Positioned(
               top: MediaQuery.of(context).padding.top + 16,
               right: 16,
-              child: TextButton(
-                onPressed: _onSkip,
-                child: Text(
-                  'Skip',
-                  style: TextStyle(
-                    color: colorScheme.onSurface.withValues(alpha: 0.6),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
+              child: _buildSkipButton(colorScheme),
             ),
         ],
       ),
@@ -219,12 +226,85 @@ class _OnboardingPageState extends State<OnboardingPage>
             ),
           ),
         ),
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 80,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: FadeTransition(
+              opacity: _fadeAnim,
+              child: SlideTransition(
+                position: _slideAnim,
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: item.gradientColors,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: item.gradientColors.first.withValues(alpha: 0.4),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Icon(item.icon, color: Colors.white, size: 36),
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildSkipButton(ColorScheme colorScheme) {
+    return GestureDetector(
+      onTap: _onSkip,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Skip',
+              style: TextStyle(
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.skip_next_rounded,
+              color: colorScheme.onSurface.withValues(alpha: 0.4),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildBottomSection(ColorScheme colorScheme, bool isDark) {
     final isLast = _currentPage == _pages.length - 1;
+    final item = _pages[_currentPage];
 
     return ClipPath(
       clipper: _UpwardCurveClipper(),
@@ -241,7 +321,7 @@ class _OnboardingPageState extends State<OnboardingPage>
             ),
           ],
         ),
-        padding: const EdgeInsets.fromLTRB(32, 60, 32, 32),
+        padding: const EdgeInsets.fromLTRB(32, 56, 32, 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -251,24 +331,58 @@ class _OnboardingPageState extends State<OnboardingPage>
                 opacity: _fadeAnim,
                 child: Column(
                   children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: item.gradientColors.first,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Step ${_currentPage + 1} of ${_pages.length}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: item.gradientColors.first,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: item.gradientColors.first,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     Text(
-                      _pages[_currentPage].title,
+                      item.title,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 26,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w900,
                         color: colorScheme.onSurface,
                         height: 1.3,
+                        letterSpacing: -0.3,
                       ),
                     ),
                     const SizedBox(height: 14),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
-                        _pages[_currentPage].description,
+                        item.description,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 14,
                           color: colorScheme.onSurface.withValues(alpha: 0.55),
                           height: 1.6,
                           letterSpacing: 0.2,
@@ -279,15 +393,15 @@ class _OnboardingPageState extends State<OnboardingPage>
                 ),
               ),
             ),
-            const SizedBox(height: 36),
+            const SizedBox(height: 28),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
                 _pages.length,
-                (index) => _buildDot(index, colorScheme),
+                (index) => _buildDot(index, colorScheme, item),
               ),
             ),
-            const SizedBox(height: 36),
+            const SizedBox(height: 28),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -322,41 +436,70 @@ class _OnboardingPageState extends State<OnboardingPage>
                 else
                   const SizedBox(width: 52),
                 if (!isLast)
-                  GestureDetector(
-                    onTap: _onNext,
-                    child: Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: colorScheme.primary.withValues(alpha: 0.15),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedBuilder(
+                        animation: _arrowAnim,
+                        builder: (context, child) {
+                          return Transform.translate(
+                            offset: Offset(0, -_arrowAnim.value - 12),
+                            child: child,
+                          );
+                        },
+                        child: Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: item.gradientColors.first.withValues(alpha: 0.5),
+                          size: 24,
+                        ),
                       ),
-                      child: AnimatedArrow(color: colorScheme.onPrimary),
-                    ),
+                      GestureDetector(
+                        onTap: _onNext,
+                        child: Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: item.gradientColors,
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: item.gradientColors.first
+                                    .withValues(alpha: 0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: AnimatedArrow(color: Colors.white),
+                        ),
+                      ),
+                    ],
                   )
                 else
                   GestureDetector(
                     onTap: _onGetStarted,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 36,
+                        horizontal: 32,
                         vertical: 16,
                       ),
                       decoration: BoxDecoration(
-                        color: colorScheme.primary,
+                        gradient: LinearGradient(
+                          colors: item.gradientColors,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
+                            color: item.gradientColors.first
+                                .withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
                           ),
                         ],
                       ),
@@ -366,13 +509,14 @@ class _OnboardingPageState extends State<OnboardingPage>
                           Text(
                             'Get Started',
                             style: TextStyle(
-                              color: colorScheme.onPrimary,
+                              color: Colors.white,
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.3,
                             ),
                           ),
                           const SizedBox(width: 10),
-                          AnimatedArrow(color: colorScheme.onPrimary),
+                          AnimatedArrow(color: Colors.white),
                         ],
                       ),
                     ),
@@ -385,7 +529,7 @@ class _OnboardingPageState extends State<OnboardingPage>
     );
   }
 
-  Widget _buildDot(int index, ColorScheme colorScheme) {
+  Widget _buildDot(int index, ColorScheme colorScheme, _OnboardingItem item) {
     final isActive = index == _currentPage;
 
     return AnimatedContainer(
@@ -395,16 +539,11 @@ class _OnboardingPageState extends State<OnboardingPage>
       height: 8,
       decoration: BoxDecoration(
         gradient: isActive
-            ? LinearGradient(
-                colors: [
-                  colorScheme.primary,
-                  colorScheme.primary.withValues(alpha: 0.6),
-                ],
-              )
+            ? LinearGradient(colors: item.gradientColors)
             : LinearGradient(
                 colors: [
-                  colorScheme.primary.withValues(alpha: 0.2),
-                  colorScheme.primary.withValues(alpha: 0.2),
+                  colorScheme.onSurface.withValues(alpha: 0.12),
+                  colorScheme.onSurface.withValues(alpha: 0.12),
                 ],
               ),
         borderRadius: BorderRadius.circular(4),
@@ -415,13 +554,17 @@ class _OnboardingPageState extends State<OnboardingPage>
 
 class _OnboardingItem {
   final String image;
+  final IconData icon;
   final String title;
   final String description;
+  final List<Color> gradientColors;
 
   const _OnboardingItem({
     required this.image,
+    required this.icon,
     required this.title,
     required this.description,
+    required this.gradientColors,
   });
 }
 

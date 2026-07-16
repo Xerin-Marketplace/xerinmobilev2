@@ -87,7 +87,7 @@ class AuthCubit extends Cubit<AuthState> {
     required String phone,
     required String password,
     required String businessName,
-    String? businessCategory,
+    required List<String> businessCategoryIds,
     String? contactEmail,
     String? contactPhone,
   }) async {
@@ -100,7 +100,7 @@ class AuthCubit extends Cubit<AuthState> {
         phone: phone,
         password: password,
         businessName: businessName,
-        businessCategory: businessCategory,
+        businessCategoryIds: businessCategoryIds,
         contactEmail: contactEmail,
         contactPhone: contactPhone,
       );

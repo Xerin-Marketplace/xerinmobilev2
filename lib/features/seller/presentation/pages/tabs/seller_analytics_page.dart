@@ -278,7 +278,7 @@ class _SellerAnalyticsPageState extends State<SellerAnalyticsPage> {
         if (existing != null) {
           productMap[name] = TopProductItem(
             name: name,
-            qty: existing.qty + item.quantity,
+            qty: existing.qty + (item.quantity as int),
             revenue: existing.revenue + (item.unitPrice * item.quantity),
           );
         } else {
@@ -302,7 +302,7 @@ class _SellerAnalyticsPageState extends State<SellerAnalyticsPage> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
         boxShadow: [
           BoxShadow(
