@@ -160,9 +160,55 @@ class CustomerRemoteDataSource {
     }
   }
 
+  Future<PaymentMethodModel> createPaymentMethod({
+    required String type,
+    required String provider,
+    required String accountName,
+    required String accountNumber,
+    String? expiryDate,
+    bool isDefault = false,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.paymentMethods,
+        data: {
+          'type': type,
+          'provider': provider,
+          'account_name': accountName,
+          'account_number': accountNumber,
+          'expiry_date': ?expiryDate,
+          'is_default': isDefault,
+        },
+      );
+      return PaymentMethodModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
   Future<void> deletePaymentMethod(String paymentMethodId) async {
     try {
       await _client.delete(ApiConstants.paymentMethodById(paymentMethodId));
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<OrderModel> createOrder({
+    required String addressId,
+    required String paymentMethodId,
+    String? notes,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.orders,
+        data: {
+          'address_id': addressId,
+          'payment_method_id': paymentMethodId,
+          'notes': ?notes,
+        },
+      );
+      return OrderModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw ServerException(_client.getErrorMessage(e));
     }

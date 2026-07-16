@@ -13,6 +13,7 @@ import '../../features/customer/presentation/pages/customer_dashboard.dart';
 import '../../features/customer/data/models/product_model.dart';
 import '../../features/customer/presentation/pages/explore_products_page.dart';
 import '../../features/customer/presentation/pages/help_support_page.dart';
+import '../../features/customer/presentation/pages/checkout_page.dart';
 import '../../features/customer/presentation/pages/notifications_page.dart';
 import '../../features/customer/presentation/pages/order_history_page.dart';
 import '../../features/customer/presentation/pages/payment_methods_page.dart';
@@ -181,6 +182,10 @@ class AppRouter {
       GoRoute(
         path: AppConstants.helpSupportRoute,
         builder: (context, state) => const HelpSupportPage(),
+      ),
+      GoRoute(
+        path: AppConstants.checkoutRoute,
+        builder: (context, state) => const CheckoutPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

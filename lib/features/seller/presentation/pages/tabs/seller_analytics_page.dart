@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../cubit/seller_cubit.dart';
 import '../../cubit/seller_state.dart';
+import '../../widgets/seller_kpi_widgets.dart';
 
 class SellerAnalyticsPage extends StatefulWidget {
   const SellerAnalyticsPage({super.key});
@@ -72,32 +73,14 @@ class _SellerAnalyticsPageState extends State<SellerAnalyticsPage> {
         ? (lowStock.length / inventory.length * 100)
         : 0.0;
 
-    final metrics = [
-      _Metric(
-        label: 'Avg Order Value',
-        value: _formatCurrency(avgOrderValue),
-        icon: Icons.shopping_basket_rounded,
-        color: const Color(0xFF3B82F6),
-      ),
-      _Metric(
-        label: 'Completion Rate',
-        value: '${completionRate.toStringAsFixed(1)}%',
-        icon: Icons.check_circle_outline_rounded,
-        color: const Color(0xFF22C55E),
-      ),
-      _Metric(
-        label: 'Pending Orders',
-        value: '$pendingCount',
-        icon: Icons.pending_actions_rounded,
-        color: const Color(0xFFF59E0B),
-      ),
-      _Metric(
-        label: 'Low Stock Rate',
-        value: '${lowStockRate.toStringAsFixed(1)}%',
-        icon: Icons.warning_amber_rounded,
-        color: const Color(0xFFE53935),
-      ),
-    ];
+    // Build daily revenue data (last 14 days)
+    final dailyData = _buildDailyRevenueData(orders, 14);
+
+    // Build order status donut segments
+    final statusSegments = _buildStatusSegments(orders);
+
+    // Build top products
+    final topProducts = _buildTopProducts(orders);
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -122,62 +105,116 @@ class _SellerAnalyticsPageState extends State<SellerAnalyticsPage> {
               ),
             ),
             const SizedBox(height: 24),
-            GridView.builder(
+            // KPI Row 1 — Gradient cards
+            GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 1.5,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: metrics.length,
-              itemBuilder: (context, index) {
-                final metric = metrics[index];
-                return Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: metric.color.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(metric.icon, color: metric.color, size: 18),
-                      ),
-                      Text(
-                        metric.value,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      Text(
-                        metric.label,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.onSurface.withValues(alpha: 0.5),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.35,
+              children: [
+                GradientKpiCard(
+                  label: 'Avg Order Value',
+                  value: _formatCompact(avgOrderValue),
+                  subValue: 'Per transaction',
+                  icon: Icons.trending_up_rounded,
+                  gradientColors: const [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                ),
+                GradientKpiCard(
+                  label: 'Completion Rate',
+                  value: '${completionRate.toStringAsFixed(1)}%',
+                  subValue: '$completedCount of $totalOrders orders',
+                  icon: Icons.check_circle_rounded,
+                  gradientColors: const [Color(0xFF22C55E), Color(0xFF16A34A)],
+                ),
+                GradientKpiCard(
+                  label: 'Pending Orders',
+                  value: '$pendingCount',
+                  subValue: 'Awaiting processing',
+                  icon: Icons.pending_actions_rounded,
+                  gradientColors: const [Color(0xFFF59E0B), Color(0xFFD97706)],
+                ),
+                GradientKpiCard(
+                  label: 'Low Stock Rate',
+                  value: '${lowStockRate.toStringAsFixed(1)}%',
+                  subValue: '${lowStock.length} of ${inventory.length} items',
+                  icon: Icons.warning_amber_rounded,
+                  gradientColors: const [Color(0xFFE53935), Color(0xFFDC2626)],
+                ),
+              ],
             ),
             const SizedBox(height: 24),
-            _buildRevenueSummary(totalRevenue, totalOrders, products.length, colorScheme),
+            // KPI Row 2 — White cards (business overview)
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 2.2,
+              children: [
+                WhiteKpiCard(
+                  label: 'Total Revenue',
+                  value: _formatCompact(totalRevenue),
+                  subValue: 'All completed orders',
+                  icon: Icons.account_balance_wallet_rounded,
+                  color: const Color(0xFFF47524),
+                  subColor: const Color(0xFFF47524),
+                ),
+                WhiteKpiCard(
+                  label: 'Total Products',
+                  value: '${products.length}',
+                  subValue: '${inventory.length} in stock',
+                  icon: Icons.inventory_2_rounded,
+                  color: const Color(0xFF3B82F6),
+                  subColor: const Color(0xFF3B82F6),
+                ),
+                WhiteKpiCard(
+                  label: 'Total Orders',
+                  value: '$totalOrders',
+                  subValue: '$pendingCount pending',
+                  icon: Icons.shopping_cart_rounded,
+                  color: const Color(0xFF8B5CF6),
+                  subColor: const Color(0xFF8B5CF6),
+                ),
+                WhiteKpiCard(
+                  label: 'Healthy Stock',
+                  value: '${inventory.length - lowStock.length}',
+                  subValue: '${lowStock.length} need restock',
+                  icon: Icons.verified_rounded,
+                  color: const Color(0xFF22C55E),
+                  subColor: const Color(0xFF22C55E),
+                ),
+              ],
+            ),
             const SizedBox(height: 24),
-            _buildOrderStatusBreakdown(orders, colorScheme),
+            // Revenue bar chart (14 days)
+            RevenueBarChart(
+              data: dailyData['values'] as List<double>,
+              labels: dailyData['labels'] as List<String>,
+              barGradient: const [Color(0xFFF47524), Color(0xFFFB923C)],
+              title: 'Revenue Trend',
+              subtitle: 'Daily revenue (last 14 days)',
+            ),
             const SizedBox(height: 24),
+            // Order status donut chart
+            SellerDonutChart(
+              segments: statusSegments,
+              title: 'Order Status Distribution',
+              subtitle: 'All orders by status',
+            ),
+            const SizedBox(height: 24),
+            // Top products
+            if (topProducts.isNotEmpty) ...[
+              TopProductsList(
+                items: topProducts,
+                title: 'Top Products Sold',
+                subtitle: 'By revenue (completed orders)',
+              ),
+              const SizedBox(height: 24),
+            ],
+            // Inventory overview
             _buildInventoryOverview(inventory, lowStock, colorScheme),
             const SizedBox(height: 24),
           ],
@@ -186,99 +223,103 @@ class _SellerAnalyticsPageState extends State<SellerAnalyticsPage> {
     );
   }
 
-  Widget _buildRevenueSummary(double revenue, int orders, int products, ColorScheme colorScheme) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Revenue Summary',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _summaryRow('Total Revenue', _formatCurrency(revenue), colorScheme),
-          const SizedBox(height: 10),
-          _summaryRow('Total Orders', '$orders', colorScheme),
-          const SizedBox(height: 10),
-          _summaryRow('Total Products', '$products', colorScheme),
-        ],
-      ),
-    );
+  Map<String, dynamic> _buildDailyRevenueData(orders, int days) {
+    final now = DateTime.now();
+    final values = <double>[];
+    final labels = <String>[];
+
+    for (int i = days - 1; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final dayStart = DateTime(date.year, date.month, date.day);
+      final dayEnd = dayStart.add(const Duration(days: 1));
+
+      double dayRevenue = 0;
+      for (final order in orders) {
+        if (order.status == 'delivered' || order.status == 'completed') {
+          try {
+            final orderDate = DateTime.parse(order.createdAt);
+            if (orderDate.isAfter(dayStart) && orderDate.isBefore(dayEnd)) {
+              dayRevenue += order.total;
+            }
+          } catch (_) {}
+        }
+      }
+      values.add(dayRevenue);
+      labels.add('${date.day}');
+    }
+
+    return {'values': values, 'labels': labels};
   }
 
-  Widget _buildOrderStatusBreakdown(orders, ColorScheme colorScheme) {
+  List<DonutSegment> _buildStatusSegments(orders) {
     final statusCounts = <String, int>{};
     for (final order in orders) {
       statusCounts[order.status] = (statusCounts[order.status] ?? 0) + 1;
     }
 
-    if (statusCounts.isEmpty) {
-      return const SizedBox.shrink();
+    return statusCounts.entries.map((entry) {
+      return DonutSegment(
+        label: entry.key,
+        value: entry.value.toDouble(),
+        color: _getStatusColor(entry.key),
+      );
+    }).toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+  }
+
+  List<TopProductItem> _buildTopProducts(orders) {
+    final productMap = <String, TopProductItem>{};
+
+    for (final order in orders) {
+      if (order.status != 'delivered' && order.status != 'completed') continue;
+      for (final item in order.items) {
+        final name = item.productName;
+        final existing = productMap[name];
+        if (existing != null) {
+          productMap[name] = TopProductItem(
+            name: name,
+            qty: existing.qty + item.quantity,
+            revenue: existing.revenue + (item.unitPrice * item.quantity),
+          );
+        } else {
+          productMap[name] = TopProductItem(
+            name: name,
+            qty: item.quantity,
+            revenue: item.unitPrice * item.quantity,
+          );
+        }
+      }
     }
 
-    final sortedEntries = statusCounts.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    final maxCount = sortedEntries.first.value;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Order Status Breakdown',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ...sortedEntries.map((entry) {
-            final percentage = maxCount > 0 ? entry.value / maxCount : 0.0;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _buildStatusBar(entry.key, entry.value, percentage, colorScheme),
-            );
-          }),
-        ],
-      ),
-    );
+    final list = productMap.values.toList()
+      ..sort((a, b) => b.revenue.compareTo(a.revenue));
+    return list.take(5).toList();
   }
 
   Widget _buildInventoryOverview(inventory, lowStock, ColorScheme colorScheme) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        color: isDark ? const Color(0xFF252525) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Inventory Overview',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
+          SellerSectionHeader(
+            title: 'Inventory Overview',
+            subtitle: 'Stock health summary',
+            icon: Icons.warehouse_rounded,
+            iconColor: const Color(0xFF3B82F6),
           ),
           const SizedBox(height: 16),
           _summaryRow('Total Items', '${inventory.length}', colorScheme),
@@ -318,46 +359,6 @@ class _SellerAnalyticsPageState extends State<SellerAnalyticsPage> {
     );
   }
 
-  Widget _buildStatusBar(String label, int count, double value, ColorScheme colorScheme) {
-    final statusColor = _getStatusColor(label);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            Text(
-              '$count',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: statusColor,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: value,
-            minHeight: 8,
-            backgroundColor: colorScheme.onSurface.withValues(alpha: 0.06),
-            valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-          ),
-        ),
-      ],
-    );
-  }
-
   Color _getStatusColor(String status) {
     switch (status) {
       case 'delivered':
@@ -376,25 +377,14 @@ class _SellerAnalyticsPageState extends State<SellerAnalyticsPage> {
     }
   }
 
-  String _formatCurrency(double amount) {
-    final formatted = amount.toStringAsFixed(0).replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]},',
-        );
-    return 'TZS $formatted';
+  String _formatCompact(double amount) {
+    if (amount >= 1000000000) {
+      return 'TZS ${(amount / 1000000000).toStringAsFixed(2)}B';
+    } else if (amount >= 1000000) {
+      return 'TZS ${(amount / 1000000).toStringAsFixed(2)}M';
+    } else if (amount >= 1000) {
+      return 'TZS ${(amount / 1000).toStringAsFixed(1)}K';
+    }
+    return 'TZS ${amount.toStringAsFixed(0)}';
   }
-}
-
-class _Metric {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _Metric({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
 }

@@ -34,6 +34,7 @@ abstract class AppConstants {
   static const String notificationsRoute = '/notifications';
   static const String settingsRoute = '/settings';
   static const String helpSupportRoute = '/help-support';
+  static const String checkoutRoute = '/checkout';
 
   // Timeouts
   static const int connectionTimeoutSeconds = 30;

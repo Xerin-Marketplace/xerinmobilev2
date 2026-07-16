@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../common/presentation/widgets/modern_bottom_nav.dart';
 import '../../../../config/constants/app_constants.dart';
+import '../cubit/seller_cubit.dart';
+import '../cubit/seller_state.dart';
 import 'tabs/seller_analytics_page.dart';
 import 'tabs/seller_dashboard_page.dart';
 import 'tabs/seller_orders_page.dart';
@@ -42,6 +45,7 @@ class _SellerDashboardState extends State<SellerDashboard>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SellerCubit>().loadDashboard();
       _showKycDialog();
     });
   }
@@ -54,6 +58,19 @@ class _SellerDashboardState extends State<SellerDashboard>
 
   void _showKycDialog() {
     if (_kycDismissed) return;
+    final cubit = context.read<SellerCubit>();
+    final state = cubit.state;
+    if (state is SellerDashboardLoaded) {
+      final kycStatus = state.kycStatus;
+      final sellerStatus = state.profile?.status ?? kycStatus?.sellerStatus ?? 'pending';
+      if (sellerStatus == 'approved' || sellerStatus == 'under_review') {
+        return;
+      }
+    }
+    _showKycDialogUI();
+  }
+
+  void _showKycDialogUI() {
     final colorScheme = Theme.of(context).colorScheme;
 
     showDialog(

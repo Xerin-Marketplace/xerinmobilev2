@@ -12,6 +12,7 @@ import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/customer/data/datasources/customer_remote_datasource.dart';
 import '../../features/customer/data/datasources/product_remote_datasource.dart';
 import '../../features/customer/data/datasources/wishlist_remote_datasource.dart';
+import '../../features/customer/presentation/cubit/customer_cubit.dart';
 import '../../features/customer/presentation/cubit/home_cubit.dart';
 import '../../features/customer/presentation/cubit/products_cubit.dart';
 import '../../features/customer/presentation/cubit/wishlist_cubit.dart';
@@ -105,6 +106,12 @@ Future<void> initServiceLocator({bool reset = false}) async {
       () => WishlistRemoteDataSource(sl()));
   sl.registerFactory<WishlistCubit>(
     () => WishlistCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+  sl.registerFactory<CustomerCubit>(
+    () => CustomerCubit(
       dataSource: sl(),
       logger: sl(),
     ),

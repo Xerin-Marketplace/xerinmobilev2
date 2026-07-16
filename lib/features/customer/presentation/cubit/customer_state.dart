@@ -1,0 +1,95 @@
+import 'package:equatable/equatable.dart';
+
+import '../../data/models/address_model.dart';
+import '../../data/models/notification_model.dart';
+import '../../data/models/order_model.dart';
+import '../../data/models/payment_method_model.dart';
+
+abstract class CustomerState extends Equatable {
+  const CustomerState();
+  @override
+  List<Object?> get props => [];
+}
+
+class CustomerInitial extends CustomerState {
+  const CustomerInitial();
+}
+
+class CustomerLoading extends CustomerState {
+  const CustomerLoading();
+}
+
+class CustomerLoaded extends CustomerState {
+  final List<OrderModel> orders;
+  final List<AddressModel> addresses;
+  final List<PaymentMethodModel> paymentMethods;
+  final List<NotificationModel> notifications;
+
+  const CustomerLoaded({
+    this.orders = const [],
+    this.addresses = const [],
+    this.paymentMethods = const [],
+    this.notifications = const [],
+  });
+
+  int get totalOrders => orders.length;
+  int get pendingOrders =>
+      orders.where((o) => o.status == 'pending').length;
+  int get deliveredOrders =>
+      orders.where((o) => o.status == 'delivered').length;
+  int get processingOrders =>
+      orders.where((o) => o.status == 'processing' || o.status == 'shipped').length;
+  int get cancelledOrders =>
+      orders.where((o) => o.status == 'cancelled').length;
+  double get totalSpent =>
+      orders.where((o) => o.status == 'delivered').fold(0.0, (sum, o) => sum + o.total);
+  double get avgOrderValue =>
+      orders.isNotEmpty ? totalSpent / orders.length : 0.0;
+  int get unreadNotifications =>
+      notifications.where((n) => !n.isRead).length;
+  AddressModel? get defaultAddress =>
+      addresses.where((a) => a.isDefault).firstOrNull;
+  PaymentMethodModel? get defaultPaymentMethod =>
+      paymentMethods.where((p) => p.isDefault).firstOrNull;
+
+  CustomerLoaded copyWith({
+    List<OrderModel>? orders,
+    List<AddressModel>? addresses,
+    List<PaymentMethodModel>? paymentMethods,
+    List<NotificationModel>? notifications,
+  }) =>
+      CustomerLoaded(
+        orders: orders ?? this.orders,
+        addresses: addresses ?? this.addresses,
+        paymentMethods: paymentMethods ?? this.paymentMethods,
+        notifications: notifications ?? this.notifications,
+      );
+
+  @override
+  List<Object?> get props => [orders, addresses, paymentMethods, notifications];
+}
+
+class CustomerError extends CustomerState {
+  final String message;
+  const CustomerError(this.message);
+  @override
+  List<Object?> get props => [message];
+}
+
+class CustomerActionInProgress extends CustomerState {
+  const CustomerActionInProgress();
+}
+
+class CustomerActionSuccess extends CustomerState {
+  final String message;
+  const CustomerActionSuccess(this.message);
+  @override
+  List<Object?> get props => [message];
+}
+
+class CustomerActionError extends CustomerState {
+  final String message;
+  const CustomerActionError(this.message);
+  @override
+  List<Object?> get props => [message];
+}

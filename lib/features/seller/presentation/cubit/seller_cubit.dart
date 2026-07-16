@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logger/logger.dart';
 
@@ -132,6 +134,34 @@ class SellerCubit extends Cubit<SellerState> {
       emit(current.copyWith(kycStatus: kycStatus));
     } on ServerException catch (e) {
       _logger.e('Refresh KYC error: ${e.message}');
+    }
+  }
+
+  Future<void> submitKycDocuments({
+    File? tinFile,
+    File? businessProfileFile,
+    File? businessRegistrationFile,
+  }) async {
+    emit(const SellerActionLoading());
+    try {
+      if (tinFile != null) {
+        await _dataSource.uploadKycDocument(
+            documentType: 'tin', file: tinFile);
+      }
+      if (businessProfileFile != null) {
+        await _dataSource.uploadKycDocument(
+            documentType: 'business_profile', file: businessProfileFile);
+      }
+      if (businessRegistrationFile != null) {
+        await _dataSource.uploadKycDocument(
+            documentType: 'business_registration',
+            file: businessRegistrationFile);
+      }
+      emit(const SellerActionSuccess(
+          message: 'KYC documents submitted successfully'));
+      await refreshKyc();
+    } on ServerException catch (e) {
+      emit(SellerActionError(message: e.message));
     }
   }
 

@@ -1,12 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
 import '../../../../shared/widgets/app_icon.dart';
+import '../cubit/seller_cubit.dart';
+import '../cubit/seller_state.dart';
 
 class KycPage extends StatefulWidget {
   final bool showAsDialog;
@@ -87,6 +90,9 @@ class _KycPageState extends State<KycPage>
     ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic));
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     _animCtrl.forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SellerCubit>().refreshKyc();
+    });
   }
 
   @override
@@ -276,10 +282,10 @@ class _KycPageState extends State<KycPage>
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_shopLogo == null || _idFront == null || _idBack == null) {
+    if (_idFront == null || _idBack == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please upload all required images'),
+          content: Text('Please upload ID front and back images'),
           backgroundColor: Color(0xFFE53935),
         ),
       );
@@ -287,21 +293,36 @@ class _KycPageState extends State<KycPage>
     }
 
     setState(() => _isSubmitting = true);
-    await Future.delayed(const Duration(seconds: 2));
+
+    await context.read<SellerCubit>().submitKycDocuments(
+          tinFile: _shopLogo,
+          businessProfileFile: _idFront,
+          businessRegistrationFile: _idBack,
+        );
+
     if (!mounted) return;
     setState(() => _isSubmitting = false);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('KYC submitted successfully! Verification in progress.'),
-        backgroundColor: Color(0xFF22C55E),
-      ),
-    );
-
-    if (widget.showAsDialog && context.canPop()) {
-      context.pop();
-    } else {
-      context.go(AppConstants.sellerDashboardRoute);
+    final state = context.read<SellerCubit>().state;
+    if (state is SellerActionSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(state.message),
+          backgroundColor: const Color(0xFF22C55E),
+        ),
+      );
+      if (widget.showAsDialog && context.canPop()) {
+        context.pop();
+      } else {
+        context.go(AppConstants.sellerDashboardRoute);
+      }
+    } else if (state is SellerActionError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(state.message),
+          backgroundColor: const Color(0xFFE53935),
+        ),
+      );
     }
   }
 

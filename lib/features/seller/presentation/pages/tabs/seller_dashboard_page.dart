@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../cubit/seller_cubit.dart';
 import '../../cubit/seller_state.dart';
+import '../../widgets/seller_kpi_widgets.dart';
 
 class SellerDashboardPage extends StatefulWidget {
   const SellerDashboardPage({super.key});
@@ -67,34 +68,11 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     final pendingOrders = state.pendingOrders;
     final completedOrders = state.completedOrders;
 
-    final stats = [
-      _StatCard(
-        icon: Icons.account_balance_wallet_outlined,
-        label: 'Total Revenue',
-        value: _formatCurrency(totalRevenue),
-        color: const Color(0xFF22C55E),
-      ),
-      _StatCard(
-        icon: Icons.shopping_bag_outlined,
-        label: 'Orders',
-        value: '${state.totalOrders}',
-        subValue: '$pendingOrders pending',
-        color: const Color(0xFFF47524),
-      ),
-      _StatCard(
-        icon: Icons.inventory_2_outlined,
-        label: 'Products',
-        value: '${state.totalProducts}',
-        subValue: '${lowStock.length} low stock',
-        color: const Color(0xFF3B82F6),
-      ),
-      _StatCard(
-        icon: Icons.check_circle_outline,
-        label: 'Completed',
-        value: '$completedOrders',
-        color: const Color(0xFF8B5CF6),
-      ),
-    ];
+    // Build daily revenue data from orders (last 7 days)
+    final dailyData = _buildDailyRevenueData(orders);
+
+    // Build top products from orders
+    final topProducts = _buildTopProducts(orders);
 
     return SafeArea(
       child: RefreshIndicator(
@@ -107,13 +85,81 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
               const SizedBox(height: 16),
               _buildHeader(profile, store, colorScheme),
               const SizedBox(height: 20),
-              _buildStatsGrid(stats, colorScheme),
+              // KPI Row 1 — Gradient cards (SalamaPay style)
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.35,
+                children: [
+                  GradientKpiCard(
+                    label: 'Total Revenue',
+                    value: _formatCompact(totalRevenue),
+                    subValue: '$completedOrders completed orders',
+                    icon: Icons.account_balance_wallet_rounded,
+                    gradientColors: const [Color(0xFF22C55E), Color(0xFF16A34A)],
+                  ),
+                  GradientKpiCard(
+                    label: 'Total Orders',
+                    value: '${state.totalOrders}',
+                    subValue: '$pendingOrders pending',
+                    icon: Icons.shopping_cart_rounded,
+                    gradientColors: const [Color(0xFFF47524), Color(0xFFE65100)],
+                  ),
+                  GradientKpiCard(
+                    label: 'Products',
+                    value: '${state.totalProducts}',
+                    subValue: '${lowStock.length} low stock',
+                    icon: Icons.inventory_2_rounded,
+                    gradientColors: const [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                  ),
+                  GradientKpiCard(
+                    label: 'Completed',
+                    value: '$completedOrders',
+                    subValue: '${state.totalOrders > 0 ? ((completedOrders / state.totalOrders) * 100).toStringAsFixed(0) : 0}% rate',
+                    icon: Icons.check_circle_rounded,
+                    gradientColors: const [Color(0xFF8B5CF6), Color(0xFF7C3AED)],
+                  ),
+                ],
+              ),
               const SizedBox(height: 24),
-              _buildSectionTitle('Recent Orders', colorScheme),
+              // Revenue bar chart
+              RevenueBarChart(
+                data: dailyData['values'] as List<double>,
+                labels: dailyData['labels'] as List<String>,
+                barGradient: const [Color(0xFFF47524), Color(0xFFFB923C)],
+                title: 'Revenue Overview',
+                subtitle: 'Last 7 days',
+              ),
+              const SizedBox(height: 24),
+              // Section: Recent Orders
+              SellerSectionHeader(
+                title: 'Recent Orders',
+                subtitle: 'Latest transactions',
+                icon: Icons.receipt_long_rounded,
+                iconColor: const Color(0xFFF47524),
+              ),
               const SizedBox(height: 14),
               _buildRecentOrders(orders, colorScheme),
               const SizedBox(height: 24),
-              _buildSectionTitle('Low Stock Alerts', colorScheme),
+              // Section: Top Products
+              if (topProducts.isNotEmpty) ...[
+                TopProductsList(
+                  items: topProducts,
+                  title: 'Top Products',
+                  subtitle: 'By revenue',
+                ),
+                const SizedBox(height: 24),
+              ],
+              // Section: Low Stock Alerts
+              SellerSectionHeader(
+                title: 'Low Stock Alerts',
+                subtitle: '${lowStock.length} items need restocking',
+                icon: Icons.warning_amber_rounded,
+                iconColor: const Color(0xFFF59E0B),
+              ),
               const SizedBox(height: 14),
               _buildLowStock(lowStock, colorScheme),
               const SizedBox(height: 24),
@@ -122,6 +168,71 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
         ),
       ),
     );
+  }
+
+  Map<String, dynamic> _buildDailyRevenueData(orders) {
+    final now = DateTime.now();
+    final values = <double>[];
+    final labels = <String>[];
+
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+      final dayStart = DateTime(date.year, date.month, date.day);
+      final dayEnd = dayStart.add(const Duration(days: 1));
+
+      double dayRevenue = 0;
+      for (final order in orders) {
+        if (order.status == 'delivered' || order.status == 'completed') {
+          // Try to parse order date if available
+          try {
+            final orderDate = DateTime.parse(order.createdAt);
+            if (orderDate.isAfter(dayStart) && orderDate.isBefore(dayEnd)) {
+              dayRevenue += order.total;
+            }
+          } catch (_) {
+            // If no date, skip
+          }
+        }
+      }
+      values.add(dayRevenue);
+      labels.add(_dayLabel(date));
+    }
+
+    return {'values': values, 'labels': labels};
+  }
+
+  String _dayLabel(DateTime date) {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return days[date.weekday - 1];
+  }
+
+  List<TopProductItem> _buildTopProducts(orders) {
+    final productMap = <String, TopProductItem>{};
+
+    for (final order in orders) {
+      if (order.status != 'delivered' && order.status != 'completed') continue;
+      for (final item in order.items) {
+        final name = item.productName;
+        final existing = productMap[name];
+        if (existing != null) {
+          productMap[name] = TopProductItem(
+            name: name,
+            qty: existing.qty + item.quantity,
+            revenue: existing.revenue + (item.unitPrice * item.quantity),
+          );
+        } else {
+          productMap[name] = TopProductItem(
+            name: name,
+            qty: item.quantity,
+            revenue: item.unitPrice * item.quantity,
+          );
+        }
+      }
+    }
+
+    final list = productMap.values.toList()
+      ..sort((a, b) => b.revenue.compareTo(a.revenue));
+    return list.take(5).toList();
   }
 
   Widget _buildHeader(profile, store, ColorScheme colorScheme) {
@@ -250,96 +361,6 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
               ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatsGrid(List<_StatCard> stats, ColorScheme colorScheme) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 1.95,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemCount: stats.length,
-      itemBuilder: (context, index) {
-        final stat = stats[index];
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: stat.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(stat.icon, color: stat.color, size: 20),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      stat.value,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      stat.label,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: colorScheme.onSurface.withValues(alpha: 0.5),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    if (stat.subValue != null)
-                      Text(
-                        stat.subValue!,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: colorScheme.onSurface.withValues(alpha: 0.35),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSectionTitle(String title, ColorScheme colorScheme) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: colorScheme.onSurface,
       ),
     );
   }
@@ -542,27 +563,14 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     }
   }
 
-  String _formatCurrency(double amount) {
-    final formatted = amount.toStringAsFixed(0).replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]},',
-        );
-    return 'TZS $formatted';
+  String _formatCompact(double amount) {
+    if (amount >= 1000000000) {
+      return 'TZS ${(amount / 1000000000).toStringAsFixed(2)}B';
+    } else if (amount >= 1000000) {
+      return 'TZS ${(amount / 1000000).toStringAsFixed(2)}M';
+    } else if (amount >= 1000) {
+      return 'TZS ${(amount / 1000).toStringAsFixed(1)}K';
+    }
+    return 'TZS ${amount.toStringAsFixed(0)}';
   }
-}
-
-class _StatCard {
-  final IconData icon;
-  final String label;
-  final String value;
-  final String? subValue;
-  final Color color;
-
-  const _StatCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.subValue,
-    required this.color,
-  });
 }

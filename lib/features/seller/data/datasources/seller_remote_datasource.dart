@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 import '../../../../config/constants/api_constants.dart';
@@ -106,6 +108,53 @@ class SellerRemoteDataSource {
           if (documentType != null) 'document_type': documentType,
           if (statusFilter != null) 'status_filter': statusFilter,
         },
+      );
+      final list = _extractList(response.data);
+      return list
+          .map((e) =>
+              SellerKycDocumentModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<SellerKycDocumentModel> uploadKycDocument({
+    required String documentType,
+    required File file,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        'document_type': documentType,
+        'file': await MultipartFile.fromFile(file.path),
+      });
+      final response = await _client.post(
+        ApiConstants.sellerKycDocuments,
+        data: formData,
+      );
+      return SellerKycDocumentModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<SellerKycDocumentModel>> uploadBulkKycDocuments({
+    required File tinFile,
+    required File businessProfileFile,
+    required File businessRegistrationFile,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        'tin_file': await MultipartFile.fromFile(tinFile.path),
+        'business_profile_file':
+            await MultipartFile.fromFile(businessProfileFile.path),
+        'business_registration_file':
+            await MultipartFile.fromFile(businessRegistrationFile.path),
+      });
+      final response = await _client.post(
+        ApiConstants.sellerKycBulkUpload,
+        data: formData,
       );
       final list = _extractList(response.data);
       return list
