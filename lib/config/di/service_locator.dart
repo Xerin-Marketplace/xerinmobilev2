@@ -15,6 +15,8 @@ import '../../features/customer/data/datasources/wishlist_remote_datasource.dart
 import '../../features/customer/presentation/cubit/home_cubit.dart';
 import '../../features/customer/presentation/cubit/products_cubit.dart';
 import '../../features/customer/presentation/cubit/wishlist_cubit.dart';
+import '../../features/seller/data/datasources/seller_remote_datasource.dart';
+import '../../features/seller/presentation/cubit/seller_cubit.dart';
 import '../constants/api_constants.dart';
 
 final GetIt sl = GetIt.instance;
@@ -103,6 +105,16 @@ Future<void> initServiceLocator({bool reset = false}) async {
       () => WishlistRemoteDataSource(sl()));
   sl.registerFactory<WishlistCubit>(
     () => WishlistCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+
+  // Seller
+  sl.registerLazySingleton<SellerRemoteDataSource>(
+      () => SellerRemoteDataSource(sl()));
+  sl.registerFactory<SellerCubit>(
+    () => SellerCubit(
       dataSource: sl(),
       logger: sl(),
     ),

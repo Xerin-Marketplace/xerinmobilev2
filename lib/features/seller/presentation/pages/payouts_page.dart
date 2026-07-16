@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../../shared/widgets/app_icon.dart';
+import '../cubit/seller_cubit.dart';
+import '../cubit/seller_state.dart';
 
 class PayoutsPage extends StatefulWidget {
   const PayoutsPage({super.key});
@@ -11,30 +14,124 @@ class PayoutsPage extends StatefulWidget {
   State<PayoutsPage> createState() => _PayoutsPageState();
 }
 
-class _PayoutsPageState extends State<PayoutsPage>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _animController;
-  final List<Map<String, dynamic>> _payouts = [
-    {'date': 'Jun 24, 2026', 'amount': 'TSh 1,250,000', 'status': 'Completed'},
-    {'date': 'Jun 17, 2026', 'amount': 'TSh 890,000', 'status': 'Completed'},
-    {'date': 'Jun 10, 2026', 'amount': 'TSh 1,540,000', 'status': 'Completed'},
-    {'date': 'Jun 03, 2026', 'amount': 'TSh 620,000', 'status': 'Pending'},
-  ];
-
+class _PayoutsPageState extends State<PayoutsPage> {
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    _animController.forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SellerCubit>().refreshPayouts();
+    });
   }
 
-  @override
-  void dispose() {
-    _animController.dispose();
-    super.dispose();
+  void _showAddPayoutDialog(BuildContext context) {
+    final accountTypeCtrl = TextEditingController(text: 'mobile_money');
+    final providerCtrl = TextEditingController();
+    final accountNameCtrl = TextEditingController();
+    final accountNumberCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Add Payout Account'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: accountTypeCtrl.text,
+                decoration: const InputDecoration(
+                  labelText: 'Account Type',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'mobile_money', child: Text('Mobile Money')),
+                  DropdownMenuItem(value: 'bank', child: Text('Bank Account')),
+                ],
+                onChanged: (v) => accountTypeCtrl.text = v ?? 'mobile_money',
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: providerCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Provider (e.g. Vodacom, CRDB)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: accountNameCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Account Name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: accountNumberCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Account Number',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (providerCtrl.text.isEmpty ||
+                  accountNameCtrl.text.isEmpty ||
+                  accountNumberCtrl.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please fill all fields'),
+                    backgroundColor: Color(0xFFE53935),
+                  ),
+                );
+                return;
+              }
+              Navigator.pop(dialogContext);
+              context.read<SellerCubit>().createPayoutAccount(
+                    accountType: accountTypeCtrl.text,
+                    provider: providerCtrl.text,
+                    accountName: accountNameCtrl.text,
+                    accountNumber: accountNumberCtrl.text,
+                  );
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirm(BuildContext context, String accountId, String provider) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Remove Account'),
+        content: Text('Remove payout account "$provider"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.read<SellerCubit>().deletePayoutAccount(accountId);
+            },
+            child: const Text('Remove', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -44,258 +141,246 @@ class _PayoutsPageState extends State<PayoutsPage>
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+        child: BlocBuilder<SellerCubit, SellerState>(
+          builder: (context, state) {
+            if (state is SellerLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final payouts = state is SellerDashboardLoaded
+                ? state.payoutAccounts
+                : <dynamic>[];
+
+            return CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        BackIconButton(
-                          onTap: () {
-                            if (context.canPop()) {
-                              context.pop();
-                            } else {
-                              context.go(AppConstants.sellerDashboardRoute);
-                            }
-                          },
-                          color: colorScheme.primary,
+                        Row(
+                          children: [
+                            BackIconButton(
+                              onTap: () {
+                                if (context.canPop()) {
+                                  context.pop();
+                                } else {
+                                  context.go(AppConstants.sellerDashboardRoute);
+                                }
+                              },
+                              color: colorScheme.primary,
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              'Payouts',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(height: 24),
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                colorScheme.primary,
+                                colorScheme.primary.withValues(alpha: 0.75),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: colorScheme.primary.withValues(alpha: 0.3),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Linked Accounts',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '${payouts.length} account(s)',
+                                style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 48,
+                                child: ElevatedButton(
+                                  onPressed: () => _showAddPayoutDialog(context),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: colorScheme.primary,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: const Text(
+                                    'Add Account',
+                                    style: TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
                         Text(
-                          'Payouts',
+                          'Payout Accounts',
                           style: TextStyle(
-                            fontSize: 24,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onSurface,
                           ),
                         ),
+                        const SizedBox(height: 16),
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            colorScheme.primary,
-                            colorScheme.primary.withValues(alpha: 0.75),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colorScheme.primary.withValues(alpha: 0.3),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
+                  ),
+                ),
+                if (payouts.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(40),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Available Balance',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white.withValues(alpha: 0.8),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'TSh 4,300,000',
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
+                          Icon(Icons.account_balance_wallet_outlined,
+                              size: 64,
+                              color: colorScheme.onSurface.withValues(alpha: 0.2)),
                           const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: SizedBox(
-                                  height: 48,
-                                  child: ElevatedButton(
-                                    onPressed: () {},
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: colorScheme.primary,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      elevation: 0,
-                                    ),
-                                    child: const Text(
-                                      'Withdraw',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: SizedBox(
-                                  height: 48,
-                                  child: OutlinedButton(
-                                    onPressed: () {},
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: Colors.white,
-                                      side: BorderSide(
-                                          color: Colors.white.withValues(alpha: 0.5)),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'History',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                          Text(
+                            'No payout accounts yet',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onSurface.withValues(alpha: 0.4),
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Payout History',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ..._payouts.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final payout = entry.value;
-                      final isCompleted = payout['status'] == 'Completed';
-
-                      return AnimatedBuilder(
-                        animation: _animController,
-                        builder: (context, child) {
-                          final delay = index * 0.1;
-                          final value = Curves.easeOutCubic.transform(
-                            (_animController.value - delay).clamp(0.0, 1.0),
-                          );
-                          return Transform.translate(
-                            offset: Offset(0, 20 * (1 - value)),
-                            child: Opacity(
-                              opacity: value,
-                              child: child,
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final payout = payouts[index];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: colorScheme.onSurface.withValues(alpha: 0.06),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.03),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primary.withValues(alpha: 0.08),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    payout.accountType == 'bank'
+                                        ? Icons.account_balance_outlined
+                                        : Icons.phone_android_outlined,
+                                    color: colorScheme.primary,
+                                    size: 22,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        payout.provider,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          color: colorScheme.onSurface,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${payout.accountName} • ${payout.accountNumber}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                        ),
+                                      ),
+                                      if (payout.isDefault)
+                                        Container(
+                                          margin: const EdgeInsets.only(top: 6),
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF22C55E).withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: const Text(
+                                            'Default',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF22C55E),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () => _showDeleteConfirm(
+                                      context, payout.id, payout.provider),
+                                  child: Icon(Icons.delete_outline_rounded,
+                                      size: 20,
+                                      color: colorScheme.error.withValues(alpha: 0.6)),
+                                ),
+                              ],
                             ),
                           );
                         },
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: colorScheme.surface,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: colorScheme.onSurface
-                                  .withValues(alpha: 0.06),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.03),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: isCompleted
-                                      ? const Color(0xFF22C55E)
-                                          .withValues(alpha: 0.1)
-                                      : const Color(0xFFF59E0B)
-                                          .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(
-                                  isCompleted
-                                      ? Icons.check_circle_rounded
-                                      : Icons.access_time_filled_rounded,
-                                  color: isCompleted
-                                      ? const Color(0xFF22C55E)
-                                      : const Color(0xFFF59E0B),
-                                  size: 22,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      payout['amount'] as String,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                        color: colorScheme.onSurface,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      payout['date'] as String,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: colorScheme.onSurface
-                                            .withValues(alpha: 0.5),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: isCompleted
-                                      ? const Color(0xFF22C55E)
-                                          .withValues(alpha: 0.1)
-                                      : const Color(0xFFF59E0B)
-                                          .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  payout['status'] as String,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: isCompleted
-                                        ? const Color(0xFF22C55E)
-                                        : const Color(0xFFF59E0B),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-            ),
-          ],
+                        childCount: payouts.length,
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
     );

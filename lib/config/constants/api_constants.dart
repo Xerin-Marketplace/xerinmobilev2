@@ -41,10 +41,28 @@ abstract class ApiConstants {
   // Seller endpoints
   static const String sellerRegister = '/sellers/register';
   static const String sellerProfile = '/sellers/me';
+  static const String sellerBusinessProfile = '/sellers/profile';
   static const String sellerKycDocuments = '/sellers/kyc-documents';
+  static const String sellerKycBulkUpload = '/sellers/kyc-documents/bulk';
+  static const String sellerKycStatus = '/sellers/kyc-status';
   static const String sellerPayoutAccounts = '/sellers/payout-accounts';
   static String sellerPayoutAccountById(String id) =>
       '/sellers/payout-accounts/$id';
+
+  // Store endpoints
+  static const String myStore = '/stores/me';
+  static const String myStoreLogo = '/stores/me/logo';
+  static const String myStoreBanner = '/stores/me/banner';
+  static const String publicStores = '/stores';
+  static String publicStoreBySlug(String slug) => '/stores/$slug';
+
+  // Inventory endpoints
+  static const String inventory = '/inventory';
+  static const String myInventory = '/inventory/my-inventory';
+  static const String lowStockInventory = '/inventory/low-stock';
+  static String inventoryByProduct(String productId) =>
+      '/inventory/product/$productId';
+  static String inventoryById(String id) => '/inventory/$id';
 
   // Product endpoints
   static const String products = '/products';
@@ -66,7 +84,9 @@ abstract class ApiConstants {
 
   // Order endpoints
   static const String orders = '/orders';
+  static const String myOrders = '/orders/my-orders';
   static String orderById(String id) => '/orders/$id';
+  static String orderStatus(String id) => '/orders/$id/status';
 
   // Payment method endpoints
   static const String paymentMethods = '/payment-methods';
