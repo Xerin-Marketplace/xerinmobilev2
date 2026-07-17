@@ -26,11 +26,10 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String?
-            keyPassword = keystoreProperties["keyPassword"] as String?
-            storeFile = keystoreProperties["storeFile"]?.let { file(it as String) }
-            storePassword = keystoreProperties["storePassword"] as String?
-            storeType = "JKS"
+            keyAlias = "xerinkey"
+            keyPassword = "xerinpass"
+            storePassword = "xerinpass"
+            storeFile = file("key.jks")
         }
     }
 
