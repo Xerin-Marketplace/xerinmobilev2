@@ -11,12 +11,17 @@ import '../../core/storage/token_storage.dart';
 import '../../core/theme/app_theme_cubit.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
+import '../../features/customer/data/datasources/cart_remote_datasource.dart';
 import '../../features/customer/data/datasources/customer_remote_datasource.dart';
+import '../../features/customer/data/datasources/payment_remote_datasource.dart';
 import '../../features/customer/data/datasources/product_remote_datasource.dart';
+import '../../features/customer/data/datasources/recommendation_remote_datasource.dart';
 import '../../features/customer/data/datasources/wishlist_remote_datasource.dart';
+import '../../features/customer/presentation/cubit/cart_cubit.dart';
 import '../../features/customer/presentation/cubit/customer_cubit.dart';
 import '../../features/customer/presentation/cubit/home_cubit.dart';
 import '../../features/customer/presentation/cubit/products_cubit.dart';
+import '../../features/customer/presentation/cubit/recommendation_cubit.dart';
 import '../../features/customer/presentation/cubit/wishlist_cubit.dart';
 import '../../features/seller/data/datasources/seller_remote_datasource.dart';
 import '../../features/seller/presentation/cubit/seller_cubit.dart';
@@ -101,6 +106,10 @@ Future<void> initServiceLocator({bool reset = false}) async {
       () => ProductRemoteDataSource(sl()));
   sl.registerLazySingleton<CustomerRemoteDataSource>(
       () => CustomerRemoteDataSource(sl()));
+  sl.registerLazySingleton<CartRemoteDataSource>(
+      () => CartRemoteDataSource(sl()));
+  sl.registerLazySingleton<PaymentRemoteDataSource>(
+      () => PaymentRemoteDataSource(sl()));
   sl.registerFactory<HomeCubit>(
     () => HomeCubit(
       productDataSource: sl(),
@@ -125,6 +134,22 @@ Future<void> initServiceLocator({bool reset = false}) async {
   );
   sl.registerFactory<CustomerCubit>(
     () => CustomerCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+  sl.registerLazySingleton<CartCubit>(
+    () => CartCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+
+  // Recommendations
+  sl.registerLazySingleton<RecommendationRemoteDataSource>(
+      () => RecommendationRemoteDataSource(sl(), sl()));
+  sl.registerLazySingleton<RecommendationCubit>(
+    () => RecommendationCubit(
       dataSource: sl(),
       logger: sl(),
     ),

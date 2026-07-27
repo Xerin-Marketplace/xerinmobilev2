@@ -6,8 +6,11 @@ import '../../../../../config/constants/app_constants.dart';
 import '../../../data/models/category_model.dart';
 import '../../../data/models/order_model.dart';
 import '../../../data/models/product_model.dart';
+import '../../../data/models/recommendation_model.dart';
 import '../../cubit/home_cubit.dart';
 import '../../cubit/home_state.dart';
+import '../../cubit/recommendation_cubit.dart';
+import '../../cubit/recommendation_state.dart';
 
 class CustomerHomePage extends StatefulWidget {
   const CustomerHomePage({super.key});
@@ -48,6 +51,9 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   void initState() {
     super.initState();
     _searchNode.addListener(() => setState(() {}));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<RecommendationCubit>().loadAll();
+    });
   }
 
   @override
@@ -112,6 +118,8 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                   ),
                   const SizedBox(height: 14),
                   _buildFeaturedProducts(colorScheme, featured, isLoadingData),
+                  const SizedBox(height: 24),
+                  _buildRecommendationSections(colorScheme),
                   const SizedBox(height: 24),
                   _buildSectionTitle('Recent Orders', '', colorScheme, icon: Icons.shopping_bag_rounded),
                   const SizedBox(height: 14),
@@ -1464,6 +1472,473 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         _categoryIcon(category ?? ''),
         color: colorScheme.primary.withValues(alpha: 0.3),
         size: 40,
+      ),
+    );
+  }
+
+  Widget _buildRecommendationSections(ColorScheme colorScheme) {
+    return BlocBuilder<RecommendationCubit, RecommendationState>(
+      builder: (context, state) {
+        if (state is! RecommendationLoaded) {
+          return const SizedBox();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (state.flashDeals.isNotEmpty) ...[
+              _buildSectionTitle(
+                'Flash Deals',
+                'See all',
+                colorScheme,
+                icon: Icons.flash_on_rounded,
+                onActionTap: () => context.push(AppConstants.flashDealsRoute),
+              ),
+              const SizedBox(height: 14),
+              _buildFlashDealsCarousel(colorScheme, state.flashDeals),
+              const SizedBox(height: 24),
+            ],
+            if (state.recommended.isNotEmpty) ...[
+              _buildSectionTitle(
+                'For You',
+                'See all',
+                colorScheme,
+                icon: Icons.auto_awesome_rounded,
+                onActionTap: () => context.push(AppConstants.forYouRoute),
+              ),
+              const SizedBox(height: 14),
+              _buildRecommendedCarousel(colorScheme, state.recommended),
+              const SizedBox(height: 24),
+            ],
+            if (state.trending.isNotEmpty) ...[
+              _buildSectionTitle(
+                'Trending Now',
+                'See all',
+                colorScheme,
+                icon: Icons.local_fire_department_rounded,
+                onActionTap: () => context.push(AppConstants.trendingRoute),
+              ),
+              const SizedBox(height: 14),
+              _buildProductCarousel(colorScheme, state.trending),
+              const SizedBox(height: 24),
+            ],
+            if (state.newArrivals.isNotEmpty) ...[
+              _buildSectionTitle(
+                'New Arrivals',
+                'See all',
+                colorScheme,
+                icon: Icons.new_releases_rounded,
+                onActionTap: () => context.push(AppConstants.newArrivalsRoute),
+              ),
+              const SizedBox(height: 14),
+              _buildProductCarousel(colorScheme, state.newArrivals),
+              const SizedBox(height: 24),
+            ],
+            if (state.stores.isNotEmpty) ...[
+              _buildSectionTitle(
+                'Top Stores',
+                'See all',
+                colorScheme,
+                icon: Icons.storefront_rounded,
+                onActionTap: () => context.push(AppConstants.storesRoute),
+              ),
+              const SizedBox(height: 14),
+              _buildStoresCarousel(colorScheme, state.stores),
+              const SizedBox(height: 24),
+            ],
+            if (state.coupons.isNotEmpty) ...[
+              _buildSectionTitle(
+                'Available Coupons',
+                'See all',
+                colorScheme,
+                icon: Icons.local_offer_rounded,
+                onActionTap: () => context.push(AppConstants.couponsRoute),
+              ),
+              const SizedBox(height: 14),
+              _buildCouponsCarousel(colorScheme, state.coupons),
+              const SizedBox(height: 24),
+            ],
+            if (state.recentlyViewed.isNotEmpty) ...[
+              _buildSectionTitle(
+                'Recently Viewed',
+                'See all',
+                colorScheme,
+                icon: Icons.history_rounded,
+                onActionTap: () => context.push(AppConstants.recentlyViewedRoute),
+              ),
+              const SizedBox(height: 14),
+              _buildProductCarousel(colorScheme, state.recentlyViewed),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildFlashDealsCarousel(
+      ColorScheme cs, List<FlashDealModel> deals) {
+    return SizedBox(
+      height: 180,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 0),
+        itemCount: deals.length,
+        itemBuilder: (context, index) {
+          final deal = deals[index];
+          final product = deal.product;
+          return GestureDetector(
+            onTap: () => context.push(AppConstants.productDetailRoute,
+                extra: {'product': product, 'category': product.categoryName ?? 'All'}),
+            child: Container(
+              width: 140,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFFF6B35).withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                        child: product.thumbnailUrl != null
+                            ? Image.network(product.thumbnailUrl!,
+                                width: 140, height: 100, fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                    width: 140, height: 100,
+                                    color: cs.primary.withValues(alpha: 0.08),
+                                    child: Icon(Icons.inventory_2_outlined,
+                                        color: cs.primary, size: 28)))
+                            : Container(
+                                width: 140, height: 100,
+                                color: cs.primary.withValues(alpha: 0.08),
+                                child: Icon(Icons.inventory_2_outlined,
+                                    color: cs.primary, size: 28)),
+                      ),
+                      Positioned(
+                        top: 0, right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE53935),
+                            borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(12),
+                              bottomLeft: Radius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            '-${deal.discountPercentage.toStringAsFixed(0)}%',
+                            style: const TextStyle(
+                                fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(product.name,
+                            style: TextStyle(
+                                fontSize: 11, fontWeight: FontWeight.w600, color: cs.onSurface),
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                        const SizedBox(height: 4),
+                        Text(deal.formattedDealPrice,
+                            style: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFFE53935))),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRecommendedCarousel(
+      ColorScheme cs, List<RecommendedProductModel> items) {
+    return SizedBox(
+      height: 200,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index];
+          final product = item.product;
+          return GestureDetector(
+            onTap: () => context.push(AppConstants.productDetailRoute,
+                extra: {'product': product, 'category': product.categoryName ?? 'All'}),
+            child: Container(
+              width: 140,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                    child: product.thumbnailUrl != null
+                        ? Image.network(product.thumbnailUrl!,
+                            width: 140, height: 110, fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                                width: 140, height: 110,
+                                color: cs.primary.withValues(alpha: 0.08),
+                                child: Icon(Icons.inventory_2_outlined,
+                                    color: cs.primary, size: 32)))
+                        : Container(
+                            width: 140, height: 110,
+                            color: cs.primary.withValues(alpha: 0.08),
+                            child: Icon(Icons.inventory_2_outlined,
+                                color: cs.primary, size: 32)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(product.name,
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface),
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.auto_awesome_rounded, size: 10, color: cs.primary),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(item.reason,
+                                  style: TextStyle(fontSize: 10, color: cs.primary),
+                                  maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(product.formattedPrice,
+                            style: TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.bold, color: cs.primary)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildProductCarousel(ColorScheme cs, List<ProductModel> products) {
+    return SizedBox(
+      height: 180,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: products.length,
+        itemBuilder: (context, index) {
+          final product = products[index];
+          return GestureDetector(
+            onTap: () => context.push(AppConstants.productDetailRoute,
+                extra: {'product': product, 'category': product.categoryName ?? 'All'}),
+            child: Container(
+              width: 130,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                    child: product.thumbnailUrl != null
+                        ? Image.network(product.thumbnailUrl!,
+                            width: 130, height: 100, fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                                width: 130, height: 100,
+                                color: cs.primary.withValues(alpha: 0.08),
+                                child: Icon(Icons.inventory_2_outlined,
+                                    color: cs.primary, size: 28)))
+                        : Container(
+                            width: 130, height: 100,
+                            color: cs.primary.withValues(alpha: 0.08),
+                            child: Icon(Icons.inventory_2_outlined,
+                                color: cs.primary, size: 28)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(product.name,
+                            style: TextStyle(
+                                fontSize: 11, fontWeight: FontWeight.w600, color: cs.onSurface),
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                        const SizedBox(height: 4),
+                        if (product.rating > 0)
+                          Row(
+                            children: [
+                              Icon(Icons.star_rounded, size: 12, color: Colors.amber[600]),
+                              const SizedBox(width: 2),
+                              Text(product.rating.toStringAsFixed(1),
+                                  style: TextStyle(
+                                      fontSize: 10, color: cs.onSurface.withValues(alpha: 0.4))),
+                            ],
+                          ),
+                        const SizedBox(height: 4),
+                        Text(product.formattedPrice,
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.bold, color: cs.primary)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildStoresCarousel(ColorScheme cs, List<StoreModel> stores) {
+    return SizedBox(
+      height: 120,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: stores.length,
+        itemBuilder: (context, index) {
+          final store = stores[index];
+          return GestureDetector(
+            onTap: () => context.push(AppConstants.storesRoute),
+            child: Container(
+              width: 200,
+              margin: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48, height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+                    ),
+                    child: store.logoUrl != null
+                        ? ClipOval(
+                            child: Image.network(store.logoUrl!, fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    Icon(Icons.store_rounded, color: cs.primary)),
+                          )
+                        : Icon(Icons.store_rounded, color: cs.primary),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(store.name,
+                                  style: TextStyle(
+                                      fontSize: 13, fontWeight: FontWeight.bold, color: cs.onSurface),
+                                  maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ),
+                            if (store.isVerified)
+                              Icon(Icons.verified_rounded, size: 14, color: cs.primary),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            if (store.rating > 0) ...[
+                              Icon(Icons.star_rounded, size: 12, color: Colors.amber[600]),
+                              const SizedBox(width: 2),
+                              Text(store.rating.toStringAsFixed(1),
+                                  style: TextStyle(
+                                      fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4))),
+                            ],
+                            const SizedBox(width: 8),
+                            Text('${store.totalProducts} items',
+                                style: TextStyle(
+                                    fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4))),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildCouponsCarousel(ColorScheme cs, List<CouponModel> coupons) {
+    return SizedBox(
+      height: 80,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: coupons.length,
+        itemBuilder: (context, index) {
+          final coupon = coupons[index];
+          return Container(
+            width: 200,
+            margin: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [cs.primary.withValues(alpha: 0.08), cs.primary.withValues(alpha: 0.03)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: cs.primary.withValues(alpha: 0.15)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.local_offer_rounded, color: cs.primary, size: 24),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(coupon.code,
+                          style: TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold, color: cs.primary)),
+                      const SizedBox(height: 2),
+                      Text(coupon.discountDisplay,
+                          style: TextStyle(
+                              fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5))),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

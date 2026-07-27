@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../../core/storage/token_storage.dart';
-import '../../../../shared/widgets/animated_logo.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -61,9 +60,11 @@ class _SplashPageState extends State<SplashPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(flex: 3),
-              const AnimatedLogo(
+              Image.asset(
+                'assets/logo/logo.png',
                 width: 280,
                 height: 200,
+                fit: BoxFit.contain,
               ),
               const Spacer(flex: 2),
               SizedBox(

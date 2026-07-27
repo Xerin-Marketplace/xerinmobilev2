@@ -8,6 +8,7 @@ class ApiClient {
   final Dio _dio;
   final TokenStorage _tokenStorage;
   final Logger _logger;
+  bool _isRefreshing = false;
 
   ApiClient(this._dio, this._tokenStorage, this._logger) {
     _dio.interceptors.add(
@@ -32,16 +33,72 @@ class ApiClient {
           );
           handler.next(response);
         },
-        onError: (err, handler) {
+        onError: (err, handler) async {
           _logger.e(
             '❌ ERROR [${err.response?.statusCode}] ${err.requestOptions.uri}\n'
             'Message: ${err.message}\n'
             'Response: ${err.response?.data}',
           );
+
+          final statusCode = err.response?.statusCode;
+          final path = err.requestOptions.path;
+
+          final isRefreshCall = path.contains(ApiConstants.refreshToken);
+          final isAuthCall = path.contains('/auth/');
+
+          if (statusCode == 401 && !isRefreshCall && !isAuthCall && !_isRefreshing) {
+            _isRefreshing = true;
+            try {
+              final refreshed = await _refreshToken();
+              _isRefreshing = false;
+              if (refreshed) {
+                final newToken = _tokenStorage.accessToken;
+                err.requestOptions.headers[ApiConstants.authorizationHeader] =
+                    '${ApiConstants.bearerPrefix} $newToken';
+                final response = await _dio.fetch(err.requestOptions);
+                handler.resolve(response);
+                return;
+              }
+            } catch (e) {
+              _isRefreshing = false;
+              _logger.e('❌ Token refresh failed: $e');
+            }
+          }
           handler.next(err);
         },
       ),
     );
+  }
+
+  Future<bool> _refreshToken() async {
+    final refreshToken = _tokenStorage.refreshToken;
+    if (refreshToken == null) return false;
+
+    try {
+      final response = await Dio(
+        BaseOptions(
+          baseUrl: ApiConstants.baseUrl,
+          headers: {'Content-Type': ApiConstants.contentType},
+          connectTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(seconds: 15),
+        ),
+      ).post(
+        ApiConstants.refreshToken,
+        data: {'refresh_token': refreshToken},
+      );
+
+      final data = response.data as Map<String, dynamic>;
+      await _tokenStorage.saveTokens(
+        accessToken: data['access_token'] as String,
+        refreshToken: data['refresh_token'] as String,
+      );
+      _logger.i('✅ Token refreshed successfully');
+      return true;
+    } catch (e) {
+      _logger.e('❌ Token refresh error: $e');
+      await _tokenStorage.clearTokens();
+      return false;
+    }
   }
 
   Future<Response<T>> get<T>(

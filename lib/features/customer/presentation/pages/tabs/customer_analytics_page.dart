@@ -66,11 +66,11 @@ class _CustomerAnalyticsPageState extends State<CustomerAnalyticsPage> {
         final existing = productMap[item.productName];
         if (existing != null) {
           existing.qty += (item.quantity as int);
-          existing.revenue += item.price * item.quantity;
+          existing.revenue += item.unitPrice * item.quantity;
         } else {
           productMap[item.productName] = TopProductAccumulator(
             qty: item.quantity,
-            revenue: item.price * item.quantity,
+            revenue: item.unitPrice * item.quantity,
           );
         }
       }

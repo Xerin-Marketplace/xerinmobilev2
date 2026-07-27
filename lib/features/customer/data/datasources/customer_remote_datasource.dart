@@ -97,23 +97,25 @@ class CustomerRemoteDataSource {
   }
 
   Future<List<OrderModel>> getOrders({
-    int skip = 0,
-    int limit = 20,
+    int page = 1,
+    int pageSize = 20,
     String? status,
   }) async {
     try {
       final response = await _client.get(
-        ApiConstants.orders,
+        ApiConstants.myOrders,
         queryParameters: {
-          'skip': skip,
-          'limit': limit,
-          'status': ?status,
+          'page': page,
+          'page_size': pageSize,
+          if (status != null) 'status': status,
         },
       );
       final data = response.data;
       List<dynamic> list;
       if (data is List) {
         list = data;
+      } else if (data is Map && data['results'] != null) {
+        list = data['results'] as List;
       } else if (data is Map && data['items'] != null) {
         list = data['items'] as List;
       } else if (data is Map && data['data'] != null) {
@@ -195,17 +197,17 @@ class CustomerRemoteDataSource {
   }
 
   Future<OrderModel> createOrder({
-    required String addressId,
-    required String paymentMethodId,
+    String? shippingAddressId,
+    String? couponCode,
     String? notes,
   }) async {
     try {
       final response = await _client.post(
         ApiConstants.orders,
         data: {
-          'address_id': addressId,
-          'payment_method_id': paymentMethodId,
-          'notes': ?notes,
+          if (shippingAddressId != null) 'shipping_address_id': shippingAddressId,
+          if (couponCode != null) 'coupon_code': couponCode,
+          if (notes != null) 'notes': notes,
         },
       );
       return OrderModel.fromJson(response.data as Map<String, dynamic>);

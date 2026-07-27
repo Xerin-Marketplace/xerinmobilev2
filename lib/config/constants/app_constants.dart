@@ -33,10 +33,23 @@ abstract class AppConstants {
   static const String addressesRoute = '/addresses';
   static const String paymentMethodsRoute = '/payment-methods';
   static const String orderHistoryRoute = '/order-history';
+  static const String orderDetailRoute = '/order-detail';
   static const String notificationsRoute = '/notifications';
   static const String settingsRoute = '/settings';
   static const String helpSupportRoute = '/help-support';
   static const String checkoutRoute = '/checkout';
+
+  // Recommendation & discovery routes
+  static const String forYouRoute = '/for-you';
+  static const String trendingRoute = '/trending';
+  static const String flashDealsRoute = '/flash-deals';
+  static const String recentlyViewedRoute = '/recently-viewed';
+  static const String newArrivalsRoute = '/new-arrivals';
+  static const String topRatedRoute = '/top-rated';
+  static const String bestSellersRoute = '/best-sellers';
+  static const String storesRoute = '/stores';
+  static const String orderTrackingRoute = '/order-tracking';
+  static const String couponsRoute = '/coupons';
 
   // Timeouts
   static const int connectionTimeoutSeconds = 30;

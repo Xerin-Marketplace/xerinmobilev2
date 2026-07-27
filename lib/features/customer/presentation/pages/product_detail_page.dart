@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../data/models/product_model.dart';
-import '../controllers/cart_controller.dart';
+import '../cubit/cart_cubit.dart';
+import '../cubit/recommendation_cubit.dart';
+import '../cubit/recommendation_state.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final ProductModel product;
@@ -20,8 +23,15 @@ class ProductDetailPage extends StatefulWidget {
 }
 
 class _ProductDetailPageState extends State<ProductDetailPage> {
-  final _cartController = CartController();
   bool _added = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<RecommendationCubit>().loadRelatedProducts(widget.product.id);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -271,11 +281,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             height: 54,
                             child: ElevatedButton.icon(
                               onPressed: () {
-                                _cartController.addToCart(
-                                  name: widget.product.name,
-                                  price: widget.product.formattedPrice,
-                                  image: widget.product.thumbnailUrl ?? '',
-                                  category: widget.category,
+                                context.read<CartCubit>().addToCart(
+                                  productId: widget.product.id,
+                                  quantity: 1,
                                 );
                                 setState(() => _added = true);
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -323,11 +331,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             height: 54,
                             child: ElevatedButton(
                               onPressed: () {
-                                _cartController.addToCart(
-                                  name: widget.product.name,
-                                  price: widget.product.formattedPrice,
-                                  image: widget.product.thumbnailUrl ?? '',
-                                  category: widget.category,
+                                context.read<CartCubit>().addToCart(
+                                  productId: widget.product.id,
+                                  quantity: 1,
                                 );
                                 context.go(AppConstants.homeRoute);
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -363,6 +369,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 28),
+                    _buildRelatedProducts(colorScheme),
                   ],
                 ),
               ),
@@ -370,6 +378,87 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildRelatedProducts(ColorScheme colorScheme) {
+    return BlocBuilder<RecommendationCubit, RecommendationState>(
+      builder: (context, state) {
+        if (state is RelatedProductsLoaded && state.products.isNotEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Related Products',
+                  style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 180,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: state.products.length,
+                  itemBuilder: (context, index) {
+                    final product = state.products[index];
+                    return GestureDetector(
+                      onTap: () => context.pushReplacement(AppConstants.productDetailRoute,
+                          extra: {'product': product, 'category': product.categoryName ?? 'All'}),
+                      child: Container(
+                        width: 130,
+                        margin: const EdgeInsets.only(right: 12),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                              child: product.thumbnailUrl != null
+                                  ? Image.network(product.thumbnailUrl!,
+                                      width: 130, height: 100, fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                          width: 130, height: 100,
+                                          color: colorScheme.primary.withValues(alpha: 0.08),
+                                          child: Icon(Icons.inventory_2_outlined,
+                                              color: colorScheme.primary, size: 28)))
+                                  : Container(
+                                      width: 130, height: 100,
+                                      color: colorScheme.primary.withValues(alpha: 0.08),
+                                      child: Icon(Icons.inventory_2_outlined,
+                                          color: colorScheme.primary, size: 28)),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(product.name,
+                                      style: TextStyle(
+                                          fontSize: 11, fontWeight: FontWeight.w600,
+                                          color: colorScheme.onSurface),
+                                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                                  const SizedBox(height: 4),
+                                  Text(product.formattedPrice,
+                                      style: TextStyle(
+                                          fontSize: 12, fontWeight: FontWeight.bold,
+                                          color: colorScheme.primary)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        }
+        return const SizedBox();
+      },
     );
   }
 

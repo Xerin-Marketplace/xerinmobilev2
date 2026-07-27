@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../common/presentation/widgets/modern_bottom_nav.dart';
-import '../controllers/cart_controller.dart';
+import '../cubit/cart_cubit.dart';
+import '../cubit/cart_state.dart';
 import 'tabs/customer_analytics_page.dart';
 import 'tabs/customer_cart_page.dart';
 import 'tabs/customer_explore_page.dart';
@@ -18,7 +20,6 @@ class CustomerDashboard extends StatefulWidget {
 
 class _CustomerDashboardState extends State<CustomerDashboard> {
   int _selectedIndex = 0;
-  final _cartController = CartController();
 
   final List<Widget> _pages = const [
     CustomerHomePage(),
@@ -33,9 +34,10 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return ListenableBuilder(
-      listenable: _cartController,
-      builder: (context, child) {
+    return BlocBuilder<CartCubit, CartState>(
+      builder: (context, cartState) {
+        final cartCount = cartState is CartLoaded ? cartState.itemCount : 0;
+
         final navItems = [
           const NavItem(
               icon: Icons.home_outlined,
@@ -49,7 +51,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             icon: Icons.shopping_cart_outlined,
             activeIcon: Icons.shopping_cart_rounded,
             label: 'Cart',
-            badgeCount: _cartController.count,
+            badgeCount: cartCount,
           ),
           const NavItem(
               icon: Icons.favorite_outline_rounded,

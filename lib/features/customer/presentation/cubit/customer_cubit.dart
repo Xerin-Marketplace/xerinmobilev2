@@ -23,7 +23,7 @@ class CustomerCubit extends Cubit<CustomerState> {
   Future<void> loadAll() async {
     emit(const CustomerLoading());
     try {
-      final ordersFuture = _dataSource.getOrders(limit: 50).then<dynamic>((v) => v).catchError((e) => null);
+      final ordersFuture = _dataSource.getOrders(pageSize: 50).then<dynamic>((v) => v).catchError((e) => null);
       final addressesFuture = _dataSource.getAddresses().then<dynamic>((v) => v).catchError((e) => null);
       final paymentsFuture = _dataSource.getPaymentMethods().then<dynamic>((v) => v).catchError((e) => null);
       final notifFuture = _dataSource.getNotifications().then<dynamic>((v) => v).catchError((e) => null);
@@ -56,7 +56,7 @@ class CustomerCubit extends Cubit<CustomerState> {
 
   Future<void> refreshOrders() async {
     try {
-      final orders = await _dataSource.getOrders(limit: 50);
+      final orders = await _dataSource.getOrders(pageSize: 50);
       final current = state;
       if (current is CustomerLoaded) {
         emit(current.copyWith(orders: orders));
@@ -289,15 +289,15 @@ class CustomerCubit extends Cubit<CustomerState> {
   }
 
   Future<bool> placeOrder({
-    required String addressId,
-    required String paymentMethodId,
+    String? shippingAddressId,
+    String? couponCode,
     String? notes,
   }) async {
     emit(const CustomerActionInProgress());
     try {
       final order = await _dataSource.createOrder(
-        addressId: addressId,
-        paymentMethodId: paymentMethodId,
+        shippingAddressId: shippingAddressId,
+        couponCode: couponCode,
         notes: notes,
       );
       _logger.i('✅ Order placed: ${order.id}');

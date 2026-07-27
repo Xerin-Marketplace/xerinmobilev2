@@ -43,7 +43,7 @@ class _OnboardingPageState extends State<OnboardingPage>
       gradientColors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
     ),
     _OnboardingItem(
-      image: 'assets/onboarding/securepayemtbns.jpg',
+      image: 'assets/onboarding/deliveryobaording.jpg',
       icon: Icons.lock_rounded,
       title: 'Secure Payments',
       description:
@@ -223,39 +223,6 @@ class _OnboardingPageState extends State<OnboardingPage>
                     ? Colors.black.withValues(alpha: 0.45)
                     : Colors.black.withValues(alpha: 0.15),
               ],
-            ),
-          ),
-        ),
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 80,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: SlideTransition(
-                position: _slideAnim,
-                child: Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: item.gradientColors,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: item.gradientColors.first.withValues(alpha: 0.4),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Icon(item.icon, color: Colors.white, size: 36),
-                ),
-              ),
             ),
           ),
         ),

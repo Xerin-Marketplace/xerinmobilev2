@@ -112,15 +112,49 @@ abstract class ApiConstants {
   static String categoryById(String id) => '/products/categories/$id';
   static String brandById(String id) => '/products/brands/$id';
 
+  // Cart endpoints
+  static const String cart = '/cart';
+  static const String cartItems = '/cart/items';
+  static String cartItemById(String id) => '/cart/items/$id';
+  static const String cartApplyCoupon = '/cart/apply-coupon';
+  static const String cartRemoveCoupon = '/cart/coupon';
+
   // Order endpoints
   static const String orders = '/orders';
   static const String myOrders = '/orders/my-orders';
   static String orderById(String id) => '/orders/$id';
   static String orderStatus(String id) => '/orders/$id/status';
 
+  // Payment endpoints
+  static const String paymentsInitiate = '/payments/initiate';
+  static const String paymentsCallback = '/payments/callback';
+  static String paymentById(String id) => '/payments/$id';
+  static String paymentCallbackByProvider(String provider) =>
+      '/payments/callback/$provider';
+
   // Payment method endpoints
   static const String paymentMethods = '/payment-methods';
   static String paymentMethodById(String id) => '/payment-methods/$id';
+
+  // Coupon endpoints
+  static const String coupons = '/coupons';
+  static String couponById(String id) => '/coupons/$id';
+  static String couponValidate(String code) => '/coupons/validate/$code';
+
+  // Recommendation endpoints
+  static const String recommendedProducts = '/products/recommended';
+  static const String trendingProducts = '/products/trending';
+  static const String flashDeals = '/products/flash-deals';
+  static const String recentlyViewed = '/products/recently-viewed';
+  static const String relatedProducts = '/products/related';
+  static String relatedByProduct(String productId) =>
+      '/products/$productId/related';
+  static const String newArrivals = '/products/new-arrivals';
+  static const String topRated = '/products/top-rated';
+  static const String bestSellers = '/products/best-sellers';
+
+  // Store endpoints (public browsing)
+  static String storeProducts(String slug) => '/stores/$slug/products';
 
   // Notification endpoints
   static const String notifications = '/notifications';

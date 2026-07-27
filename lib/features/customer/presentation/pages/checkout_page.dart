@@ -3,10 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../shared/widgets/app_icon.dart';
-import '../controllers/cart_controller.dart';
+import '../cubit/cart_cubit.dart';
+import '../cubit/cart_state.dart';
 import '../cubit/customer_cubit.dart';
 import '../cubit/customer_state.dart';
 import '../../data/models/address_model.dart';
+import '../../data/models/cart_model.dart';
 import '../../data/models/payment_method_model.dart';
 
 class CheckoutPage extends StatefulWidget {
@@ -17,7 +19,6 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
-  final _cartController = CartController();
   final _notesController = TextEditingController();
   String? _selectedAddressId;
   String? _selectedPaymentMethodId;
@@ -80,8 +81,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     setState(() => _isPlacing = true);
 
     final success = await context.read<CustomerCubit>().placeOrder(
-      addressId: _selectedAddressId!,
-      paymentMethodId: _selectedPaymentMethodId!,
+      shippingAddressId: _selectedAddressId,
       notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
     );
 
@@ -89,7 +89,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     setState(() => _isPlacing = false);
 
     if (success) {
-      _cartController.clear();
+      context.read<CartCubit>().clearCart();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Order placed successfully!'),
@@ -109,8 +109,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cartItems = _cartController.items;
-    final cartTotal = _cartController.total;
+    final cartState = context.watch<CartCubit>().state;
+    final cartItems = cartState is CartLoaded ? cartState.cart.items : <CartItemModel>[];
+    final cartTotal = cartState is CartLoaded ? cartState.cart.total : 0.0;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -279,7 +280,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _buildCartItemCard(CartItem item, ColorScheme cs, bool isDark) {
+  Widget _buildCartItemCard(CartItemModel item, ColorScheme cs, bool isDark) {
+    final imageUrl = item.product?.thumbnailUrl;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -297,11 +299,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
               color: cs.primary.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: item.image.isNotEmpty
+            child: imageUrl != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.network(item.image, fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Icon(Icons.inventory_2_outlined, color: cs.primary.withValues(alpha: 0.4), size: 22)),
+                    child: Image.network(imageUrl, fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Icon(Icons.inventory_2_outlined, color: cs.primary.withValues(alpha: 0.4), size: 22)),
                   )
                 : Icon(Icons.inventory_2_outlined, color: cs.primary.withValues(alpha: 0.4), size: 22),
           ),
@@ -310,14 +312,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
+                Text(item.product?.name ?? 'Product', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
                   maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 2),
                 Text('Qty: ${item.quantity}', style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4))),
               ],
             ),
           ),
-          Text(item.price, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurface)),
+          Text(item.formattedTotal, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurface)),
         ],
       ),
     );

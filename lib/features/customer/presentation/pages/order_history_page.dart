@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../config/constants/app_constants.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/customer_cubit.dart';
 import '../cubit/customer_state.dart';
@@ -214,7 +215,9 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
   Widget _buildOrderCard(OrderModel order, ColorScheme colorScheme, bool isDark) {
     final statusColor = _statusColor(order.status);
 
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push(AppConstants.orderDetailRoute, extra: {'order': order}),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -307,6 +310,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }
