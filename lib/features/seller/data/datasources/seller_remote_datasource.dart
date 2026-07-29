@@ -429,8 +429,15 @@ class SellerRemoteDataSource {
       final response = await _client.get(ApiConstants.adminBusinessCategories);
       final list = _extractList(response.data);
       return list.cast<Map<String, dynamic>>();
-    } on DioException catch (e) {
-      throw ServerException(_client.getErrorMessage(e));
+    } on DioException catch (_) {
+      // Fallback: try product categories (public endpoint)
+      try {
+        final response = await _client.get(ApiConstants.productCategories);
+        final list = _extractList(response.data);
+        return list.cast<Map<String, dynamic>>();
+      } on DioException catch (e) {
+        throw ServerException(_client.getErrorMessage(e));
+      }
     }
   }
 

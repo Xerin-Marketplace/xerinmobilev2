@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/storage/token_storage.dart';
+import '../../../seller/data/datasources/seller_remote_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import 'auth_state.dart';
 
@@ -10,6 +11,7 @@ class AuthCubit extends Cubit<AuthState> {
   final AuthRemoteDataSource _dataSource;
   final TokenStorage _tokenStorage;
   final Logger _logger;
+  final SellerRemoteDataSource? _sellerDataSource;
 
   String? _pendingPhone;
   String? _pendingFirstName;
@@ -21,9 +23,11 @@ class AuthCubit extends Cubit<AuthState> {
     required AuthRemoteDataSource dataSource,
     required TokenStorage tokenStorage,
     required Logger logger,
+    SellerRemoteDataSource? sellerDataSource,
   })  : _dataSource = dataSource,
         _tokenStorage = tokenStorage,
         _logger = logger,
+        _sellerDataSource = sellerDataSource,
         super(const AuthInitial());
 
   String? get pendingPhone => _pendingPhone;
@@ -129,10 +133,24 @@ class AuthCubit extends Cubit<AuthState> {
       );
       _logger.i(
           '✅ Login success — token_type: ${token.tokenType}, access: ${token.accessToken.substring(0, 20)}...');
-      emit(AuthLoginSuccess(token: token));
+
+      bool isSeller = false;
+      if (_sellerDataSource != null) {
+        try {
+          await _sellerDataSource.getMyProfile();
+          isSeller = true;
+        } catch (_) {}
+      }
+
+      emit(AuthLoginSuccess(token: token, isSeller: isSeller));
     } on ServerException catch (e) {
       _logger.e('❌ Login error: ${e.message}');
-      emit(AuthError(message: e.message));
+      final msg = e.message.toLowerCase();
+      if (msg.contains('not verified') || msg.contains('account not verified')) {
+        emit(AuthNeedsVerification(email: email));
+      } else {
+        emit(AuthError(message: e.message));
+      }
     } catch (e) {
       _logger.e('❌ Login unexpected error: $e');
       emit(AuthError(message: 'An unexpected error occurred'));

@@ -40,11 +40,12 @@ class AuthSellerRegisterSuccess extends AuthState {
 
 class AuthLoginSuccess extends AuthState {
   final TokenModel token;
+  final bool isSeller;
 
-  const AuthLoginSuccess({required this.token});
+  const AuthLoginSuccess({required this.token, this.isSeller = false});
 
   @override
-  List<Object?> get props => [token];
+  List<Object?> get props => [token, isSeller];
 }
 
 class AuthOtpSent extends AuthState {
@@ -80,6 +81,15 @@ class AuthError extends AuthState {
 
   @override
   List<Object?> get props => [message];
+}
+
+class AuthNeedsVerification extends AuthState {
+  final String email;
+
+  const AuthNeedsVerification({required this.email});
+
+  @override
+  List<Object?> get props => [email];
 }
 
 class AuthLoggedOut extends AuthState {

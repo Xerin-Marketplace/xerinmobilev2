@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/cart_cubit.dart';
 import '../cubit/cart_state.dart';
@@ -66,15 +67,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   Future<void> _placeOrder() async {
     if (_selectedAddressId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a delivery address'), backgroundColor: Color(0xFFE53935)),
-      );
+      NotificationService().warning('Please select a delivery address');
       return;
     }
     if (_selectedPaymentMethodId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a payment method'), backgroundColor: Color(0xFFE53935)),
-      );
+      NotificationService().warning('Please select a payment method');
       return;
     }
 
@@ -90,18 +87,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     if (success) {
       context.read<CartCubit>().clearCart();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Order placed successfully!'),
-          backgroundColor: Color(0xFF22C55E),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      NotificationService().success('Order placed successfully!');
       context.go('/');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to place order. Please try again.'), backgroundColor: Color(0xFFE53935)),
-      );
+      NotificationService().error('Failed to place order. Please try again.');
     }
   }
 

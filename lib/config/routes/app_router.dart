@@ -3,8 +3,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/legal_page.dart';
+import '../../features/auth/presentation/pages/lock_screen_page.dart';
+import '../../features/auth/presentation/pages/pin_setup_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/registration_success_page.dart';
+import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/auth/presentation/pages/sign_in_page.dart';
 import '../../features/auth/presentation/pages/verify_otp_page.dart';
 import '../../features/customer/presentation/pages/addresses_page.dart';
@@ -69,12 +72,31 @@ class AppRouter {
           final extra = state.extra as Map<String, dynamic>?;
           return VerifyOtpPage(
             phone: extra?['phone'] as String? ?? '',
+            fromLogin: extra?['fromLogin'] as bool? ?? false,
+            fromSeller: extra?['fromSeller'] as bool? ?? false,
           );
         },
       ),
       GoRoute(
         path: AppConstants.forgotPasswordRoute,
         builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: AppConstants.resetPasswordRoute,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ResetPasswordPage(
+            email: extra?['email'] as String? ?? '',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppConstants.lockRoute,
+        builder: (context, state) => const LockScreenPage(),
+      ),
+      GoRoute(
+        path: AppConstants.pinSetupRoute,
+        builder: (context, state) => const PinSetupPage(),
       ),
       GoRoute(
         path: AppConstants.homeRoute,

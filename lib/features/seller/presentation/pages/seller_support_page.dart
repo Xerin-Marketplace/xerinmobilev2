@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../shared/widgets/app_icon.dart';
 
 class SellerSupportPage extends StatefulWidget {
@@ -257,12 +258,7 @@ class _SellerSupportPageState extends State<SellerSupportPage>
                         onPressed: () {
                           if (_messageCtrl.text.isNotEmpty) {
                             _messageCtrl.clear();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Message sent to support'),
-                                backgroundColor: Color(0xFF22C55E),
-                              ),
-                            );
+                            NotificationService().success('Message sent to support');
                           }
                         },
                         style: ElevatedButton.styleFrom(

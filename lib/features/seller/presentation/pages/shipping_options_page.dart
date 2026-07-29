@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../shared/widgets/app_icon.dart';
 
 class ShippingOptionsPage extends StatefulWidget {
@@ -275,13 +276,7 @@ class _ShippingOptionsPageState extends State<ShippingOptionsPage>
                       height: 54,
                       child: ElevatedButton(
                         onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                  'Shipping set to $_selectedCourier'),
-                              backgroundColor: const Color(0xFF22C55E),
-                            ),
-                          );
+                          NotificationService().success('Shipping set to $_selectedCourier');
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: colorScheme.primary,

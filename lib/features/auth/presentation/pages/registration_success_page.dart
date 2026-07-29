@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../widgets/auth_text_field.dart' show AuthPrimaryButton;
 
 class RegistrationSuccessPage extends StatefulWidget {
@@ -269,20 +270,10 @@ class _RegistrationSuccessPageState extends State<RegistrationSuccessPage>
           const SizedBox(height: 16),
           TextButton(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    isSeller
-                        ? 'A welcome email has been sent to your inbox!'
-                        : 'Welcome to XerinMarket! Happy shopping!',
-                  ),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  backgroundColor: colorScheme.primary,
-                  duration: const Duration(seconds: 3),
-                ),
+              NotificationService().info(
+                isSeller
+                    ? 'A welcome email has been sent to your inbox!'
+                    : 'Welcome to XerinMarket! Happy shopping!',
               );
             },
             child: Text(

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
@@ -21,7 +22,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
   final _emailCtrl = TextEditingController();
   final _emailNode = FocusNode();
   final _formKey = GlobalKey<FormState>();
-  String? _sentEmail;
 
   late final AnimationController _animCtrl;
   late final Animation<Offset> _slideAnim;
@@ -60,15 +60,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
 
   void _onStateChange(BuildContext context, AuthState state) {
     if (state is AuthForgotPasswordSent) {
-      setState(() => _sentEmail = state.email);
-    } else if (state is AuthError) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(state.message),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
+      NotificationService().success('OTP sent to ${state.email}');
+      context.go(
+        AppConstants.resetPasswordRoute,
+        extra: {'email': state.email},
       );
+    } else if (state is AuthError) {
+      NotificationService().error(state.message);
     }
   }
 
@@ -121,7 +119,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            'Enter your email address and we will send you a reset link.',
+                            'Enter your email address and we will send you an OTP to reset your password.',
                             style: TextStyle(
                               fontSize: 15,
                               color: colorScheme.onSurface.withValues(alpha: 0.45),
@@ -129,96 +127,29 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
                             ),
                           ),
                           const SizedBox(height: 40),
-                          if (_sentEmail == null)
-                            AuthTextField(
-                              controller: _emailCtrl,
-                              focusNode: _emailNode,
-                              label: 'Email Address',
-                              hint: 'example@email.com',
-                              icon: Icons.email_outlined,
-                              keyboardType: TextInputType.emailAddress,
-                              validator: (v) {
-                                if (v == null || v.isEmpty) {
-                                  return 'Enter your email';
-                                }
-                                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
-                                  return 'Enter a valid email';
-                                }
-                                return null;
-                              },
-                            )
-                          else
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color:
-                                    colorScheme.primary.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Column(
-                                children: [
-                                  Icon(
-                                    Icons.mark_email_read_rounded,
-                                    color: colorScheme.primary,
-                                    size: 48,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Email Sent!',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: colorScheme.onSurface,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'We sent a reset link to $_sentEmail. Check your inbox.',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: colorScheme.onSurface
-                                          .withValues(alpha: 0.55),
-                                      height: 1.4,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                          AuthTextField(
+                            controller: _emailCtrl,
+                            focusNode: _emailNode,
+                            label: 'Email Address',
+                            hint: 'example@email.com',
+                            icon: Icons.email_outlined,
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (v) {
+                              if (v == null || v.isEmpty) {
+                                return 'Enter your email';
+                              }
+                              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
+                                return 'Enter a valid email';
+                              }
+                              return null;
+                            },
+                          ),
                           const SizedBox(height: 32),
-                          if (_sentEmail == null)
-                            AuthPrimaryButton(
-                              label: 'Send Reset Link',
-                              onPressed: isLoading ? null : _onSubmit,
-                              isLoading: isLoading,
-                            )
-                          else
-                            SizedBox(
-                              width: double.infinity,
-                              height: 52,
-                              child: OutlinedButton(
-                                onPressed: () =>
-                                    context.go(AppConstants.signInRoute),
-                                style: OutlinedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  side: BorderSide(
-                                    color: colorScheme.onSurface
-                                        .withValues(alpha: 0.12),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Back to Sign In',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: colorScheme.onSurface,
-                                  ),
-                                ),
-                              ),
-                            ),
+                          AuthPrimaryButton(
+                            label: 'Send Reset OTP',
+                            onPressed: isLoading ? null : _onSubmit,
+                            isLoading: isLoading,
+                          ),
                           const SizedBox(height: 32),
                         ],
                       );

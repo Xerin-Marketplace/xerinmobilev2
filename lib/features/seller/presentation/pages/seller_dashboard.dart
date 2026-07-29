@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../common/presentation/widgets/modern_bottom_nav.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../auth/presentation/cubit/auth_state.dart';
 import '../../../../config/constants/app_constants.dart';
 import '../cubit/seller_cubit.dart';
 import '../cubit/seller_state.dart';
@@ -214,16 +216,23 @@ class _SellerDashboardState extends State<SellerDashboard>
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
-      bottomNavigationBar: ModernBottomNav(
-        selectedIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        items: _navItems,
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is AuthLoggedOut) {
+          context.go(AppConstants.signInRoute);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: colorScheme.surface,
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: _pages,
+        ),
+        bottomNavigationBar: ModernBottomNav(
+          selectedIndex: _selectedIndex,
+          onTap: (index) => setState(() => _selectedIndex = index),
+          items: _navItems,
+        ),
       ),
     );
   }

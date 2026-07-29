@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/seller_cubit.dart';
 import '../cubit/seller_state.dart';
@@ -81,23 +82,13 @@ class _ShopDetailsPageState extends State<ShopDetailsPage> {
 
             if (state is SellerActionSuccess) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.message),
-                    backgroundColor: const Color(0xFF22C55E),
-                  ),
-                );
+                NotificationService().success(state.message);
               });
             }
 
             if (state is SellerActionError) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.message),
-                    backgroundColor: const Color(0xFFE53935),
-                  ),
-                );
+                NotificationService().error(state.message);
               });
             }
 

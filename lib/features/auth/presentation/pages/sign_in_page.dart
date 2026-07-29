@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
@@ -63,25 +64,87 @@ class _SignInPageState extends State<SignInPage>
   }
 
   void _onStateChange(BuildContext context, AuthState state) {
-    if (state is AuthLoginSuccess || state is AuthGuest) {
-      final message = state is AuthLoginSuccess ? 'Signed in successfully!' : 'Welcome, Guest!';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    if (state is AuthLoginSuccess) {
+      NotificationService().success('Signed in successfully!');
+      if (state.isSeller) {
+        context.go(AppConstants.sellerDashboardRoute);
+      } else {
+        context.go(AppConstants.homeRoute);
+      }
+    } else if (state is AuthGuest) {
+      NotificationService().success('Welcome, Guest!');
       context.go(AppConstants.homeRoute);
+    } else if (state is AuthNeedsVerification) {
+      _showVerifyDialog(context, state.email);
     } else if (state is AuthError) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(state.message),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      NotificationService().error(state.message);
     }
+  }
+
+  void _showVerifyDialog(BuildContext context, String email) {
+    final phoneCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Account Not Verified'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Your account ($email) is not verified. Enter your phone number to receive an OTP.',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone Number',
+                    hintText: '+255XXXXXXXXX',
+                    prefixIcon: Icon(Icons.phone_outlined),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Enter your phone number';
+                    }
+                    if (v.trim().length < 10) {
+                      return 'Enter a valid phone number';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  final phone = phoneCtrl.text.trim();
+                  Navigator.of(dialogContext).pop();
+                  context.read<AuthCubit>().sendOtp(phone: phone);
+                  context.go(
+                    AppConstants.verifyOtpRoute,
+                    extra: {'phone': phone, 'fromLogin': true},
+                  );
+                }
+              },
+              child: const Text('Send OTP'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override

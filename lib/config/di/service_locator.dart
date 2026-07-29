@@ -7,6 +7,8 @@ import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/network/api_client.dart';
+import '../../core/notifications/notification_service.dart';
+import '../../core/security/security_service.dart';
 import '../../core/storage/token_storage.dart';
 import '../../core/theme/app_theme_cubit.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
@@ -45,6 +47,7 @@ Future<void> initServiceLocator({bool reset = false}) async {
   sl.registerLazySingleton<FlutterSecureStorage>(
     () => const FlutterSecureStorage(),
   );
+  sl.registerLazySingleton<NotificationService>(() => NotificationService());
 
   sl.registerLazySingleton<Logger>(
     () => Logger(
@@ -90,6 +93,11 @@ Future<void> initServiceLocator({bool reset = false}) async {
   sl.registerLazySingleton<ApiClient>(
       () => ApiClient(sl<Dio>(), sl<TokenStorage>(), sl<Logger>()));
 
+  // Security
+  final securityService = SecurityService(sharedPreferences, sl<FlutterSecureStorage>());
+  await securityService.initialize();
+  sl.registerLazySingleton<SecurityService>(() => securityService);
+
   // Auth
   sl.registerLazySingleton<AuthRemoteDataSource>(
       () => AuthRemoteDataSource(sl()));
@@ -98,6 +106,7 @@ Future<void> initServiceLocator({bool reset = false}) async {
       dataSource: sl(),
       tokenStorage: sl(),
       logger: sl(),
+      sellerDataSource: sl<SellerRemoteDataSource>(),
     ),
   );
 

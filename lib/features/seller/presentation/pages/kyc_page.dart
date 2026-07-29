@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/seller_cubit.dart';
@@ -283,12 +284,7 @@ class _KycPageState extends State<KycPage>
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_idFront == null || _idBack == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please upload ID front and back images'),
-          backgroundColor: Color(0xFFE53935),
-        ),
-      );
+      NotificationService().warning('Please upload ID front and back images');
       return;
     }
 
@@ -305,24 +301,14 @@ class _KycPageState extends State<KycPage>
 
     final state = context.read<SellerCubit>().state;
     if (state is SellerActionSuccess) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(state.message),
-          backgroundColor: const Color(0xFF22C55E),
-        ),
-      );
+      NotificationService().success(state.message);
       if (widget.showAsDialog && context.canPop()) {
         context.pop();
       } else {
         context.go(AppConstants.sellerDashboardRoute);
       }
     } else if (state is SellerActionError) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(state.message),
-          backgroundColor: const Color(0xFFE53935),
-        ),
-      );
+      NotificationService().error(state.message);
     }
   }
 

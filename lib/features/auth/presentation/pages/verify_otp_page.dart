@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:sms_autofill/sms_autofill.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
@@ -15,8 +16,15 @@ import '../widgets/auth_text_field.dart' show AuthPrimaryButton;
 
 class VerifyOtpPage extends StatefulWidget {
   final String phone;
+  final bool fromLogin;
+  final bool fromSeller;
 
-  const VerifyOtpPage({super.key, required this.phone});
+  const VerifyOtpPage({
+    super.key,
+    required this.phone,
+    this.fromLogin = false,
+    this.fromSeller = false,
+  });
 
   @override
   State<VerifyOtpPage> createState() => _VerifyOtpPageState();
@@ -132,12 +140,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
             otpCode: otp,
           );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter the 6-digit OTP code'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      NotificationService().warning('Please enter the 6-digit OTP code');
     }
   }
 
@@ -159,30 +162,20 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
 
   void _onStateChange(BuildContext context, AuthState state) {
     if (state is AuthOtpVerified) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Phone verified successfully!'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      context.go(AppConstants.homeRoute);
+      NotificationService().success('Phone verified successfully!');
+      if (widget.fromSeller) {
+        context.go(AppConstants.sellerDashboardRoute);
+      } else if (widget.fromLogin) {
+        NotificationService().info('Account verified! Please sign in again.');
+        context.go(AppConstants.signInRoute);
+      } else {
+        context.go(AppConstants.homeRoute);
+      }
     } else if (state is AuthOtpSent) {
       _startCountdown();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('OTP resent to ${state.phone}'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      NotificationService().info('OTP resent to ${state.phone}');
     } else if (state is AuthError) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(state.message),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      NotificationService().error(state.message);
     }
   }
 

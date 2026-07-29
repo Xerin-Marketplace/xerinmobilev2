@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'config/di/service_locator.dart';
 import 'config/routes/app_router.dart';
 import 'config/theme/app_theme.dart';
+import 'core/notifications/notification_service.dart';
 import 'core/theme/app_theme_cubit.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/customer/presentation/cubit/cart_cubit.dart';
@@ -39,6 +40,7 @@ class XerinApp extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             themeMode: state.themeMode,
             routerConfig: AppRouter.router,
+            navigatorKey: NotificationService.navigatorKey,
           );
         },
       ),

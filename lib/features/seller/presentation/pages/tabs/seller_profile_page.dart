@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../config/constants/app_constants.dart';
+import '../../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../cubit/seller_cubit.dart';
 import '../../cubit/seller_state.dart';
 
@@ -251,6 +252,8 @@ class SellerProfilePage extends StatelessWidget {
                             final route = item['route'] as String?;
                             if (route != null) {
                               context.go(route);
+                            } else if (item['label'] == 'Logout') {
+                              _showLogoutDialog(context);
                             }
                           },
                         );
@@ -267,8 +270,52 @@ class SellerProfilePage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
+          if (state is SellerError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 48, color: colorScheme.error),
+                  const SizedBox(height: 12),
+                  Text(state.message, textAlign: TextAlign.center),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.read<SellerCubit>().loadDashboard(),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
+
           return const Center(child: CircularProgressIndicator());
         },
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Logout?'),
+        content: const Text('Are you sure you want to log out of your seller account?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              context.read<AuthCubit>().logout();
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFE53935),
+            ),
+            child: const Text('Logout'),
+          ),
+        ],
       ),
     );
   }

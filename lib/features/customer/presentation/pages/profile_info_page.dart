@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../config/di/service_locator.dart';
 import '../../../auth/data/datasources/auth_remote_datasource.dart';
 import '../../../../shared/widgets/app_icon.dart';
@@ -56,22 +57,16 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
       );
       if (mounted) {
         context.read<HomeCubit>().loadHome();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile updated successfully'), backgroundColor: Color(0xFF22C55E)),
-        );
+        NotificationService().success('Profile updated successfully');
         context.pop();
       }
     } on ServerException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message), backgroundColor: const Color(0xFFE53935)),
-        );
+        NotificationService().error(e.message);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update: $e'), backgroundColor: const Color(0xFFE53935)),
-        );
+        NotificationService().error('Failed to update: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../data/models/product_model.dart';
 import '../cubit/cart_cubit.dart';
 import '../cubit/recommendation_cubit.dart';
@@ -286,16 +287,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                   quantity: 1,
                                 );
                                 setState(() => _added = true);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('${widget.product.name} added to cart'),
-                                    backgroundColor: const Color(0xFF22C55E),
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                );
+                                NotificationService().success('${widget.product.name} added to cart');
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: _added
@@ -336,18 +328,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                   quantity: 1,
                                 );
                                 context.go(AppConstants.homeRoute);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Proceeding to checkout for ${widget.product.name}',
-                                    ),
-                                    backgroundColor: const Color(0xFF22C55E),
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                );
+                                NotificationService().info('Proceeding to checkout for ${widget.product.name}');
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: colorScheme.primary,

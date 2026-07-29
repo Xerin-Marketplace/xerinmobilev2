@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/seller_cubit.dart';
 import '../cubit/seller_state.dart';
@@ -87,12 +88,7 @@ class _PayoutsPageState extends State<PayoutsPage> {
               if (providerCtrl.text.isEmpty ||
                   accountNameCtrl.text.isEmpty ||
                   accountNumberCtrl.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please fill all fields'),
-                    backgroundColor: Color(0xFFE53935),
-                  ),
-                );
+                NotificationService().warning('Please fill all fields');
                 return;
               }
               Navigator.pop(dialogContext);

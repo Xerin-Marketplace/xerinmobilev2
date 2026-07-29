@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../core/security/security_service.dart';
 import '../../../../core/storage/token_storage.dart';
 
 class SplashPage extends StatefulWidget {
@@ -26,11 +27,14 @@ class _SplashPageState extends State<SplashPage> {
 
     final tokenStorage = GetIt.instance<TokenStorage>();
     final prefs = GetIt.instance<SharedPreferences>();
+    final securityService = GetIt.instance<SecurityService>();
     final isLoggedIn = tokenStorage.hasTokens;
     final isGuest = tokenStorage.isGuestMode;
     final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
 
-    if (isLoggedIn || isGuest) {
+    if ((isLoggedIn || isGuest) && securityService.isPinLockEnabled) {
+      context.go(AppConstants.lockRoute);
+    } else if (isLoggedIn || isGuest) {
       context.go(AppConstants.homeRoute);
     } else if (hasSeenOnboarding) {
       context.go(AppConstants.signInRoute);

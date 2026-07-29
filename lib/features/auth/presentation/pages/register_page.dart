@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
@@ -107,11 +108,8 @@ class _RegisterPageState extends State<RegisterPage>
   void _onRegister() {
     if (!_formKey.currentState!.validate()) return;
     if (!_agree) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please accept the Terms of Service & Privacy Policy'),
-          behavior: SnackBarBehavior.floating,
-        ),
+      NotificationService().warning(
+        'Please accept the Terms of Service & Privacy Policy',
       );
       return;
     }
@@ -144,26 +142,15 @@ class _RegisterPageState extends State<RegisterPage>
 
   void _onStateChange(BuildContext context, AuthState state) {
     if (state is AuthRegisterSuccess) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              'Welcome ${state.user.firstName}! Please verify your phone.'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
+      NotificationService().success(
+        'Welcome ${state.user.firstName}! Please verify your phone.',
       );
       context.go(
         AppConstants.verifyOtpRoute,
         extra: {'phone': state.phone},
       );
     } else if (state is AuthError) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(state.message),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      NotificationService().error(state.message);
     }
   }
 

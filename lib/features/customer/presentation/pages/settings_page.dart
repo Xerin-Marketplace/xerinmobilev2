@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../config/constants/app_constants.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../../../auth/data/models/user_model.dart';
+import '../../../../core/security/security_service.dart';
 import '../../../../core/theme/app_theme_cubit.dart';
 import '../cubit/home_cubit.dart';
 import '../cubit/home_state.dart';
@@ -142,6 +144,14 @@ class SettingsPage extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
+                  const SizedBox(height: 28),
+                  _buildSectionTitle('Security', colorScheme),
+                  const SizedBox(height: 12),
+                  _buildSettingCard(
+                    context,
+                    colorScheme,
+                    child: _SecuritySection(colorScheme: colorScheme),
                   ),
                   const SizedBox(height: 28),
                   _buildSectionTitle('About', colorScheme),
@@ -342,5 +352,131 @@ class SettingsPage extends StatelessWidget {
 
   Widget _buildDivider(ColorScheme colorScheme) {
     return Divider(height: 1, color: colorScheme.onSurface.withValues(alpha: 0.06), indent: 70);
+  }
+}
+
+class _SecuritySection extends StatefulWidget {
+  final ColorScheme colorScheme;
+
+  const _SecuritySection({required this.colorScheme});
+
+  @override
+  State<_SecuritySection> createState() => _SecuritySectionState();
+}
+
+class _SecuritySectionState extends State<_SecuritySection> {
+  late final SecurityService _security;
+  late bool _pinEnabled;
+
+  @override
+  void initState() {
+    super.initState();
+    _security = GetIt.instance<SecurityService>();
+    _pinEnabled = _security.isPinLockEnabled;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () {
+            if (_pinEnabled) {
+              _showDisablePinDialog();
+            } else {
+              context.push(AppConstants.pinSetupRoute).then((_) {
+                if (mounted) {
+                  setState(() => _pinEnabled = _security.isPinLockEnabled);
+                }
+              });
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                IconContainer(
+                  icon: Icons.lock_rounded,
+                  color: const Color(0xFFEF4444),
+                  size: 40,
+                  iconSize: AppIconSize.md,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'App Lock PIN',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: widget.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _pinEnabled
+                            ? 'Enabled - PIN required on startup'
+                            : 'Require a PIN to open the app',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: widget.colorScheme.onSurface.withValues(alpha: 0.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: _pinEnabled,
+                  onChanged: (v) {
+                    if (v) {
+                      context.push(AppConstants.pinSetupRoute).then((_) {
+                        if (mounted) {
+                          setState(() => _pinEnabled = _security.isPinLockEnabled);
+                        }
+                      });
+                    } else {
+                      _showDisablePinDialog();
+                    }
+                  },
+                  activeTrackColor: widget.colorScheme.primary.withValues(alpha: 0.5),
+                  activeThumbColor: widget.colorScheme.primary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showDisablePinDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Disable PIN Lock?'),
+        content: const Text(
+          'Your app will no longer require a PIN on startup. Are you sure?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              await _security.disablePin();
+              if (mounted) {
+                setState(() => _pinEnabled = false);
+              }
+              if (ctx.mounted) Navigator.of(ctx).pop();
+            },
+            child: const Text('Disable'),
+          ),
+        ],
+      ),
+    );
   }
 }
