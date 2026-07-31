@@ -5,6 +5,7 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/storage/token_storage.dart';
 import '../../../seller/data/datasources/seller_remote_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
+import '../../data/models/user_model.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -131,20 +132,31 @@ class AuthCubit extends Cubit<AuthState> {
         accessToken: token.accessToken,
         refreshToken: token.refreshToken,
       );
-      _logger.i(
-          '✅ Login success — token_type: ${token.tokenType}, access: ${token.accessToken.substring(0, 20)}...');
+      _logger.i('✅ Login success — token_type: ${token.tokenType}');
 
-      bool isSeller = false;
-      if (_sellerDataSource != null) {
+      UserModel? user = token.user;
+
+      if (user == null) {
         try {
-          await _sellerDataSource.getMyProfile();
-          isSeller = true;
-        } catch (_) {}
+          user = await _dataSource.getMyProfile();
+          _logger.i('✅ User profile fetched separately: ${user.fullName}');
+        } catch (e) {
+          _logger.w('Could not fetch user profile: $e');
+        }
+      } else {
+        _logger.i('✅ User from token: ${user.fullName}, account_type: ${user.accountType}');
       }
 
-      emit(AuthLoginSuccess(token: token, isSeller: isSeller));
+      final isSeller = user?.isSeller ?? false;
+      final isAdmin = user?.isAdmin ?? false;
+
+      emit(AuthLoginSuccess(
+        token: token,
+        isSeller: isSeller,
+        isAdmin: isAdmin,
+        user: user,
+      ));
     } on ServerException catch (e) {
-      _logger.e('❌ Login error: ${e.message}');
       final msg = e.message.toLowerCase();
       if (msg.contains('not verified') || msg.contains('account not verified')) {
         emit(AuthNeedsVerification(email: email));
@@ -152,8 +164,7 @@ class AuthCubit extends Cubit<AuthState> {
         emit(AuthError(message: e.message));
       }
     } catch (e) {
-      _logger.e('❌ Login unexpected error: $e');
-      emit(AuthError(message: 'An unexpected error occurred'));
+      emit(const AuthError(message: 'An unexpected error occurred. Please try again.'));
     }
   }
 

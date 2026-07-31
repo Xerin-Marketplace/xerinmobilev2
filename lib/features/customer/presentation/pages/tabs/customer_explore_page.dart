@@ -19,21 +19,6 @@ class CustomerExplorePage extends StatefulWidget {
 class _CustomerExplorePageState extends State<CustomerExplorePage> {
   final _searchCtrl = TextEditingController();
 
-  static IconData _categoryIcon(String name) {
-    final n = name.toLowerCase();
-    if (n.contains('electron') || n.contains('gadget')) return Icons.devices_rounded;
-    if (n.contains('fashion') || n.contains('cloth') || n.contains('wear')) return Icons.checkroom_rounded;
-    if (n.contains('home') || n.contains('furniture')) return Icons.home_rounded;
-    if (n.contains('auto') || n.contains('car')) return Icons.directions_car_rounded;
-    if (n.contains('sport') || n.contains('fitness')) return Icons.sports_soccer_rounded;
-    if (n.contains('book') || n.contains('media')) return Icons.book_rounded;
-    if (n.contains('health') || n.contains('beauty')) return Icons.health_and_safety_rounded;
-    if (n.contains('food') || n.contains('drink')) return Icons.restaurant_rounded;
-    if (n.contains('phone') || n.contains('mobile')) return Icons.phone_android_rounded;
-    if (n.contains('computer') || n.contains('laptop')) return Icons.laptop_rounded;
-    return Icons.category_rounded;
-  }
-
   @override
   void dispose() {
     _searchCtrl.dispose();
@@ -314,23 +299,23 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
     final displayCats = categories.take(8).toList();
     return GridView.builder(
       shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, childAspectRatio: 0.85, mainAxisSpacing: 10, crossAxisSpacing: 10),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, childAspectRatio: 2.2, mainAxisSpacing: 10, crossAxisSpacing: 10),
       itemCount: displayCats.length,
       itemBuilder: (context, index) {
         final cat = displayCats[index];
         return GestureDetector(
           onTap: () => context.push(AppConstants.categoryProductsRoute, extra: {'category': cat.name, 'categoryId': cat.id}),
-          child: Column(
-            children: [
-              Container(
-                width: 56, height: 56,
-                decoration: BoxDecoration(color: colorScheme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
-                child: Icon(_categoryIcon(cat.name), color: colorScheme.primary, size: 26),
-              ),
-              const SizedBox(height: 8),
-              Text(cat.name, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.7))),
-            ],
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colorScheme.primary.withValues(alpha: 0.15)),
+            ),
+            child: Center(
+              child: Text(cat.name, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.primary)),
+            ),
           ),
         );
       },

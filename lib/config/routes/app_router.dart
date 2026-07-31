@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/admin/presentation/pages/admin_dashboard.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/legal_page.dart';
 import '../../features/auth/presentation/pages/lock_screen_page.dart';
@@ -288,6 +289,10 @@ class AppRouter {
       GoRoute(
         path: AppConstants.couponsRoute,
         builder: (context, state) => const CouponsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminDashboardRoute,
+        builder: (context, state) => const AdminDashboard(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

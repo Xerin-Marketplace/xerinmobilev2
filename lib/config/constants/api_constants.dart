@@ -1,6 +1,6 @@
 /// API-related constants.
 abstract class ApiConstants {
-    static const String _defaultBaseUrl = 'http://187.124.32.94:8080';
+    static const String _defaultBaseUrl = 'https://api.xerinmarketplace.com';
     static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
 
     static String get baseUrl => _resolveBaseUrl(_envBaseUrl);
@@ -26,6 +26,7 @@ abstract class ApiConstants {
   static const String verifyOtp = '/auth/verify-otp';
   static const String forgotPassword = '/auth/forgot-password';
   static const String resetPassword = '/auth/reset-password';
+  static const String changePassword = '/auth/change-password';
 
   // User endpoints
   static const String myProfile = '/users/me';
@@ -83,6 +84,11 @@ abstract class ApiConstants {
   static const String myStore = '/stores/me';
   static const String myStoreLogo = '/stores/me/logo';
   static const String myStoreBanner = '/stores/me/banner';
+  static const String myStoreGallery = '/stores/me/gallery';
+  static String myStoreGalleryImageById(String id) => '/stores/me/gallery/$id';
+  static const String myStoreOpeningHours = '/stores/me/opening-hours';
+  static String myStoreOpeningHourById(String id) =>
+      '/stores/me/opening-hours/$id';
   static const String publicStores = '/stores';
   static String publicStoreBySlug(String slug) => '/stores/$slug';
 
@@ -163,6 +169,59 @@ abstract class ApiConstants {
   static const String wishlist = '/wishlists';
   static String wishlistById(String id) => '/wishlists/$id';
   static String toggleWishlistItem(String productId) => '/wishlists/toggle/$productId';
+
+  // Analytics endpoints
+  static const String analyticsAdminOverview = '/analytics/admin/overview';
+  static const String analyticsAdminSales = '/analytics/admin/sales';
+  static const String analyticsAdminSellers = '/analytics/admin/sellers';
+  static const String analyticsAdminProducts = '/analytics/admin/products';
+  static const String analyticsAdminReconciliation = '/analytics/admin/reconciliation';
+  static const String analyticsSellerOverview = '/analytics/seller/me/overview';
+  static const String analyticsSellerSales = '/analytics/seller/me/sales';
+  static const String analyticsSellerProducts = '/analytics/seller/me/products';
+
+  // Wallet endpoints
+  static const String myWallet = '/wallet/me';
+  static const String myWalletTransactions = '/wallet/me/transactions';
+  static const String myWalletPayouts = '/wallet/me/payouts';
+  static String cancelPayout(String payoutId) => '/wallet/me/payouts/$payoutId/cancel';
+  static const String adminWallets = '/wallet/admin/wallets';
+  static const String adminPayouts = '/wallet/admin/payouts';
+  static String adminUpdatePayout(String payoutId) => '/wallet/admin/payouts/$payoutId';
+  static String adminWalletAdjustment(String sellerId) => '/wallet/admin/wallets/$sellerId/adjustments';
+
+  // Commission endpoints
+  static const String commissionRules = '/commissions/rules';
+  static String commissionRuleById(String ruleId) => '/commissions/rules/$ruleId';
+  static String orderCommissions(String orderId) => '/commissions/orders/$orderId';
+  static const String sellerEarningsSummary = '/commissions/seller/me/summary';
+
+  // Refund endpoints
+  static const String refunds = '/refunds';
+  static const String adminRefunds = '/refunds/admin';
+  static String refundById(String refundId) => '/refunds/$refundId';
+  static String cancelRefund(String refundId) => '/refunds/$refundId/cancel';
+  static String reviewRefund(String refundId) => '/refunds/$refundId/review';
+  static String approveRefund(String refundId) => '/refunds/$refundId/approve';
+  static String rejectRefund(String refundId) => '/refunds/$refundId/reject';
+  static String processRefund(String refundId) => '/refunds/$refundId/process';
+
+  // Shipping endpoints
+  static const String shippingZones = '/shipping/zones';
+  static String shippingZoneById(String zoneId) => '/shipping/zones/$zoneId';
+  static const String shippingMethods = '/shipping/methods';
+  static String shippingMethodById(String methodId) => '/shipping/methods/$methodId';
+  static const String shippingRates = '/shipping/rates';
+  static String shippingRateById(String rateId) => '/shipping/rates/$rateId';
+  static const String shippingQuote = '/shipping/quote';
+  static const String myShipments = '/shipping/shipments/my';
+  static const String sellerShipments = '/shipping/shipments/seller';
+  static String shipmentById(String shipmentId) => '/shipping/shipments/$shipmentId';
+  static String shipmentEvent(String shipmentId) => '/shipping/shipments/$shipmentId/events';
+  static const String adminAllOrders = '/orders/admin/all';
+
+  // Audit log endpoints
+  static const String auditLogs = '/audit-logs';
 
   // Common headers
   static const String contentType = 'application/json';

@@ -66,7 +66,9 @@ class _SignInPageState extends State<SignInPage>
   void _onStateChange(BuildContext context, AuthState state) {
     if (state is AuthLoginSuccess) {
       NotificationService().success('Signed in successfully!');
-      if (state.isSeller) {
+      if (state.isAdmin) {
+        context.go(AppConstants.adminDashboardRoute);
+      } else if (state.isSeller) {
         context.go(AppConstants.sellerDashboardRoute);
       } else {
         context.go(AppConstants.homeRoute);

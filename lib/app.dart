@@ -6,6 +6,7 @@ import 'config/routes/app_router.dart';
 import 'config/theme/app_theme.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/theme/app_theme_cubit.dart';
+import 'features/admin/presentation/cubit/admin_cubit.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/customer/presentation/cubit/cart_cubit.dart';
 import 'features/customer/presentation/cubit/customer_cubit.dart';
@@ -30,6 +31,7 @@ class XerinApp extends StatelessWidget {
         BlocProvider.value(value: sl<RecommendationCubit>()),
         BlocProvider(create: (_) => sl<WishlistCubit>()),
         BlocProvider(create: (_) => sl<SellerCubit>()..loadDashboard()),
+        BlocProvider(create: (_) => sl<AdminCubit>()),
       ],
       child: BlocBuilder<AppThemeCubit, AppThemeState>(
         builder: (context, state) {
@@ -40,7 +42,6 @@ class XerinApp extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             themeMode: state.themeMode,
             routerConfig: AppRouter.router,
-            navigatorKey: NotificationService.navigatorKey,
           );
         },
       ),

@@ -27,19 +27,6 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   String? _selectedRegion;
   String? _selectedPriceRange;
 
-  static IconData _categoryIcon(String name) {
-    final n = name.toLowerCase();
-    if (n.contains('electron')) return Icons.devices_rounded;
-    if (n.contains('fashion') || n.contains('cloth') || n.contains('wear')) return Icons.checkroom_rounded;
-    if (n.contains('home') || n.contains('furniture')) return Icons.home_rounded;
-    if (n.contains('auto') || n.contains('car') || n.contains('vehicle')) return Icons.directions_car_rounded;
-    if (n.contains('sport') || n.contains('fitness')) return Icons.sports_soccer_rounded;
-    if (n.contains('book') || n.contains('media')) return Icons.book_rounded;
-    if (n.contains('health') || n.contains('beauty')) return Icons.health_and_safety_rounded;
-    if (n.contains('food') || n.contains('beverage')) return Icons.restaurant_rounded;
-    return Icons.category_rounded;
-  }
-
   static String _greeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good morning 👋';
@@ -774,10 +761,15 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         color: colorScheme.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Icon(
-        _categoryIcon(category ?? ''),
-        color: colorScheme.primary,
-        size: 24,
+      child: Center(
+        child: Text(
+          (category ?? '?')[0].toUpperCase(),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: colorScheme.primary,
+          ),
+        ),
       ),
     );
   }
@@ -1134,33 +1126,17 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   ) {
     if (isLoading) {
       return SizedBox(
-        height: 82,
+        height: 40,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: 6,
           separatorBuilder: (_, _) => const SizedBox(width: 10),
-          itemBuilder: (_, _) => SizedBox(
-            width: 64,
-            child: Column(
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: colorScheme.onSurface.withValues(alpha: 0.06),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  width: 40,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: colorScheme.onSurface.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ],
+          itemBuilder: (_, _) => Container(
+            width: 80,
+            height: 32,
+            decoration: BoxDecoration(
+              color: colorScheme.onSurface.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(20),
             ),
           ),
         ),
@@ -1169,13 +1145,13 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
 
     if (categories.isEmpty) {
       return const SizedBox(
-        height: 82,
+        height: 40,
         child: Center(child: Text('No categories', style: TextStyle(fontSize: 13))),
       );
     }
 
     return SizedBox(
-      height: 82,
+      height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
@@ -1187,64 +1163,27 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
               AppConstants.categoryProductsRoute,
               extra: {'category': cat.name, 'categoryId': cat.id},
             ),
-            child: SizedBox(
-              width: 64,
-              child: Column(
-                children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    padding: const EdgeInsets.all(2.5),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [
-                          colorScheme.primary,
-                          colorScheme.primary.withValues(alpha: 0.7),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colorScheme.primary.withValues(alpha: 0.15),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Container(
-                        margin: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.08),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          _categoryIcon(cat.name),
-                          color: colorScheme.primary,
-                          size: 20,
-                        ),
-                      ),
-                    ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: colorScheme.primary.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  cat.name,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.primary,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    cat.name,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           );
@@ -1468,10 +1407,15 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
       height: 130,
       width: 160,
       color: colorScheme.primary.withValues(alpha: 0.06),
-      child: Icon(
-        _categoryIcon(category ?? ''),
-        color: colorScheme.primary.withValues(alpha: 0.3),
-        size: 40,
+      child: Center(
+        child: Text(
+          (category ?? 'Product')[0].toUpperCase(),
+          style: TextStyle(
+            fontSize: 36,
+            fontWeight: FontWeight.bold,
+            color: colorScheme.primary.withValues(alpha: 0.3),
+          ),
+        ),
       ),
     );
   }

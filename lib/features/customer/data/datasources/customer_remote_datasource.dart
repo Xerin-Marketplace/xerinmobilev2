@@ -261,4 +261,157 @@ class CustomerRemoteDataSource {
       throw ServerException(_client.getErrorMessage(e));
     }
   }
+
+  // =========================
+  // REFUNDS (customer)
+  // =========================
+
+  Future<Map<String, dynamic>> requestRefund({
+    required String orderId,
+    required String reason,
+    required List<Map<String, dynamic>> items,
+    String? reasonDetails,
+    bool refundShipping = false,
+    bool refundTax = false,
+    required String idempotencyKey,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.refunds,
+        data: {
+          'order_id': orderId,
+          'reason': reason,
+          'items': items,
+          'refund_shipping': refundShipping,
+          'refund_tax': refundTax,
+          'idempotency_key': idempotencyKey,
+          if (reasonDetails != null) 'reason_details': reasonDetails,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getMyRefunds() async {
+    try {
+      final response = await _client.get(ApiConstants.refunds);
+      final data = response.data;
+      List<dynamic> list;
+      if (data is List) {
+        list = data;
+      } else if (data is Map && data['items'] != null) {
+        list = data['items'] as List;
+      } else {
+        list = [];
+      }
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> getRefundById(String refundId) async {
+    try {
+      final response = await _client.get(ApiConstants.refundById(refundId));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> cancelRefund(String refundId) async {
+    try {
+      final response = await _client.post(ApiConstants.cancelRefund(refundId));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // SHIPPING QUOTES
+  // =========================
+
+  Future<List<Map<String, dynamic>>> getShippingQuote({
+    required String addressId,
+    required double subtotal,
+    double weightKg = 0,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.shippingQuote,
+        data: {
+          'address_id': addressId,
+          'subtotal': subtotal,
+          'weight_kg': weightKg,
+        },
+      );
+      final data = response.data;
+      List<dynamic> list;
+      if (data is List) {
+        list = data;
+      } else if (data is Map && data['options'] != null) {
+        list = data['options'] as List;
+      } else {
+        list = [];
+      }
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // CHANGE PASSWORD
+  // =========================
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      await _client.post(
+        ApiConstants.changePassword,
+        data: {
+          'current_password': currentPassword,
+          'new_password': newPassword,
+        },
+      );
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // SHIPMENTS (customer)
+  // =========================
+
+  Future<List<Map<String, dynamic>>> getMyShipments() async {
+    try {
+      final response = await _client.get(ApiConstants.myShipments);
+      final data = response.data;
+      List<dynamic> list;
+      if (data is List) {
+        list = data;
+      } else if (data is Map && data['items'] != null) {
+        list = data['items'] as List;
+      } else {
+        list = [];
+      }
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> getShipmentById(String shipmentId) async {
+    try {
+      final response = await _client.get(ApiConstants.shipmentById(shipmentId));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
 }

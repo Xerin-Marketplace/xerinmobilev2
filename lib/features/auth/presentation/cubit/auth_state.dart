@@ -41,11 +41,18 @@ class AuthSellerRegisterSuccess extends AuthState {
 class AuthLoginSuccess extends AuthState {
   final TokenModel token;
   final bool isSeller;
+  final bool isAdmin;
+  final UserModel? user;
 
-  const AuthLoginSuccess({required this.token, this.isSeller = false});
+  const AuthLoginSuccess({
+    required this.token,
+    this.isSeller = false,
+    this.isAdmin = false,
+    this.user,
+  });
 
   @override
-  List<Object?> get props => [token, isSeller];
+  List<Object?> get props => [token, isSeller, isAdmin, user];
 }
 
 class AuthOtpSent extends AuthState {

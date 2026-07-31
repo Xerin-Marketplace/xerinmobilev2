@@ -10,7 +10,9 @@ import '../../data/models/seller_kyc_model.dart';
 import '../../data/models/seller_order_model.dart';
 import '../../data/models/seller_payout_model.dart';
 import '../../data/models/seller_profile_model.dart';
+import '../../data/models/store_gallery_image_model.dart';
 import '../../data/models/store_model.dart';
+import '../../data/models/store_opening_hour_model.dart';
 import 'seller_state.dart';
 
 class SellerCubit extends Cubit<SellerState> {
@@ -276,6 +278,122 @@ class SellerCubit extends Cubit<SellerState> {
         emit(current.copyWith(store: store));
       }
       emit(const SellerActionSuccess(message: 'Store updated successfully'));
+    } on ServerException catch (e) {
+      emit(SellerActionError(message: e.message));
+    }
+  }
+
+  Future<void> uploadStoreLogo(File file) async {
+    emit(const SellerActionLoading());
+    try {
+      final store = await _dataSource.uploadStoreLogo(file);
+      final current = state;
+      if (current is SellerDashboardLoaded) {
+        emit(current.copyWith(store: store));
+      }
+      emit(const SellerActionSuccess(message: 'Logo uploaded successfully'));
+    } on ServerException catch (e) {
+      emit(SellerActionError(message: e.message));
+    }
+  }
+
+  Future<void> uploadStoreBanner(File file) async {
+    emit(const SellerActionLoading());
+    try {
+      final store = await _dataSource.uploadStoreBanner(file);
+      final current = state;
+      if (current is SellerDashboardLoaded) {
+        emit(current.copyWith(store: store));
+      }
+      emit(const SellerActionSuccess(message: 'Banner uploaded successfully'));
+    } on ServerException catch (e) {
+      emit(SellerActionError(message: e.message));
+    }
+  }
+
+  Future<List<StoreGalleryImageModel>> getGalleryImages() async {
+    try {
+      return await _dataSource.getGalleryImages();
+    } on ServerException catch (e) {
+      _logger.e('Gallery images error: ${e.message}');
+      return [];
+    }
+  }
+
+  Future<void> uploadGalleryImage({
+    required File file,
+    String? caption,
+    int displayOrder = 0,
+  }) async {
+    emit(const SellerActionLoading());
+    try {
+      await _dataSource.uploadGalleryImage(
+        file: file,
+        caption: caption,
+        displayOrder: displayOrder,
+      );
+      emit(const SellerActionSuccess(message: 'Gallery image uploaded'));
+    } on ServerException catch (e) {
+      emit(SellerActionError(message: e.message));
+    }
+  }
+
+  Future<void> updateGalleryImage(
+      String imageId, Map<String, dynamic> data) async {
+    emit(const SellerActionLoading());
+    try {
+      await _dataSource.updateGalleryImage(imageId, data);
+      emit(const SellerActionSuccess(message: 'Gallery image updated'));
+    } on ServerException catch (e) {
+      emit(SellerActionError(message: e.message));
+    }
+  }
+
+  Future<void> deleteGalleryImage(String imageId) async {
+    emit(const SellerActionLoading());
+    try {
+      await _dataSource.deleteGalleryImage(imageId);
+      emit(const SellerActionSuccess(message: 'Gallery image deleted'));
+    } on ServerException catch (e) {
+      emit(SellerActionError(message: e.message));
+    }
+  }
+
+  Future<List<StoreOpeningHourModel>> getOpeningHours() async {
+    try {
+      return await _dataSource.getOpeningHours();
+    } on ServerException catch (e) {
+      _logger.e('Opening hours error: ${e.message}');
+      return [];
+    }
+  }
+
+  Future<void> createOpeningHour(Map<String, dynamic> data) async {
+    emit(const SellerActionLoading());
+    try {
+      await _dataSource.createOpeningHour(data);
+      emit(const SellerActionSuccess(message: 'Opening hour added'));
+    } on ServerException catch (e) {
+      emit(SellerActionError(message: e.message));
+    }
+  }
+
+  Future<void> updateOpeningHour(
+      String hourId, Map<String, dynamic> data) async {
+    emit(const SellerActionLoading());
+    try {
+      await _dataSource.updateOpeningHour(hourId, data);
+      emit(const SellerActionSuccess(message: 'Opening hour updated'));
+    } on ServerException catch (e) {
+      emit(SellerActionError(message: e.message));
+    }
+  }
+
+  Future<void> deleteOpeningHour(String hourId) async {
+    emit(const SellerActionLoading());
+    try {
+      await _dataSource.deleteOpeningHour(hourId);
+      emit(const SellerActionSuccess(message: 'Opening hour removed'));
     } on ServerException catch (e) {
       emit(SellerActionError(message: e.message));
     }

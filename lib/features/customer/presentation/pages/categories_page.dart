@@ -30,32 +30,6 @@ class _CategoriesPageState extends State<CategoriesPage> {
     super.dispose();
   }
 
-  static IconData _categoryIcon(String name) {
-    final n = name.toLowerCase();
-    if (n.contains('electron')) return Icons.devices_rounded;
-    if (n.contains('fashion') || n.contains('cloth') || n.contains('wear')) return Icons.checkroom_rounded;
-    if (n.contains('home') || n.contains('furniture')) return Icons.home_rounded;
-    if (n.contains('auto') || n.contains('car') || n.contains('vehicle')) return Icons.directions_car_rounded;
-    if (n.contains('sport') || n.contains('fitness')) return Icons.sports_soccer_rounded;
-    if (n.contains('book') || n.contains('media')) return Icons.book_rounded;
-    if (n.contains('health') || n.contains('beauty')) return Icons.health_and_safety_rounded;
-    if (n.contains('food') || n.contains('beverage') || n.contains('grocery')) return Icons.restaurant_rounded;
-    return Icons.category_rounded;
-  }
-
-  static Color _categoryColor(String name) {
-    final n = name.toLowerCase();
-    if (n.contains('electron')) return const Color(0xFF3B82F6);
-    if (n.contains('fashion')) return const Color(0xFFEC4899);
-    if (n.contains('home')) return const Color(0xFFF59E0B);
-    if (n.contains('auto')) return const Color(0xFF6366F1);
-    if (n.contains('sport')) return const Color(0xFF22C55E);
-    if (n.contains('book')) return const Color(0xFF8B5CF6);
-    if (n.contains('health')) return const Color(0xFF14B8A6);
-    if (n.contains('food')) return const Color(0xFFF97316);
-    return const Color(0xFF64748B);
-  }
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -151,61 +125,39 @@ class _CategoriesPageState extends State<CategoriesPage> {
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 1.1,
+                      childAspectRatio: 2.5,
                       crossAxisSpacing: 14,
                       mainAxisSpacing: 14,
                     ),
                     itemCount: categories.length,
                     itemBuilder: (context, index) {
                       final cat = categories[index];
-                      final color = _categoryColor(cat.name);
                       return GestureDetector(
                         onTap: () => context.go(
                           AppConstants.categoryProductsRoute,
                           extra: {'category': cat.name, 'categoryId': cat.id},
                         ),
                         child: Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.08),
+                            color: colorScheme.primary.withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: color.withValues(alpha: 0.2),
+                              color: colorScheme.primary.withValues(alpha: 0.15),
                             ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                width: 52,
-                                height: 52,
-                                padding: const EdgeInsets.all(3),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: color.withValues(alpha: 0.15),
-                                ),
-                                child: Container(
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    _categoryIcon(cat.name),
-                                    color: color,
-                                    size: 24,
-                                  ),
-                                ),
+                          child: Center(
+                            child: Text(
+                              cat.name,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: colorScheme.onSurface,
                               ),
-                              Text(
-                                cat.name,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: colorScheme.onSurface,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       );

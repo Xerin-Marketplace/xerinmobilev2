@@ -54,6 +54,9 @@ abstract class AppConstants {
   static const String orderTrackingRoute = '/order-tracking';
   static const String couponsRoute = '/coupons';
 
+  // Admin routes
+  static const String adminDashboardRoute = '/admin-dashboard';
+
   // Timeouts
   static const int connectionTimeoutSeconds = 30;
   static const int receiveTimeoutSeconds = 30;

@@ -122,7 +122,7 @@ class StoreModel {
     return StoreModel(
       id: json['id']?.toString() ?? '',
       sellerId: json['seller_id']?.toString() ?? '',
-      name: json['name'] as String? ?? '',
+      name: (json['store_name'] ?? json['name']) as String? ?? '',
       slug: json['slug'] as String? ?? '',
       description: json['description'] as String?,
       logoUrl: json['logo_url'] as String?,

@@ -11,6 +11,8 @@ import '../../core/notifications/notification_service.dart';
 import '../../core/security/security_service.dart';
 import '../../core/storage/token_storage.dart';
 import '../../core/theme/app_theme_cubit.dart';
+import '../../features/admin/data/datasources/admin_remote_datasource.dart';
+import '../../features/admin/presentation/cubit/admin_cubit.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/customer/data/datasources/cart_remote_datasource.dart';
@@ -68,7 +70,7 @@ Future<void> initServiceLocator({bool reset = false}) async {
     () {
       final dio = Dio(
         BaseOptions(
-          baseUrl: ApiConstants.baseUrl,
+          baseUrl: '${ApiConstants.baseUrl}/api/v1',
           connectTimeout: const Duration(seconds: 30),
           receiveTimeout: const Duration(seconds: 30),
           headers: {'Content-Type': ApiConstants.contentType},
@@ -169,6 +171,16 @@ Future<void> initServiceLocator({bool reset = false}) async {
       () => SellerRemoteDataSource(sl()));
   sl.registerFactory<SellerCubit>(
     () => SellerCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+
+  // Admin
+  sl.registerLazySingleton<AdminRemoteDataSource>(
+      () => AdminRemoteDataSource(sl()));
+  sl.registerFactory<AdminCubit>(
+    () => AdminCubit(
       dataSource: sl(),
       logger: sl(),
     ),

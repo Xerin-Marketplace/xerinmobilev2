@@ -104,7 +104,7 @@ class _ReportsPageState extends State<ReportsPage> {
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 1.35,
+                  childAspectRatio: 1.1,
                   children: [
                     GradientKpiCard(
                       label: 'Total Revenue',

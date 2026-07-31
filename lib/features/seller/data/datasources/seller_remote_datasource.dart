@@ -10,7 +10,9 @@ import '../models/seller_kyc_model.dart';
 import '../models/seller_order_model.dart';
 import '../models/seller_payout_model.dart';
 import '../models/seller_profile_model.dart';
+import '../models/store_gallery_image_model.dart';
 import '../models/store_model.dart';
+import '../models/store_opening_hour_model.dart';
 
 class SellerRemoteDataSource {
   final ApiClient _client;
@@ -252,6 +254,148 @@ class SellerRemoteDataSource {
     }
   }
 
+  Future<StoreModel> uploadStoreLogo(File file) async {
+    try {
+      final formData = FormData.fromMap({
+        'logo': await MultipartFile.fromFile(file.path),
+      });
+      final response = await _client.post(
+        ApiConstants.myStoreLogo,
+        data: formData,
+      );
+      return StoreModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<StoreModel> uploadStoreBanner(File file) async {
+    try {
+      final formData = FormData.fromMap({
+        'banner': await MultipartFile.fromFile(file.path),
+      });
+      final response = await _client.post(
+        ApiConstants.myStoreBanner,
+        data: formData,
+      );
+      return StoreModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // STORE GALLERY
+  // =========================
+
+  Future<StoreGalleryImageModel> uploadGalleryImage({
+    required File file,
+    String? caption,
+    int displayOrder = 0,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(file.path),
+        if (caption != null) 'caption': caption,
+        'display_order': displayOrder,
+      });
+      final response = await _client.post(
+        ApiConstants.myStoreGallery,
+        data: formData,
+      );
+      return StoreGalleryImageModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<StoreGalleryImageModel>> getGalleryImages() async {
+    try {
+      final response = await _client.get(ApiConstants.myStoreGallery);
+      final list = _extractList(response.data);
+      return list
+          .map((e) => StoreGalleryImageModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<StoreGalleryImageModel> updateGalleryImage(
+      String imageId, Map<String, dynamic> data) async {
+    try {
+      final response = await _client.patch(
+        ApiConstants.myStoreGalleryImageById(imageId),
+        data: data,
+      );
+      return StoreGalleryImageModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<void> deleteGalleryImage(String imageId) async {
+    try {
+      await _client.delete(ApiConstants.myStoreGalleryImageById(imageId));
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // STORE OPENING HOURS
+  // =========================
+
+  Future<StoreOpeningHourModel> createOpeningHour(
+      Map<String, dynamic> data) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.myStoreOpeningHours,
+        data: data,
+      );
+      return StoreOpeningHourModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<StoreOpeningHourModel>> getOpeningHours() async {
+    try {
+      final response = await _client.get(ApiConstants.myStoreOpeningHours);
+      final list = _extractList(response.data);
+      return list
+          .map((e) => StoreOpeningHourModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<StoreOpeningHourModel> updateOpeningHour(
+      String hourId, Map<String, dynamic> data) async {
+    try {
+      final response = await _client.patch(
+        ApiConstants.myStoreOpeningHourById(hourId),
+        data: data,
+      );
+      return StoreOpeningHourModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<void> deleteOpeningHour(String hourId) async {
+    try {
+      await _client.delete(ApiConstants.myStoreOpeningHourById(hourId));
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
   // =========================
   // INVENTORY
   // =========================
@@ -456,6 +600,249 @@ class SellerRemoteDataSource {
       final response = await _client.get(ApiConstants.productBrands);
       final list = _extractList(response.data);
       return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // WALLET
+  // =========================
+
+  Future<Map<String, dynamic>> getMyWallet() async {
+    try {
+      final response = await _client.get(ApiConstants.myWallet);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getWalletTransactions() async {
+    try {
+      final response = await _client.get(ApiConstants.myWalletTransactions);
+      final list = _extractList(response.data);
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> requestPayout({
+    required String payoutAccountId,
+    required double amount,
+    String? note,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.myWalletPayouts,
+        data: {
+          'payout_account_id': payoutAccountId,
+          'amount': amount,
+          if (note != null) 'note': note,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getMyPayouts() async {
+    try {
+      final response = await _client.get(ApiConstants.myWalletPayouts);
+      final list = _extractList(response.data);
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> cancelPayout(String payoutId) async {
+    try {
+      final response = await _client.post(ApiConstants.cancelPayout(payoutId));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // COMMISSIONS & EARNINGS
+  // =========================
+
+  Future<Map<String, dynamic>> getEarningsSummary() async {
+    try {
+      final response = await _client.get(ApiConstants.sellerEarningsSummary);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getOrderCommissions(String orderId) async {
+    try {
+      final response = await _client.get(ApiConstants.orderCommissions(orderId));
+      final list = _extractList(response.data);
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // ANALYTICS
+  // =========================
+
+  Future<Map<String, dynamic>> getSellerAnalyticsOverview({
+    DateTime? startAt,
+    DateTime? endAt,
+  }) async {
+    try {
+      final response = await _client.get(
+        ApiConstants.analyticsSellerOverview,
+        queryParameters: {
+          if (startAt != null) 'start_at': startAt.toIso8601String(),
+          if (endAt != null) 'end_at': endAt.toIso8601String(),
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getSellerAnalyticsSales({
+    DateTime? startAt,
+    DateTime? endAt,
+  }) async {
+    try {
+      final response = await _client.get(
+        ApiConstants.analyticsSellerSales,
+        queryParameters: {
+          if (startAt != null) 'start_at': startAt.toIso8601String(),
+          if (endAt != null) 'end_at': endAt.toIso8601String(),
+        },
+      );
+      final list = _extractList(response.data);
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getSellerAnalyticsProducts({
+    DateTime? startAt,
+    DateTime? endAt,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _client.get(
+        ApiConstants.analyticsSellerProducts,
+        queryParameters: {
+          'limit': limit,
+          if (startAt != null) 'start_at': startAt.toIso8601String(),
+          if (endAt != null) 'end_at': endAt.toIso8601String(),
+        },
+      );
+      final list = _extractList(response.data);
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // SHIPPING
+  // =========================
+
+  Future<List<Map<String, dynamic>>> getShippingZones({bool activeOnly = true}) async {
+    try {
+      final response = await _client.get(
+        ApiConstants.shippingZones,
+        queryParameters: {'active_only': activeOnly},
+      );
+      final list = _extractList(response.data);
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getShippingMethods() async {
+    try {
+      final response = await _client.get(ApiConstants.shippingMethods);
+      final list = _extractList(response.data);
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getShippingQuote({
+    required String addressId,
+    required double subtotal,
+    double weightKg = 0,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.shippingQuote,
+        data: {
+          'address_id': addressId,
+          'subtotal': subtotal,
+          'weight_kg': weightKg,
+        },
+      );
+      final list = _extractList(response.data);
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // SHIPMENTS
+  // =========================
+
+  Future<List<Map<String, dynamic>>> getSellerShipments() async {
+    try {
+      final response = await _client.get(ApiConstants.sellerShipments);
+      final list = _extractList(response.data);
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> getShipmentById(String shipmentId) async {
+    try {
+      final response = await _client.get(ApiConstants.shipmentById(shipmentId));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> updateShipmentStatus(
+      String shipmentId, {
+    required String status,
+    String? location,
+    String? notes,
+    String? trackingNumber,
+    String? carrierName,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.shipmentEvent(shipmentId),
+        data: {
+          'status': status,
+          if (location != null) 'location': location,
+          if (notes != null) 'notes': notes,
+          if (trackingNumber != null) 'tracking_number': trackingNumber,
+          if (carrierName != null) 'carrier_name': carrierName,
+        },
+      );
+      return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       throw ServerException(_client.getErrorMessage(e));
     }

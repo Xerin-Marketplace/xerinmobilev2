@@ -228,28 +228,27 @@ class _ExploreProductsPageState extends State<ExploreProductsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(10)),
-                  child: product.thumbnailUrl != null
-                      ? Image.network(
-                          product.thumbnailUrl!,
-                          height: 150,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        )
-                      : Container(
-                          height: 150,
-                          width: double.infinity,
-                          color: colorScheme.surfaceContainerHighest,
-                          child: Icon(
-                            Icons.image_not_supported_rounded,
-                            color: colorScheme.onSurface.withValues(alpha: 0.3),
+            Expanded(
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(10)),
+                    child: product.thumbnailUrl != null
+                        ? Image.network(
+                            product.thumbnailUrl!,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          )
+                        : Container(
+                            width: double.infinity,
+                            color: colorScheme.surfaceContainerHighest,
+                            child: Icon(
+                              Icons.image_not_supported_rounded,
+                              color: colorScheme.onSurface.withValues(alpha: 0.3),
+                            ),
                           ),
-                        ),
-                ),
+                  ),
                 Positioned(
                   top: 8,
                   right: 8,
@@ -267,6 +266,7 @@ class _ExploreProductsPageState extends State<ExploreProductsPage> {
                   ),
                 ),
               ],
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(12),

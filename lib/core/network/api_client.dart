@@ -19,25 +19,28 @@ class ApiClient {
             options.headers[ApiConstants.authorizationHeader] =
                 '${ApiConstants.bearerPrefix} $token';
           }
+          final isAuthCall = options.path.contains('/auth/');
+          final sanitizedBody = isAuthCall ? '[REDACTED]' : options.data;
+          final sanitizedHeaders = Map.of(options.headers);
+          if (sanitizedHeaders.containsKey(ApiConstants.authorizationHeader)) {
+            sanitizedHeaders[ApiConstants.authorizationHeader] = '[REDACTED]';
+          }
           _logger.i(
             '➡️  REQUEST [${options.method}] ${options.uri}\n'
-            'Headers: ${options.headers}\n'
-            'Body: ${options.data}',
+            'Headers: $sanitizedHeaders\n'
+            'Body: $sanitizedBody',
           );
           handler.next(options);
         },
         onResponse: (response, handler) {
           _logger.i(
-            '✅ RESPONSE [${response.statusCode}] ${response.requestOptions.uri}\n'
-            'Data: ${response.data}',
+            '✅ RESPONSE [${response.statusCode}] ${response.requestOptions.uri}',
           );
           handler.next(response);
         },
         onError: (err, handler) async {
           _logger.e(
-            '❌ ERROR [${err.response?.statusCode}] ${err.requestOptions.uri}\n'
-            'Message: ${err.message}\n'
-            'Response: ${err.response?.data}',
+            '❌ ERROR [${err.response?.statusCode}] ${err.requestOptions.uri}',
           );
 
           final statusCode = err.response?.statusCode;
@@ -77,7 +80,7 @@ class ApiClient {
     try {
       final response = await Dio(
         BaseOptions(
-          baseUrl: ApiConstants.baseUrl,
+          baseUrl: '${ApiConstants.baseUrl}/api/v1',
           headers: {'Content-Type': ApiConstants.contentType},
           connectTimeout: const Duration(seconds: 15),
           receiveTimeout: const Duration(seconds: 15),
@@ -138,17 +141,88 @@ class ApiClient {
       _dio.delete<T>(path, data: data, options: options);
 
   String _extractErrorMessage(DioException e) {
+    final statusCode = e.response?.statusCode;
     final data = e.response?.data;
+
     if (data is Map) {
       final detail = data['detail'];
-      if (detail is String) return detail;
+      if (detail is String) return _humanizeMessage(detail, statusCode);
       if (detail is List && detail.isNotEmpty) {
         final first = detail.first;
-        if (first is Map) return first['msg']?.toString() ?? 'Validation error';
+        if (first is Map) {
+          final msg = first['msg']?.toString();
+          if (msg != null) return _humanizeMessage(msg, statusCode);
+        }
       }
-      return data['message']?.toString() ?? e.message ?? 'Unknown error';
+      if (data['message'] is String) {
+        return _humanizeMessage(data['message'] as String, statusCode);
+      }
     }
-    return e.message ?? 'Unknown error';
+
+    return _humanizeMessage(e.message ?? '', statusCode);
+  }
+
+  String _humanizeMessage(String raw, int? statusCode) {
+    final msg = raw.trim();
+
+    if (statusCode == 401) {
+      if (msg.toLowerCase().contains('invalid email or password') ||
+          msg.toLowerCase().contains('invalid credentials')) {
+        return 'Invalid email or password. Please try again.';
+      }
+      if (msg.toLowerCase().contains('not verified') ||
+          msg.toLowerCase().contains('account not verified')) {
+        return 'Your account is not verified. Please verify your phone number.';
+      }
+      if (msg.toLowerCase().contains('token') ||
+          msg.toLowerCase().contains('unauthorized')) {
+        return 'Your session has expired. Please sign in again.';
+      }
+      return 'Authentication failed. Please sign in again.';
+    }
+
+    if (statusCode == 403) {
+      if (msg.toLowerCase().contains('permission') ||
+          msg.toLowerCase().contains('forbidden')) {
+        return 'You do not have permission to perform this action.';
+      }
+      return 'Access denied. You do not have permission to do this.';
+    }
+
+    if (statusCode == 404) {
+      return 'The requested resource was not found.';
+    }
+
+    if (statusCode == 409) {
+      if (msg.toLowerCase().contains('already') ||
+          msg.toLowerCase().contains('exists')) {
+        return 'This item already exists.';
+      }
+      return 'A conflict occurred with the current state.';
+    }
+
+    if (statusCode == 422) {
+      if (msg.toLowerCase().contains('validation')) {
+        return 'Please check your input and try again.';
+      }
+      return msg.isEmpty ? 'Validation error. Please check your input.' : msg;
+    }
+
+    if (statusCode == 429) {
+      return 'Too many requests. Please wait a moment and try again.';
+    }
+
+    if (statusCode != null && statusCode >= 500) {
+      return 'Server error. Please try again later.';
+    }
+
+    if (msg.toLowerCase().contains('connection') ||
+        msg.toLowerCase().contains('socket') ||
+        msg.toLowerCase().contains('timeout')) {
+      return 'Connection error. Please check your internet and try again.';
+    }
+
+    return msg.isEmpty ? 'Something went wrong. Please try again.' : msg;
   }
 
   String getErrorMessage(DioException e) => _extractErrorMessage(e);

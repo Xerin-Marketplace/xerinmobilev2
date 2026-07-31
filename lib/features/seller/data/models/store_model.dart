@@ -1,3 +1,6 @@
+import 'store_gallery_image_model.dart';
+import 'store_opening_hour_model.dart';
+
 class StoreModel {
   final String id;
   final String sellerId;
@@ -32,6 +35,8 @@ class StoreModel {
   final double rating;
   final int reviewCount;
   final int followersCount;
+  final List<StoreGalleryImageModel> galleryImages;
+  final List<StoreOpeningHourModel> openingHours;
   final String? createdAt;
   final String? updatedAt;
 
@@ -69,6 +74,8 @@ class StoreModel {
     this.rating = 0.0,
     this.reviewCount = 0,
     this.followersCount = 0,
+    this.galleryImages = const [],
+    this.openingHours = const [],
     this.createdAt,
     this.updatedAt,
   });
@@ -108,6 +115,14 @@ class StoreModel {
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       reviewCount: (json['review_count'] as num?)?.toInt() ?? 0,
       followersCount: (json['followers_count'] as num?)?.toInt() ?? 0,
+      galleryImages: (json['gallery_images'] as List<dynamic>?)
+              ?.map((e) => StoreGalleryImageModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      openingHours: (json['opening_hours'] as List<dynamic>?)
+              ?.map((e) => StoreOpeningHourModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
       createdAt: json['created_at'] as String?,
       updatedAt: json['updated_at'] as String?,
     );
