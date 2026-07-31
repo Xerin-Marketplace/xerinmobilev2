@@ -190,11 +190,15 @@ class _SellerOrdersPageState extends State<SellerOrdersPage> {
               Icon(Icons.person_outline_rounded,
                   size: 14, color: colorScheme.onSurface.withValues(alpha: 0.4)),
               const SizedBox(width: 4),
-              Text(
-                'Customer: ${order.userId.substring(0, 8)}...',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+              Flexible(
+                child: Text(
+                  'Customer: ${order.userId.substring(0, 8)}...',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 12),
