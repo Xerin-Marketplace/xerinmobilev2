@@ -237,7 +237,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Order #${order.orderNumber.length > 8 ? order.orderNumber.substring(0, 8).toUpperCase() : order.orderNumber}',
+              Text('Order ${order.orderRef}',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colorScheme.onSurface),
               ),
               Container(

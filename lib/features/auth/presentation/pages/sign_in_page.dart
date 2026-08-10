@@ -157,8 +157,31 @@ class _SignInPageState extends State<SignInPage>
       listener: _onStateChange,
       builder: (context, state) {
         final isLoading = state is AuthLoading;
+        final errorMessage = state is AuthError ? state.message : null;
         return Scaffold(
-      body: SafeArea(
+      body: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 280,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    colorScheme.primary.withValues(alpha: 0.08),
+                    colorScheme.primary.withValues(alpha: 0.02),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Form(
@@ -169,9 +192,22 @@ class _SignInPageState extends State<SignInPage>
                 position: _slideAnim,
                 child: Column(
                   children: [
-                    const SizedBox(height: 40),
-                    const AuthLogo(width: 200, height: 130),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 30),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorScheme.primary.withValues(alpha: 0.12),
+                            blurRadius: 30,
+                            spreadRadius: 4,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: const AuthLogo(width: 200, height: 130),
+                    ),
+                    const SizedBox(height: 24),
                     Text(
                       'Welcome Back!',
                       style: TextStyle(
@@ -190,7 +226,11 @@ class _SignInPageState extends State<SignInPage>
                         letterSpacing: 0.2,
                       ),
                     ),
-                    const SizedBox(height: 36),
+                    const SizedBox(height: 28),
+                    if (errorMessage != null) ...[
+                      AuthErrorBanner(message: errorMessage),
+                      const SizedBox(height: 20),
+                    ],
                     AuthTextField(
                       controller: _emailCtrl,
                       focusNode: _emailNode,
@@ -286,11 +326,11 @@ class _SignInPageState extends State<SignInPage>
                     const SizedBox(height: 14),
                     SizedBox(
                       width: double.infinity,
-                      height: 50,
+                      height: 52,
                       child: OutlinedButton.icon(
                         onPressed: isLoading ? null : () => context.read<AuthCubit>().continueAsGuest(),
                         icon: Icon(Icons.person_outline_rounded, color: colorScheme.primary, size: 18),
-                        label: const Text('Continue as Guest', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                        label: const Text('Continue as Guest', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: colorScheme.primary,
                           side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.3), width: 1.5),
@@ -299,7 +339,35 @@ class _SignInPageState extends State<SignInPage>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: colorScheme.onSurface.withValues(alpha: 0.08),
+                            thickness: 1,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            'or',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onSurface.withValues(alpha: 0.35),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: colorScheme.onSurface.withValues(alpha: 0.08),
+                            thickness: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -330,13 +398,15 @@ class _SignInPageState extends State<SignInPage>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
             ),
           ),
         ),
+      ),
+        ],
       ),
     );
       },

@@ -12,7 +12,7 @@ class WishlistRemoteDataSource {
 
   Future<List<WishlistItemModel>> getWishlist() async {
     try {
-      final response = await _client.get(ApiConstants.wishlist);
+      final response = await _client.get(ApiConstants.wishlistProducts);
       final data = response.data;
       List<dynamic> list;
       if (data is List) {
@@ -35,8 +35,7 @@ class WishlistRemoteDataSource {
   Future<WishlistItemModel> addToWishlist({required String productId}) async {
     try {
       final response = await _client.post(
-        ApiConstants.wishlist,
-        data: {'product_id': productId},
+        ApiConstants.wishlistAddProduct(productId),
       );
       return WishlistItemModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
@@ -44,9 +43,30 @@ class WishlistRemoteDataSource {
     }
   }
 
-  Future<void> removeFromWishlist({required String wishlistItemId}) async {
+  Future<void> removeFromWishlist({required String productId}) async {
     try {
-      await _client.delete(ApiConstants.wishlistById(wishlistItemId));
+      await _client.delete(ApiConstants.wishlistRemoveProduct(productId));
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<void> clearWishlist() async {
+    try {
+      await _client.delete(ApiConstants.wishlistClear);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, int>> getWishlistSummary() async {
+    try {
+      final response = await _client.get(ApiConstants.wishlistSummary);
+      final data = response.data as Map<String, dynamic>;
+      return {
+        'product_count': (data['product_count'] as num?)?.toInt() ?? 0,
+        'store_count': (data['store_count'] as num?)?.toInt() ?? 0,
+      };
     } on DioException catch (e) {
       throw ServerException(_client.getErrorMessage(e));
     }
@@ -54,13 +74,7 @@ class WishlistRemoteDataSource {
 
   Future<bool> toggleWishlistItem({required String productId}) async {
     try {
-      final response = await _client.post(
-        ApiConstants.toggleWishlistItem(productId),
-      );
-      final data = response.data;
-      if (data is Map && data['is_wishlisted'] is bool) {
-        return data['is_wishlisted'] as bool;
-      }
+      await _client.post(ApiConstants.wishlistAddProduct(productId));
       return true;
     } on DioException catch (e) {
       throw ServerException(_client.getErrorMessage(e));

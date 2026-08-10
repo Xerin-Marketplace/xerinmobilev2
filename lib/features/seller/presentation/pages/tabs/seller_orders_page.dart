@@ -203,10 +203,11 @@ class _SellerOrdersPageState extends State<SellerOrdersPage> {
               ),
               const SizedBox(width: 12),
               Text(
-                '#${order.id.substring(0, 8)}',
+                order.orderRef,
                 style: TextStyle(
                   fontSize: 12,
                   color: colorScheme.onSurface.withValues(alpha: 0.4),
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],

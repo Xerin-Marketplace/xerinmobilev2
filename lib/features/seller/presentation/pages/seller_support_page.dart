@@ -163,7 +163,7 @@ class _SellerSupportPageState extends State<SellerSupportPage>
                     _buildContactOption(
                       Icons.phone_rounded,
                       'Call Support',
-                      '+255 800 123 456',
+                      '+255 22 200 0000',
                       const Color(0xFF22C55E),
                       colorScheme,
                     ),
@@ -181,6 +181,14 @@ class _SellerSupportPageState extends State<SellerSupportPage>
                       'Live Chat',
                       'Available now',
                       const Color(0xFFF59E0B),
+                      colorScheme,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildContactOption(
+                      Icons.chat_bubble_rounded,
+                      'WhatsApp',
+                      '+255 22 200 0000',
+                      const Color(0xFF22C55E),
                       colorScheme,
                     ),
                     const SizedBox(height: 24),

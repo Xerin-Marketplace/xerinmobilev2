@@ -74,15 +74,15 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
                   const SizedBox(height: 24),
                   _buildFlashSale(colorScheme, flashSaleProducts, isLoading, context),
                   const SizedBox(height: 24),
-                  _buildSectionTitle('Categories', colorScheme),
+                  _buildSectionTitle('Categories', colorScheme, onSeeAll: () => context.push(AppConstants.categoriesRoute)),
                   const SizedBox(height: 16),
                   _buildCategoryGrid(colorScheme, categories, isLoading, context),
                   const SizedBox(height: 24),
-                  _buildSectionTitle('Trending Now', colorScheme),
+                  _buildSectionTitle('Trending Now', colorScheme, onSeeAll: () => context.push(AppConstants.exploreProductsRoute)),
                   const SizedBox(height: 16),
                   _buildTrendingList(colorScheme, trending, isLoading, context),
                   const SizedBox(height: 24),
-                  _buildSectionTitle('All Products', colorScheme),
+                  _buildSectionTitle('All Products', colorScheme, onSeeAll: () => context.push(AppConstants.exploreProductsRoute)),
                   const SizedBox(height: 16),
                   _buildProductGrid(colorScheme, products, isLoading, context),
                   const SizedBox(height: 24),
@@ -284,12 +284,16 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
     );
   }
 
-  Widget _buildSectionTitle(String title, ColorScheme colorScheme) {
+  Widget _buildSectionTitle(String title, ColorScheme colorScheme, {VoidCallback? onSeeAll}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
-        Text('See All', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.primary)),
+        if (onSeeAll != null)
+          GestureDetector(
+            onTap: onSeeAll,
+            child: Text('See All', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.primary)),
+          ),
       ],
     );
   }
@@ -324,7 +328,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
 
   Widget _buildTrendingList(ColorScheme colorScheme, List<ProductModel> trending, bool isLoading, BuildContext context) {
     if (isLoading) return const Center(child: CircularProgressIndicator());
-    final items = trending.take(4).toList();
+    final items = trending.take(10).toList();
     if (items.isEmpty) {
       return Container(padding: const EdgeInsets.all(20),
         child: Center(child: Text('No trending products', style: TextStyle(fontSize: 13, color: colorScheme.onSurface.withValues(alpha: 0.4)))),
@@ -334,8 +338,8 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
       children: items.map((product) {
         return GestureDetector(
           onTap: () => context.push(AppConstants.productDetailRoute, extra: {
-            'name': product.name, 'price': product.formattedPrice, 'image': product.thumbnailUrl ?? '',
-            'category': product.categoryName ?? '', 'rating': product.rating,
+            'product': product,
+            'category': product.categoryName ?? 'All',
           }),
           child: Container(
             margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(14),
@@ -419,8 +423,8 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
         final product = products[index];
         return GestureDetector(
           onTap: () => context.push(AppConstants.productDetailRoute, extra: {
-            'name': product.name, 'price': product.formattedPrice, 'image': product.thumbnailUrl ?? '',
-            'category': product.categoryName ?? '', 'rating': product.rating,
+            'product': product,
+            'category': product.categoryName ?? 'All',
           }),
           child: Container(
             decoration: BoxDecoration(
@@ -431,7 +435,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
                   child: Stack(fit: StackFit.expand, children: [
                     product.thumbnailUrl != null
                         ? Image.network(product.thumbnailUrl!, fit: BoxFit.cover, errorBuilder: (_, _, _) => _productGridPlaceholder(colorScheme))
@@ -465,15 +469,19 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
                     const SizedBox(height: 2),
                     Text(product.formattedPrice, style: TextStyle(fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.4), decoration: TextDecoration.lineThrough)),
                   ],
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Row(children: [
+                    Icon(Icons.local_shipping_rounded, size: 12, color: colorScheme.primary.withValues(alpha: 0.6)),
+                    const SizedBox(width: 3),
+                    Text('Xerin Express', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: colorScheme.primary.withValues(alpha: 0.6))),
+                    const Spacer(),
                     Icon(Icons.star_rounded, size: 12, color: Colors.amber),
                     const SizedBox(width: 3),
                     Text(product.rating.toStringAsFixed(1), style: TextStyle(fontSize: 10, color: colorScheme.onSurface.withValues(alpha: 0.5))),
                   ]),
                 ]),
               ),
-            ]),
+            ],
           ),
         );
       },

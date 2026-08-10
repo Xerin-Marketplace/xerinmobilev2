@@ -25,7 +25,7 @@ class _SellerOnboardingPageState extends State<SellerOnboardingPage>
       title: 'Your Shop is Ready!',
       description:
           'You\'ve taken the first step toward building your business on XerinMarket. '
-          'Millions of customers are waiting to discover your products.',
+          'Customers across Tanzania are ready to discover your products.',
       color: Color(0xFFF47524),
       gradientColors: [Color(0xFFF47524), Color(0xFFFF8A50)],
     ),

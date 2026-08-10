@@ -55,8 +55,10 @@ class WishlistCubit extends Cubit<WishlistState> {
   Future<void> removeItem(String itemId) async {
     final current = state;
     if (current is! WishlistLoaded) return;
+    final item = current.items.where((i) => i.id == itemId).firstOrNull;
+    if (item == null) return;
     try {
-      await _dataSource.removeFromWishlist(wishlistItemId: itemId);
+      await _dataSource.removeFromWishlist(productId: item.productId);
       final updated = current.items.where((i) => i.id != itemId).toList();
       final selected = Set<String>.from(current.selectedIds)..remove(itemId);
       _logger.i('✅ Wishlist item removed: $itemId');
@@ -70,8 +72,8 @@ class WishlistCubit extends Cubit<WishlistState> {
     final current = state;
     if (current is! WishlistLoaded || current.selectedIds.isEmpty) return;
     try {
-      for (final id in current.selectedIds) {
-        await _dataSource.removeFromWishlist(wishlistItemId: id);
+      for (final item in current.items.where((i) => current.selectedIds.contains(i.id))) {
+        await _dataSource.removeFromWishlist(productId: item.productId);
       }
       final updated = current.items.where((i) => !current.selectedIds.contains(i.id)).toList();
       _logger.i('✅ Removed ${current.selectedIds.length} wishlist items');

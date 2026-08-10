@@ -144,6 +144,31 @@ class AdminCubit extends Cubit<AdminState> {
   }
 
   // Sellers
+  Future<void> registerSeller({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+    String? phone,
+    String? businessName,
+  }) async {
+    emit(const AdminActionLoading());
+    try {
+      await _dataSource.registerSeller(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        password: password,
+        phone: phone,
+        businessName: businessName,
+      );
+      emit(const AdminActionSuccess(message: 'Seller registered successfully'));
+      await loadDashboard();
+    } on ServerException catch (e) {
+      emit(AdminActionError(message: e.message));
+    }
+  }
+
   Future<void> approveSeller(String id) async {
     emit(const AdminActionLoading());
     try {

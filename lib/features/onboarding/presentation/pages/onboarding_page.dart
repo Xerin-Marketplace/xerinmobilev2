@@ -29,9 +29,9 @@ class _OnboardingPageState extends State<OnboardingPage>
     _OnboardingItem(
       image: 'assets/onboarding/1stonbaoidng .jpg',
       icon: Icons.storefront_rounded,
-      title: 'Welcome to Xerin',
+      title: 'Welcome to XerinMarket',
       description:
-          'Discover a marketplace built for everyone. Shop, sell, and connect with trusted vendors from one beautiful app.',
+          'Tanzania\'s Trusted Online Marketplace. Shop local, connect globally — buy and sell with confidence.',
       gradientColors: [Color(0xFFF47524), Color(0xFFFF8A50)],
     ),
     _OnboardingItem(
@@ -47,7 +47,7 @@ class _OnboardingPageState extends State<OnboardingPage>
       icon: Icons.lock_rounded,
       title: 'Secure Payments',
       description:
-          'Pay with confidence using encrypted, secure transactions. Your data and money are always protected with us.',
+          'Pay with confidence — your funds are held securely until you confirm delivery. Buyer protection on every purchase.',
       gradientColors: [Color(0xFF22C55E), Color(0xFF4ADE80)],
     ),
   ];

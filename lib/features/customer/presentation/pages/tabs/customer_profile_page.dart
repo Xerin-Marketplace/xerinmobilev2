@@ -20,11 +20,14 @@ class CustomerProfilePage extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final menuItems = [
-      {'icon': Icons.person_outline_rounded, 'label': 'Personal Info'},
+      {'icon': Icons.person_outline_rounded, 'label': 'Personal info'},
       {'icon': Icons.location_on_outlined, 'label': 'Addresses'},
       {'icon': Icons.payment_rounded, 'label': 'Payment Methods'},
       {'icon': Icons.shopping_bag_outlined, 'label': 'Order History'},
+      {'icon': Icons.local_offer_outlined, 'label': 'Promotions & Deals'},
       {'icon': Icons.notifications_outlined, 'label': 'Notifications'},
+      {'icon': Icons.tune_outlined, 'label': 'Notification Preferences'},
+      {'icon': Icons.search_rounded, 'label': 'Search Products'},
       {'icon': Icons.settings_outlined, 'label': 'Settings'},
       {'icon': Icons.help_outline_rounded, 'label': 'Help & Support'},
       {'icon': Icons.logout_rounded, 'label': 'Logout', 'color': const Color(0xFFE53935)},
@@ -194,6 +197,15 @@ class CustomerProfilePage extends StatelessWidget {
                             break;
                           case 'Notifications':
                             context.push(AppConstants.notificationsRoute);
+                            break;
+                          case 'Promotions & Deals':
+                            context.push(AppConstants.promotionsRoute);
+                            break;
+                          case 'Notification Preferences':
+                            context.push(AppConstants.notificationPreferencesRoute);
+                            break;
+                          case 'Search Products':
+                            context.push(AppConstants.searchRoute);
                             break;
                           case 'Settings':
                             context.push(AppConstants.settingsRoute);

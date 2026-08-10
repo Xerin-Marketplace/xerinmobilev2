@@ -11,24 +11,25 @@ class AdminCategoriesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          toolbarHeight: 0,
-          bottom: const TabBar(
+      child: Column(
+        children: [
+          const TabBar(
             tabs: [
-              Tab(text: 'Product Categories'),
-              Tab(text: 'Business Categories'),
+              Tab(text: 'Products'),
+              Tab(text: 'Business'),
               Tab(text: 'Brands'),
             ],
           ),
-        ),
-        body: const TabBarView(
-          children: [
-            _ProductCategoriesTab(),
-            _BusinessCategoriesTab(),
-            _BrandsTab(),
-          ],
-        ),
+          const Expanded(
+            child: TabBarView(
+              children: [
+                _ProductCategoriesTab(),
+                _BusinessCategoriesTab(),
+                _BrandsTab(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -41,6 +42,13 @@ class _ProductCategoriesTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AdminCubit, AdminState>(
       builder: (context, state) {
+        if (state is AdminError) {
+          return _ErrorView(
+            message: state.message,
+            onRetry: () => context.read<AdminCubit>().loadDashboard(),
+          );
+        }
+
         if (state is! AdminDashboardLoaded) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -68,44 +76,50 @@ class _ProductCategoriesTab extends StatelessWidget {
             ),
             Expanded(
               child: categories.isEmpty
-                  ? const Center(child: Text('No categories found'))
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: categories.length,
-                      itemBuilder: (context, index) {
-                        final cat = categories[index];
-                        final name = cat['name']?.toString() ?? 'Unknown';
-                        final desc = cat['description']?.toString() ?? '';
-                        final id = cat['id']?.toString() ?? '';
+                  ? _buildEmptyState(context, 'No product categories found')
+                  : RefreshIndicator(
+                      onRefresh: () => context.read<AdminCubit>().loadDashboard(),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: categories.length,
+                        itemBuilder: (context, index) {
+                          final cat = categories[index];
+                          final name = cat['name']?.toString() ?? 'Unknown';
+                          final desc = cat['description']?.toString() ?? '';
+                          final id = cat['id']?.toString() ?? '';
 
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            leading: const CircleAvatar(
-                              child: Icon(Icons.category_rounded),
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            clipBehavior: Clip.antiAlias,
+                            child: ListTile(
+                              leading: const CircleAvatar(
+                                child: Icon(Icons.category_rounded),
+                              ),
+                              title: Text(name,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis),
+                              subtitle: desc.isNotEmpty
+                                  ? Text(desc,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 13))
+                                  : null,
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded,
+                                    color: Colors.red),
+                                onPressed: () =>
+                                    _showDeleteConfirm(context, id, name, () {
+                                  context
+                                      .read<AdminCubit>()
+                                      .deleteProductCategory(id);
+                                }),
+                              ),
                             ),
-                            title: Text(name,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600)),
-                            subtitle: desc.isNotEmpty
-                                ? Text(desc,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 13))
-                                : null,
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline_rounded,
-                                  color: Colors.red),
-                              onPressed: () =>
-                                  _showDeleteConfirm(context, id, name, () {
-                                context
-                                    .read<AdminCubit>()
-                                    .deleteProductCategory(id);
-                              }),
-                            ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
             ),
           ],
@@ -122,6 +136,13 @@ class _BusinessCategoriesTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AdminCubit, AdminState>(
       builder: (context, state) {
+        if (state is AdminError) {
+          return _ErrorView(
+            message: state.message,
+            onRetry: () => context.read<AdminCubit>().loadDashboard(),
+          );
+        }
+
         if (state is! AdminDashboardLoaded) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -149,44 +170,50 @@ class _BusinessCategoriesTab extends StatelessWidget {
             ),
             Expanded(
               child: categories.isEmpty
-                  ? const Center(child: Text('No business categories found'))
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: categories.length,
-                      itemBuilder: (context, index) {
-                        final cat = categories[index];
-                        final name = cat['name']?.toString() ?? 'Unknown';
-                        final desc = cat['description']?.toString() ?? '';
-                        final id = cat['id']?.toString() ?? '';
+                  ? _buildEmptyState(context, 'No business categories found')
+                  : RefreshIndicator(
+                      onRefresh: () => context.read<AdminCubit>().loadDashboard(),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: categories.length,
+                        itemBuilder: (context, index) {
+                          final cat = categories[index];
+                          final name = cat['name']?.toString() ?? 'Unknown';
+                          final desc = cat['description']?.toString() ?? '';
+                          final id = cat['id']?.toString() ?? '';
 
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            leading: const CircleAvatar(
-                              child: Icon(Icons.business_rounded),
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            clipBehavior: Clip.antiAlias,
+                            child: ListTile(
+                              leading: const CircleAvatar(
+                                child: Icon(Icons.business_rounded),
+                              ),
+                              title: Text(name,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis),
+                              subtitle: desc.isNotEmpty
+                                  ? Text(desc,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 13))
+                                  : null,
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded,
+                                    color: Colors.red),
+                                onPressed: () =>
+                                    _showDeleteConfirm(context, id, name, () {
+                                  context
+                                      .read<AdminCubit>()
+                                      .deleteBusinessCategory(id);
+                                }),
+                              ),
                             ),
-                            title: Text(name,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600)),
-                            subtitle: desc.isNotEmpty
-                                ? Text(desc,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(fontSize: 13))
-                                : null,
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline_rounded,
-                                  color: Colors.red),
-                              onPressed: () =>
-                                  _showDeleteConfirm(context, id, name, () {
-                                context
-                                    .read<AdminCubit>()
-                                    .deleteBusinessCategory(id);
-                              }),
-                            ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
             ),
           ],
@@ -203,6 +230,13 @@ class _BrandsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AdminCubit, AdminState>(
       builder: (context, state) {
+        if (state is AdminError) {
+          return _ErrorView(
+            message: state.message,
+            onRetry: () => context.read<AdminCubit>().loadDashboard(),
+          );
+        }
+
         if (state is! AdminDashboardLoaded) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -230,35 +264,41 @@ class _BrandsTab extends StatelessWidget {
             ),
             Expanded(
               child: brands.isEmpty
-                  ? const Center(child: Text('No brands found'))
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: brands.length,
-                      itemBuilder: (context, index) {
-                        final brand = brands[index];
-                        final name = brand['name']?.toString() ?? 'Unknown';
-                        final id = brand['id']?.toString() ?? '';
+                  ? _buildEmptyState(context, 'No brands found')
+                  : RefreshIndicator(
+                      onRefresh: () => context.read<AdminCubit>().loadDashboard(),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: brands.length,
+                        itemBuilder: (context, index) {
+                          final brand = brands[index];
+                          final name = brand['name']?.toString() ?? 'Unknown';
+                          final id = brand['id']?.toString() ?? '';
 
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            leading: const CircleAvatar(
-                              child: Icon(Icons.branding_watermark_rounded),
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            clipBehavior: Clip.antiAlias,
+                            child: ListTile(
+                              leading: const CircleAvatar(
+                                child: Icon(Icons.branding_watermark_rounded),
+                              ),
+                              title: Text(name,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded,
+                                    color: Colors.red),
+                                onPressed: () =>
+                                    _showDeleteConfirm(context, id, name, () {
+                                  context.read<AdminCubit>().deleteBrand(id);
+                                }),
+                              ),
                             ),
-                            title: Text(name,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600)),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline_rounded,
-                                  color: Colors.red),
-                              onPressed: () =>
-                                  _showDeleteConfirm(context, id, name, () {
-                                context.read<AdminCubit>().deleteBrand(id);
-                              }),
-                            ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
             ),
           ],
@@ -353,4 +393,64 @@ void _showDeleteConfirm(
       ],
     ),
   );
+}
+
+Widget _buildEmptyState(BuildContext context, String message) {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(Icons.inbox_outlined,
+            size: 64,
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+        const SizedBox(height: 16),
+        Text(message,
+            style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
+      ],
+    ),
+  );
+}
+
+class _ErrorView extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorView({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline_rounded,
+                size: 64, color: colorScheme.error.withValues(alpha: 0.6)),
+            const SizedBox(height: 16),
+            Text('Failed to load',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface)),
+            const SizedBox(height: 8),
+            Text(message,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 14,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

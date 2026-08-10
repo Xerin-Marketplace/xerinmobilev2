@@ -3,20 +3,25 @@ import 'package:logger/logger.dart';
 
 import '../../../../core/errors/exceptions.dart';
 import '../../data/datasources/customer_remote_datasource.dart';
+import '../../data/datasources/payment_remote_datasource.dart';
 import '../../data/models/address_model.dart';
 import '../../data/models/notification_model.dart';
 import '../../data/models/order_model.dart';
 import '../../data/models/payment_method_model.dart';
+import '../../data/models/payment_model.dart';
 import 'customer_state.dart';
 
 class CustomerCubit extends Cubit<CustomerState> {
   final CustomerRemoteDataSource _dataSource;
+  final PaymentRemoteDataSource _paymentDataSource;
   final Logger _logger;
 
   CustomerCubit({
     required CustomerRemoteDataSource dataSource,
+    required PaymentRemoteDataSource paymentDataSource,
     required Logger logger,
   })  : _dataSource = dataSource,
+        _paymentDataSource = paymentDataSource,
         _logger = logger,
         super(const CustomerInitial());
 
@@ -311,5 +316,141 @@ class CustomerCubit extends Cubit<CustomerState> {
       emit(CustomerActionError('Failed to place order: $e'));
       return false;
     }
+  }
+
+  // =========================
+  // PAYMENT FLOW
+  // =========================
+
+  Future<PaymentModel?> placeOrderAndPay({
+    String? shippingAddressId,
+    String? couponCode,
+    String? notes,
+    required String paymentMethod,
+    String? provider,
+    String? phoneNumber,
+    String? successUrl,
+    String? failureUrl,
+  }) async {
+    emit(const PaymentInProgress(message: 'Placing your order...'));
+    try {
+      final order = await _dataSource.createOrder(
+        shippingAddressId: shippingAddressId,
+        couponCode: couponCode,
+        notes: notes,
+      );
+      _logger.i('✅ Order placed: ${order.id}');
+
+      if (paymentMethod == 'cash_on_delivery') {
+        await refreshOrders();
+        emit(PaymentSuccess(
+          paymentId: '',
+          orderId: order.id,
+          method: paymentMethod,
+        ));
+        return null;
+      }
+
+      emit(const PaymentInProgress(message: 'Initiating payment...'));
+      final payment = await _paymentDataSource.initiatePayment(
+        orderId: order.id,
+        method: paymentMethod,
+        provider: provider,
+        phoneNumber: phoneNumber,
+        successUrl: successUrl,
+        failureUrl: failureUrl,
+      );
+      _logger.i('✅ Payment initiated: ${payment.id}, status: ${payment.status}');
+
+      await refreshOrders();
+
+      String? checkoutUrl;
+      if (payment.providerResponse != null) {
+        checkoutUrl = payment.providerResponse!['checkout_url'] as String?;
+      }
+
+      if (payment.isCompleted) {
+        emit(PaymentSuccess(
+          paymentId: payment.id,
+          orderId: order.id,
+          method: paymentMethod,
+        ));
+      } else if (payment.isProcessing || payment.isPending) {
+        if (checkoutUrl != null) {
+          emit(PaymentSuccess(
+            paymentId: payment.id,
+            orderId: order.id,
+            method: paymentMethod,
+            checkoutUrl: checkoutUrl,
+          ));
+        } else {
+          emit(PaymentSuccess(
+            paymentId: payment.id,
+            orderId: order.id,
+            method: paymentMethod,
+          ));
+        }
+      } else if (payment.isFailed) {
+        emit(const PaymentFailed('Payment was rejected by the provider'));
+      } else {
+        emit(PaymentSuccess(
+          paymentId: payment.id,
+          orderId: order.id,
+          method: paymentMethod,
+          checkoutUrl: checkoutUrl,
+        ));
+      }
+
+      return payment;
+    } on ServerException catch (e) {
+      _logger.e('❌ Payment failed: ${e.message}');
+      emit(PaymentFailed(e.message));
+      return null;
+    } catch (e) {
+      _logger.e('❌ Payment unexpected error: $e');
+      emit(PaymentFailed('Failed to process payment: $e'));
+      return null;
+    }
+  }
+
+  Future<PaymentModel?> checkPaymentStatus(String paymentId) async {
+    try {
+      final payment = await _paymentDataSource.getPayment(paymentId);
+      emit(PaymentStatusUpdated(paymentId: paymentId, status: payment.status));
+      return payment;
+    } on ServerException catch (e) {
+      _logger.e('❌ Payment status check failed: ${e.message}');
+      return null;
+    } catch (e) {
+      _logger.e('❌ Payment status check error: $e');
+      return null;
+    }
+  }
+
+  Future<PaymentModel?> pollPaymentStatus({
+    required String paymentId,
+    Duration interval = const Duration(seconds: 3),
+    int maxAttempts = 20,
+  }) async {
+    for (int i = 0; i < maxAttempts; i++) {
+      await Future.delayed(interval);
+      final payment = await checkPaymentStatus(paymentId);
+      if (payment == null) continue;
+      if (payment.isCompleted) {
+        emit(PaymentSuccess(
+          paymentId: payment.id,
+          orderId: payment.orderId,
+          method: payment.method,
+        ));
+        return payment;
+      }
+      if (payment.isFailed || payment.isCancelled) {
+        emit(PaymentFailed(payment.status == 'cancelled'
+            ? 'Payment was cancelled'
+            : 'Payment failed'));
+        return payment;
+      }
+    }
+    return null;
   }
 }

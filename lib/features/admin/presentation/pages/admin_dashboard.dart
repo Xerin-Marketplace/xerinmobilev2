@@ -51,12 +51,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
       },
       builder: (context, state) {
         final isLoading = state is AdminLoading;
+        final isError = state is AdminError;
 
         return Scaffold(
           appBar: AppBar(
             title: const Text('Admin Panel'),
             centerTitle: false,
             actions: [
+              if (state is AdminActionLoading)
+                const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
               IconButton(
                 icon: const Icon(Icons.refresh_rounded),
                 onPressed: isLoading
@@ -85,8 +95,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ],
           ),
           body: isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _pages[_currentIndex],
+              ? _buildLoadingSkeleton()
+              : isError
+                  ? _buildErrorView(state.message, colorScheme)
+                  : _pages[_currentIndex],
           bottomNavigationBar: NavigationBar(
             selectedIndex: _currentIndex,
             onDestinationSelected: (index) {
@@ -122,6 +134,122 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildLoadingSkeleton() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 28,
+            width: 200,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          const SizedBox(height: 20),
+          GridView.count(
+            shrinkWrap: true,
+            crossAxisCount: 2,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1.4,
+            children: List.generate(6, (_) => _SkeletonCard()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorView(String message, ColorScheme colorScheme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline_rounded,
+                size: 64, color: colorScheme.error.withValues(alpha: 0.6)),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: () => context.read<AdminCubit>().loadDashboard(),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SkeletonCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              shape: BoxShape.circle,
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 24,
+                width: 60,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                height: 12,
+                width: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

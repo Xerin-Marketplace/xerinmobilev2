@@ -11,6 +11,13 @@ class AdminProductsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AdminCubit, AdminState>(
       builder: (context, state) {
+        if (state is AdminError) {
+          return _ErrorView(
+            message: state.message,
+            onRetry: () => context.read<AdminCubit>().loadDashboard(),
+          );
+        }
+
         if (state is! AdminDashboardLoaded) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -26,7 +33,9 @@ class AdminProductsPage extends StatelessWidget {
                     size: 64,
                     color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
                 const SizedBox(height: 16),
-                const Text('No pending products'),
+                const Text('No pending products',
+                    style: TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
                 const Text('All products have been reviewed',
                     style: TextStyle(fontSize: 13, color: Colors.grey)),
@@ -35,95 +44,103 @@ class AdminProductsPage extends StatelessWidget {
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: products.length,
-          itemBuilder: (context, index) {
-            final product = products[index];
-            final name = product['name']?.toString() ?? 'Unknown Product';
-            final price = product['price']?.toString() ?? '0';
-            final sellerName = product['seller_name']?.toString() ??
-                product['seller']?['business_name']?.toString() ??
-                'Unknown Seller';
-            final status = product['status']?.toString() ?? 'pending';
-            final id = product['id']?.toString() ?? '';
-            final description = product['description']?.toString() ?? '';
+        return RefreshIndicator(
+          onRefresh: () => context.read<AdminCubit>().loadDashboard(),
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              final product = products[index];
+              final name = product['name']?.toString() ?? 'Unknown Product';
+              final price = product['price']?.toString() ?? '0';
+              final sellerName = product['seller_name']?.toString() ??
+                  product['seller']?['business_name']?.toString() ??
+                  'Unknown Seller';
+              final id = product['id']?.toString() ?? '';
+              final description = product['description']?.toString() ?? '';
 
-            return Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ExpansionTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.teal.withValues(alpha: 0.2),
-                  child: const Icon(Icons.inventory_2_rounded,
-                      color: Colors.teal),
-                ),
-                title: Text(name,
-                    style:
-                        const TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                clipBehavior: Clip.antiAlias,
+                child: ExpansionTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.teal.withValues(alpha: 0.2),
+                    child: const Icon(Icons.inventory_2_rounded,
+                        color: Colors.teal),
+                  ),
+                  title: Text(name,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('TZS $price',
+                          style: const TextStyle(fontSize: 13)),
+                      Text('by $sellerName',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.5)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
                   children: [
-                    Text('TZS $price',
-                        style: const TextStyle(fontSize: 13)),
-                    Text('by $sellerName',
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.5))),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (description.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Text(description,
+                                  maxLines: 3,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.7))),
+                            ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: FilledButton.icon(
+                                  icon: const Icon(Icons.check_rounded),
+                                  label: const Text('Approve'),
+                                  style: FilledButton.styleFrom(
+                                      backgroundColor: Colors.green),
+                                  onPressed: () => context
+                                      .read<AdminCubit>()
+                                      .approveProduct(id),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  icon: const Icon(Icons.close_rounded),
+                                  label: const Text('Reject'),
+                                  style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.red),
+                                  onPressed: () => _showRejectDialog(
+                                      context, id),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (description.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Text(description,
-                                style: TextStyle(
-                                    fontSize: 13,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.7))),
-                          ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: FilledButton.icon(
-                                icon: const Icon(Icons.check_rounded),
-                                label: const Text('Approve'),
-                                style: FilledButton.styleFrom(
-                                    backgroundColor: Colors.green),
-                                onPressed: () => context
-                                    .read<AdminCubit>()
-                                    .approveProduct(id),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                icon: const Icon(Icons.close_rounded),
-                                label: const Text('Reject'),
-                                style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.red),
-                                onPressed: () => _showRejectDialog(
-                                    context, id),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
+              );
+            },
+          ),
         );
       },
     );
@@ -159,6 +176,48 @@ class AdminProductsPage extends StatelessWidget {
             child: const Text('Reject'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorView({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline_rounded,
+                size: 64, color: colorScheme.error.withValues(alpha: 0.6)),
+            const SizedBox(height: 16),
+            Text('Failed to load products',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface)),
+            const SizedBox(height: 8),
+            Text(message,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 14,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
       ),
     );
   }

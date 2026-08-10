@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -15,10 +16,13 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
   final _searchCtrl = TextEditingController();
   List<Map<String, dynamic>> _searchResults = [];
   bool _isSearching = false;
+  bool _hasSearched = false;
+  Timer? _debounce;
 
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
@@ -27,21 +31,39 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
       setState(() {
         _isSearching = false;
         _searchResults = [];
+        _hasSearched = false;
       });
       return;
     }
     setState(() => _isSearching = true);
-    final results = await context.read<AdminCubit>().searchUsers(query);
-    setState(() {
-      _searchResults = results;
-      _isSearching = false;
+    try {
+      final results = await context.read<AdminCubit>().searchUsers(query);
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+          _isSearching = false;
+          _hasSearched = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isSearching = false;
+          _hasSearched = true;
+        });
+      }
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      _performSearch(query);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Column(
       children: [
         Padding(
@@ -65,19 +87,29 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            onChanged: _performSearch,
+            onChanged: _onSearchChanged,
           ),
         ),
         Expanded(
           child: _isSearching
               ? const Center(child: CircularProgressIndicator())
-              : _isSearching == false && _searchResults.isNotEmpty
-                  ? _buildUserList(_searchResults)
+              : _hasSearched
+                  ? _searchResults.isEmpty
+                      ? _buildEmptyState('No users found for "${_searchCtrl.text}"')
+                      : _buildUserList(_searchResults)
                   : BlocBuilder<AdminCubit, AdminState>(
                       builder: (context, state) {
+                        if (state is AdminError) {
+                          return _ErrorView(
+                            message: state.message,
+                            onRetry: () => context.read<AdminCubit>().loadDashboard(),
+                          );
+                        }
                         if (state is! AdminDashboardLoaded) {
-                          return const Center(
-                              child: CircularProgressIndicator());
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        if (state.users.isEmpty) {
+                          return _buildEmptyState('No users found');
                         }
                         return _buildUserList(state.users);
                       },
@@ -87,20 +119,24 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
     );
   }
 
-  Widget _buildUserList(List<Map<String, dynamic>> users) {
-    if (users.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.people_outline_rounded, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('No users found'),
-          ],
-        ),
-      );
-    }
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.people_outline_rounded,
+              size: 64,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
+          const SizedBox(height: 16),
+          Text(message, style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5))),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildUserList(List<Map<String, dynamic>> users) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: users.length,
@@ -111,12 +147,13 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
         final email = user['email']?.toString() ?? 'No email';
         final isVerified = user['is_verified'] as bool? ?? false;
         final status = user['status']?.toString() ?? 'unknown';
-        final roles = user['roles'];
         final accountType = user['account_type']?.toString() ?? 'customer';
 
         return Card(
           margin: const EdgeInsets.only(bottom: 8),
+          clipBehavior: Clip.antiAlias,
           child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             leading: CircleAvatar(
               backgroundColor: _getRoleColor(accountType).withValues(alpha: 0.2),
               child: Text(
@@ -127,12 +164,18 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
               ),
             ),
             title: Text(name.isEmpty ? 'Unknown' : name,
-                style: const TextStyle(fontWeight: FontWeight.w600)),
+                style: const TextStyle(fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(email, style: const TextStyle(fontSize: 13)),
-                Row(
+                Text(email, style: const TextStyle(fontSize: 13),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -150,17 +193,44 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
                     if (isVerified)
-                      const Icon(Icons.verified_rounded,
-                          size: 14, color: Colors.green),
-                    const SizedBox(width: 6),
-                    Text(status,
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: status == 'active'
-                                ? Colors.green
-                                : Colors.orange)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.verified_rounded,
+                                size: 12, color: Colors.green),
+                            SizedBox(width: 4),
+                            Text('Verified',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.green)),
+                          ],
+                        ),
+                      ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: (status == 'active' ? Colors.green : Colors.orange)
+                            .withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(status,
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: status == 'active'
+                                  ? Colors.green
+                                  : Colors.orange)),
+                    ),
                   ],
                 ),
               ],
@@ -239,6 +309,48 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
             child: const Text('Delete'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorView({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline_rounded,
+                size: 64, color: colorScheme.error.withValues(alpha: 0.6)),
+            const SizedBox(height: 16),
+            Text('Failed to load users',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurface)),
+            const SizedBox(height: 8),
+            Text(message,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 14,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6))),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -32,14 +32,16 @@ class OrderTrackingPage extends StatelessWidget {
     switch (status.toLowerCase()) {
       case 'pending':
         return 0;
+      case 'paid':
+        return 1;
       case 'confirmed':
       case 'processing':
-        return 1;
-      case 'shipped':
         return 2;
+      case 'shipped':
+        return 3;
       case 'delivered':
       case 'completed':
-        return 3;
+        return 4;
       case 'cancelled':
       case 'failed':
         return -1;
@@ -56,10 +58,11 @@ class OrderTrackingPage extends StatelessWidget {
     final isCancelled = currentStep == -1;
 
     final steps = [
-      {'icon': Icons.receipt_long_rounded, 'title': 'Order Placed', 'desc': 'Your order has been received'},
-      {'icon': Icons.inventory_rounded, 'title': 'Processing', 'desc': 'Seller is preparing your order'},
-      {'icon': Icons.local_shipping_rounded, 'title': 'Shipped', 'desc': 'Your order is on the way'},
-      {'icon': Icons.check_circle_rounded, 'title': 'Delivered', 'desc': 'Order has been delivered'},
+      {'icon': Icons.receipt_long_rounded, 'title': 'Order Confirmed', 'desc': 'Your order has been received and confirmed'},
+      {'icon': Icons.verified_rounded, 'title': 'Payment Verified', 'desc': 'Payment has been verified and seller notified'},
+      {'icon': Icons.inventory_rounded, 'title': 'Seller Preparing', 'desc': 'The seller is preparing your order for dispatch'},
+      {'icon': Icons.local_shipping_rounded, 'title': 'Out for Delivery', 'desc': 'Your order is on the way via Xerin Express'},
+      {'icon': Icons.check_circle_rounded, 'title': 'Delivered', 'desc': 'Order has been delivered successfully'},
     ];
 
     return Scaffold(
@@ -112,7 +115,7 @@ class OrderTrackingPage extends StatelessWidget {
                                 fontSize: 18, fontWeight: FontWeight.bold, color: _statusColor(order.status)),
                           ),
                           const SizedBox(height: 4),
-                          Text('Order #${order.orderNumber}',
+                          Text('Order ${order.orderRef}',
                               style: TextStyle(
                                   fontSize: 13, color: colorScheme.onSurface.withValues(alpha: 0.5))),
                         ],

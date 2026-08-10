@@ -93,3 +93,44 @@ class CustomerActionError extends CustomerState {
   @override
   List<Object?> get props => [message];
 }
+
+// =========================
+// PAYMENT STATES
+// =========================
+
+class PaymentInProgress extends CustomerState {
+  final String message;
+  const PaymentInProgress({this.message = 'Processing payment...'});
+  @override
+  List<Object?> get props => [message];
+}
+
+class PaymentSuccess extends CustomerState {
+  final String paymentId;
+  final String orderId;
+  final String method;
+  final String? checkoutUrl;
+  const PaymentSuccess({
+    required this.paymentId,
+    required this.orderId,
+    required this.method,
+    this.checkoutUrl,
+  });
+  @override
+  List<Object?> get props => [paymentId, orderId, method, checkoutUrl];
+}
+
+class PaymentFailed extends CustomerState {
+  final String message;
+  const PaymentFailed(this.message);
+  @override
+  List<Object?> get props => [message];
+}
+
+class PaymentStatusUpdated extends CustomerState {
+  final String paymentId;
+  final String status;
+  const PaymentStatusUpdated({required this.paymentId, required this.status});
+  @override
+  List<Object?> get props => [paymentId, status];
+}

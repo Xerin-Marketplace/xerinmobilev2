@@ -1,3 +1,5 @@
+import '../../../../core/utils/helpers.dart';
+
 class OrderModel {
   final String id;
   final String orderNumber;
@@ -56,6 +58,9 @@ class OrderModel {
   }
 
   String get displayStatus => statusLabel ?? status;
+
+  /// Returns a commercial order reference (e.g. XM-260811-00125)
+  String get orderRef => formatOrderRef(id, createdAt);
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     final itemsList = json['items'] as List<dynamic>? ?? [];

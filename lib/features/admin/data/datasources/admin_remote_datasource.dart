@@ -101,6 +101,32 @@ class AdminRemoteDataSource {
   // SELLERS
   // =========================
 
+  Future<Map<String, dynamic>> registerSeller({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+    String? phone,
+    String? businessName,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.registerSeller,
+        data: {
+          'first_name': firstName,
+          'last_name': lastName,
+          'email': email,
+          'password': password,
+          if (phone != null) 'phone': phone,
+          if (businessName != null) 'business_name': businessName,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getSellers({
     int page = 1,
     int pageSize = 20,

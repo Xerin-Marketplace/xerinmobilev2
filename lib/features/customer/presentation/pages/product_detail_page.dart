@@ -186,6 +186,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           const SizedBox(height: 20),
                           _buildReviewsSection(colorScheme),
                           const SizedBox(height: 20),
+                          // Xerin Logistics badges
+                          Row(
+                            children: [
+                              Expanded(child: _buildXerinBadge(Icons.verified_user_rounded, 'Verified Seller', 'Quality-checked', colorScheme)),
+                              const SizedBox(width: 8),
+                              Expanded(child: _buildXerinBadge(Icons.inventory_2_rounded, 'Fulfilled by Xerin', 'Quality dispatch', colorScheme)),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(child: _buildXerinBadge(Icons.shield_rounded, 'Buyer Protection', 'Secure payment hold', colorScheme)),
+                              const SizedBox(width: 8),
+                              Expanded(child: _buildXerinBadge(Icons.local_shipping_rounded, 'Xerin Express', 'Fast delivery', colorScheme)),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
                           Text(
                             'Description',
                             style: TextStyle(
@@ -216,9 +233,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           const SizedBox(height: 10),
                           Column(
                             children: [
-                              _buildFeature('High quality materials', colorScheme),
-                              _buildFeature('Fast delivery available', colorScheme),
-                              _buildFeature('30-day return policy', colorScheme),
+                              _buildFeature('Delivery by Xerin Express', colorScheme),
+                              _buildFeature('Buyer Protection — funds held securely', colorScheme),
+                              _buildFeature('7-day return policy', colorScheme),
                             ],
                           ),
                           const SizedBox(height: 24),
@@ -362,6 +379,32 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
+  Widget _buildXerinBadge(IconData icon, String title, String subtitle, ColorScheme cs) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: cs.primary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: cs.primary.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: cs.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: cs.onSurface)),
+                Text(subtitle, style: TextStyle(fontSize: 9, color: cs.onSurface.withValues(alpha: 0.4))),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRelatedProducts(ColorScheme colorScheme) {
     return BlocBuilder<RecommendationCubit, RecommendationState>(
       builder: (context, state) {
@@ -444,12 +487,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   Widget _buildReviewsSection(ColorScheme colorScheme) {
-    final reviews = [
-      {'name': 'John M.', 'rating': 5, 'comment': 'Great quality, fast delivery!'},
-      {'name': 'Amina K.', 'rating': 4, 'comment': 'Nice product, worth the price.'},
-      {'name': 'David L.', 'rating': 5, 'comment': 'Exceeded my expectations.'},
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -457,18 +494,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Reviews',
+              'Rating',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: colorScheme.onSurface,
-              ),
-            ),
-            Text(
-              '${reviews.length} reviews',
-              style: TextStyle(
-                fontSize: 12,
-                color: colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -495,59 +525,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 12),
-        Column(
-          children: reviews.map((review) {
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.onSurface.withValues(alpha: 0.03),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: colorScheme.onSurface.withValues(alpha: 0.06),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        review['name'] as String,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Row(
-                        children: List.generate(5, (index) {
-                          return Icon(
-                            index < (review['rating'] as int)
-                                ? Icons.star_rounded
-                                : Icons.star_border_rounded,
-                            size: 12,
-                            color: Colors.amber.shade700,
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    review['comment'] as String,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
         ),
       ],
     );

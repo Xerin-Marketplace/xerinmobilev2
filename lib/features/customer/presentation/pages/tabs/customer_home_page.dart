@@ -81,6 +81,8 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 _buildHeader(colorScheme, userName: user?.fullName ?? 'Guest'),
                 const SizedBox(height: 20),
                 _buildSearchBar(colorScheme),
+                const SizedBox(height: 16),
+                _buildPromoBanner(colorScheme),
                 const SizedBox(height: 24),
                 if (_searchQuery.isNotEmpty) ...[
                   _buildSearchResults(colorScheme, searchResults, isLoadingData),
@@ -91,7 +93,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                     'See all',
                     colorScheme,
                     icon: Icons.category_rounded,
-                    onActionTap: () => context.go(AppConstants.categoriesRoute),
+                    onActionTap: () => context.push(AppConstants.categoriesRoute),
                   ),
                   const SizedBox(height: 14),
                   _buildCategories(colorScheme, categories, isLoadingData),
@@ -101,7 +103,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                     'See all',
                     colorScheme,
                     icon: Icons.star_rounded,
-                    onActionTap: () => context.go(AppConstants.exploreProductsRoute),
+                    onActionTap: () => context.push(AppConstants.exploreProductsRoute),
                   ),
                   const SizedBox(height: 14),
                   _buildFeaturedProducts(colorScheme, featured, isLoadingData),
@@ -495,6 +497,76 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     );
   }
 
+  Widget _buildPromoBanner(ColorScheme colorScheme) {
+    return GestureDetector(
+      onTap: () => context.push(AppConstants.promotionsRoute),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              colorScheme.primary,
+              colorScheme.primary.withValues(alpha: 0.7),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.primary.withValues(alpha: 0.25),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.local_offer_rounded, color: Colors.white, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Deals & Promotions',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Check out the latest offers',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_rounded,
+              color: Colors.white.withValues(alpha: 0.8),
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSearchBar(ColorScheme colorScheme) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
@@ -598,6 +670,20 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
             ),
           ),
           const SizedBox(width: 4),
+          GestureDetector(
+            onTap: () => context.push(AppConstants.searchRoute),
+            child: Container(
+              margin: const EdgeInsets.all(4),
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: colorScheme.onSurface.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.search_rounded, color: colorScheme.onSurface.withValues(alpha: 0.5), size: 16),
+            ),
+          ),
+          const SizedBox(width: 4),
         ],
       ),
     );
@@ -678,7 +764,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         Column(
           children: results.map((product) {
             return GestureDetector(
-              onTap: () => context.go(
+              onTap: () => context.push(
                 AppConstants.productDetailRoute,
                 extra: {
                   'product': product,
@@ -1231,7 +1317,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         itemBuilder: (context, index) {
           final product = products[index];
           return GestureDetector(
-            onTap: () => context.go(
+            onTap: () => context.push(
               AppConstants.productDetailRoute,
               extra: {
                 'product': product,

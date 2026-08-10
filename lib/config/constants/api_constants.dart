@@ -164,11 +164,114 @@ abstract class ApiConstants {
 
   // Notification endpoints
   static const String notifications = '/notifications';
+  static const String notificationsSummary = '/notifications/summary';
+  static const String notificationsReadAll = '/notifications/read-all';
+  static String notificationRead(String id) => '/notifications/$id/read';
+  static String notificationById(String id) => '/notifications/$id';
+  static const String notificationPreferences = '/notifications/preferences';
+  static const String notificationDeviceTokens = '/notifications/device-tokens';
+  static String notificationDeviceTokenById(String id) => '/notifications/device-tokens/$id';
+  static const String adminNotificationTemplates = '/admin/notification-templates';
+  static String adminNotificationTemplateById(String id) => '/admin/notification-templates/$id';
 
-  // Wishlist endpoints
-  static const String wishlist = '/wishlists';
-  static String wishlistById(String id) => '/wishlists/$id';
-  static String toggleWishlistItem(String productId) => '/wishlists/toggle/$productId';
+  // Wishlist endpoints (prefix /wishlist)
+  static const String wishlistProducts = '/wishlist/products';
+  static String wishlistAddProduct(String productId) => '/wishlist/products/$productId';
+  static String wishlistRemoveProduct(String productId) => '/wishlist/products/$productId';
+  static const String wishlistStores = '/wishlist/stores';
+  static String wishlistAddStore(String slug) => '/wishlist/stores/$slug';
+  static String wishlistRemoveStore(String slug) => '/wishlist/stores/$slug';
+  static const String wishlistSummary = '/wishlist/summary';
+  static const String wishlistClear = '/wishlist/clear';
+
+  // Review endpoints
+  static String productReviews(String productId) => '/products/$productId/reviews';
+  static String reviewById(String reviewId) => '/reviews/$reviewId';
+  static String storeReviews(String slug) => '/stores/$slug/reviews';
+  static const String sellerReviews = '/seller/reviews';
+  static String sellerReviewReply(String reviewId) => '/seller/reviews/$reviewId/reply';
+  static String sellerReviewReport(String reviewId) => '/seller/reviews/$reviewId/report';
+  static const String adminReviews = '/admin/reviews';
+  static String adminReviewModerate(String reviewId) => '/admin/reviews/$reviewId/moderate';
+
+  // Product Q&A endpoints
+  static String productQuestions(String productId) => '/products/$productId/questions';
+  static String questionById(String questionId) => '/questions/$questionId';
+  static String questionAnswers(String questionId) => '/questions/$questionId/answers';
+  static String answerById(String answerId) => '/answers/$answerId';
+  static String questionHelpful(String questionId) => '/questions/$questionId/helpful';
+  static String answerHelpful(String answerId) => '/answers/$answerId/helpful';
+  static String questionReport(String questionId) => '/questions/$questionId/report';
+  static const String sellerQuestions = '/seller/questions';
+  static String sellerAnswerQuestion(String questionId) => '/seller/questions/$questionId/answer';
+  static const String adminQuestions = '/admin/questions';
+  static String adminQuestionModerate(String questionId) => '/admin/questions/$questionId/moderate';
+
+  // Promotion endpoints
+  static const String promotionsAvailable = '/promotions/available';
+  static const String promotionsApply = '/promotions/apply';
+  static const String sellerPromotions = '/seller/promotions';
+  static String sellerPromotionById(String promotionId) => '/seller/promotions/$promotionId';
+  static const String campaigns = '/campaigns';
+  static const String adminCampaigns = '/admin/campaigns';
+
+  // Search & Recommendation endpoints
+  static const String searchProducts = '/search/products';
+  static const String searchSuggestions = '/search/suggestions';
+  static const String searchTrending = '/search/trending';
+  static String productView(String productId) => '/products/$productId/view';
+  static String relatedProductsBySearch(String productId) => '/products/$productId/related';
+  static const String recommendations = '/recommendations';
+  static const String recommendationsRecentlyViewed = '/recommendations/recently-viewed';
+  static const String sellerSearchAnalytics = '/seller/search-analytics';
+  static const String sellerProductPerformance = '/seller/product-performance';
+
+  // Seller Storefront endpoints
+  static const String sellerStore = '/seller/store';
+  static const String sellerStoreLogo = '/seller/store/logo';
+  static const String sellerStoreBanner = '/seller/store/banner';
+  static String storeProductsBySlug(String slug) => '/stores/$slug/products';
+  static String storeCategoriesBySlug(String slug) => '/stores/$slug/categories';
+
+  // Delivery Integration endpoints (prefix /delivery)
+  static const String deliveryQuote = '/delivery/quote';
+  static String deliveryBySellerOrder(String sellerOrderId) => '/delivery/seller-orders/$sellerOrderId';
+  static String deliveryRequest(String sellerOrderId) => '/delivery/seller-orders/$sellerOrderId/request';
+
+  // Seller Orders endpoints (prefix /seller/orders)
+  static const String sellerOrdersSummary = '/seller/orders/summary';
+  static const String sellerOrders = '/seller/orders';
+  static String sellerOrderById(String id) => '/seller/orders/$id';
+  static String sellerOrderAccept(String id) => '/seller/orders/$id/accept';
+  static String sellerOrderStartProcessing(String id) => '/seller/orders/$id/start-processing';
+  static String sellerOrderReadyToShip(String id) => '/seller/orders/$id/ready-to-ship';
+  static String sellerOrderDispatch(String id) => '/seller/orders/$id/dispatch';
+  static String sellerOrderRequestCancellation(String id) => '/seller/orders/$id/request-cancellation';
+
+  // Seller Inventory endpoints (prefix /seller/inventory)
+  static const String sellerInventory = '/seller/inventory';
+  static const String sellerInventorySummary = '/seller/inventory/summary';
+  static const String sellerInventoryLowStock = '/seller/inventory/low-stock';
+  static const String sellerInventoryHistory = '/seller/inventory/history';
+  static String sellerInventoryById(String id) => '/seller/inventory/$id';
+  static String sellerInventoryAdjust(String id) => '/seller/inventory/$id/adjust';
+  static String sellerInventoryRestock(String id) => '/seller/inventory/$id/restock';
+
+  // Admin Dashboard endpoints (prefix /admin/dashboard)
+  static const String adminDashboardSummary = '/admin/dashboard/summary';
+  static const String adminDashboardSales = '/admin/dashboard/sales';
+  static const String adminDashboardOrders = '/admin/dashboard/orders';
+  static const String adminDashboardSellers = '/admin/dashboard/sellers';
+  static const String adminDashboardProducts = '/admin/dashboard/products';
+  static const String adminDashboardCustomers = '/admin/dashboard/customers';
+  static const String adminDashboardPayments = '/admin/dashboard/payments';
+  static const String adminDashboardRefunds = '/admin/dashboard/refunds';
+  static const String adminDashboardDelivery = '/admin/dashboard/delivery';
+  static const String adminDashboardNotifications = '/admin/dashboard/notifications';
+  static const String adminDashboardSearch = '/admin/dashboard/search';
+  static const String adminDashboardAlerts = '/admin/dashboard/alerts';
+  static String adminDashboardAlertResolve(String alertId) => '/admin/dashboard/alerts/$alertId/resolve';
+  static const String adminDashboardActivityLogs = '/admin/dashboard/activity-logs';
 
   // Analytics endpoints
   static const String analyticsAdminOverview = '/analytics/admin/overview';
@@ -222,6 +325,9 @@ abstract class ApiConstants {
 
   // Audit log endpoints
   static const String auditLogs = '/audit-logs';
+  static String auditLogById(String auditId) => '/audit-logs/$auditId';
+  static const String auditLogSecurityEvents = '/audit-logs/security/events';
+  static String auditLogSecurityEventResolve(String eventId) => '/audit-logs/security/events/$eventId/resolve';
 
   // Common headers
   static const String contentType = 'application/json';

@@ -12,23 +12,37 @@ import '../../core/security/security_service.dart';
 import '../../core/storage/token_storage.dart';
 import '../../core/theme/app_theme_cubit.dart';
 import '../../features/admin/data/datasources/admin_remote_datasource.dart';
+import '../../features/admin/data/datasources/admin_dashboard_datasource.dart';
 import '../../features/admin/presentation/cubit/admin_cubit.dart';
+import '../../features/admin/presentation/cubit/admin_dashboard_cubit.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/customer/data/datasources/cart_remote_datasource.dart';
 import '../../features/customer/data/datasources/customer_remote_datasource.dart';
+import '../../features/customer/data/datasources/notification_remote_datasource.dart';
 import '../../features/customer/data/datasources/payment_remote_datasource.dart';
+import '../../features/customer/data/datasources/product_qa_remote_datasource.dart';
 import '../../features/customer/data/datasources/product_remote_datasource.dart';
+import '../../features/customer/data/datasources/promotion_remote_datasource.dart';
 import '../../features/customer/data/datasources/recommendation_remote_datasource.dart';
+import '../../features/customer/data/datasources/review_remote_datasource.dart';
+import '../../features/customer/data/datasources/search_remote_datasource.dart';
 import '../../features/customer/data/datasources/wishlist_remote_datasource.dart';
 import '../../features/customer/presentation/cubit/cart_cubit.dart';
 import '../../features/customer/presentation/cubit/customer_cubit.dart';
 import '../../features/customer/presentation/cubit/home_cubit.dart';
+import '../../features/customer/presentation/cubit/notification_cubit.dart';
+import '../../features/customer/presentation/cubit/product_qa_cubit.dart';
 import '../../features/customer/presentation/cubit/products_cubit.dart';
+import '../../features/customer/presentation/cubit/promotion_cubit.dart';
 import '../../features/customer/presentation/cubit/recommendation_cubit.dart';
+import '../../features/customer/presentation/cubit/review_cubit.dart';
+import '../../features/customer/presentation/cubit/search_cubit.dart';
 import '../../features/customer/presentation/cubit/wishlist_cubit.dart';
 import '../../features/seller/data/datasources/seller_remote_datasource.dart';
+import '../../features/seller/data/datasources/seller_orders_inventory_datasource.dart';
 import '../../features/seller/presentation/cubit/seller_cubit.dart';
+import '../../features/seller/presentation/cubit/seller_orders_inventory_cubit.dart';
 import '../constants/api_constants.dart';
 
 final GetIt sl = GetIt.instance;
@@ -146,6 +160,7 @@ Future<void> initServiceLocator({bool reset = false}) async {
   sl.registerFactory<CustomerCubit>(
     () => CustomerCubit(
       dataSource: sl(),
+      paymentDataSource: sl(),
       logger: sl(),
     ),
   );
@@ -166,11 +181,69 @@ Future<void> initServiceLocator({bool reset = false}) async {
     ),
   );
 
+  // Reviews
+  sl.registerLazySingleton<ReviewRemoteDataSource>(
+      () => ReviewRemoteDataSource(sl()));
+  sl.registerFactory<ReviewCubit>(
+    () => ReviewCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+
+  // Product Q&A
+  sl.registerLazySingleton<ProductQaRemoteDataSource>(
+      () => ProductQaRemoteDataSource(sl()));
+  sl.registerFactory<ProductQaCubit>(
+    () => ProductQaCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+
+  // Notifications
+  sl.registerLazySingleton<NotificationRemoteDataSource>(
+      () => NotificationRemoteDataSource(sl()));
+  sl.registerFactory<NotificationCubit>(
+    () => NotificationCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+
+  // Promotions
+  sl.registerLazySingleton<PromotionRemoteDataSource>(
+      () => PromotionRemoteDataSource(sl()));
+  sl.registerFactory<PromotionCubit>(
+    () => PromotionCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+
+  // Search
+  sl.registerLazySingleton<SearchRemoteDataSource>(
+      () => SearchRemoteDataSource(sl()));
+  sl.registerFactory<SearchCubit>(
+    () => SearchCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+
   // Seller
   sl.registerLazySingleton<SellerRemoteDataSource>(
       () => SellerRemoteDataSource(sl()));
   sl.registerFactory<SellerCubit>(
     () => SellerCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+  sl.registerLazySingleton<SellerOrdersInventoryDataSource>(
+      () => SellerOrdersInventoryDataSource(sl()));
+  sl.registerFactory<SellerOrdersInventoryCubit>(
+    () => SellerOrdersInventoryCubit(
       dataSource: sl(),
       logger: sl(),
     ),
@@ -181,6 +254,14 @@ Future<void> initServiceLocator({bool reset = false}) async {
       () => AdminRemoteDataSource(sl()));
   sl.registerFactory<AdminCubit>(
     () => AdminCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+  sl.registerLazySingleton<AdminDashboardDataSource>(
+      () => AdminDashboardDataSource(sl()));
+  sl.registerFactory<AdminDashboardCubit>(
+    () => AdminDashboardCubit(
       dataSource: sl(),
       logger: sl(),
     ),

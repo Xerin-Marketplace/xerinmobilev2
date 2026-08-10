@@ -336,7 +336,7 @@ class LegalPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Contact us at support@xerinmarket.com',
+                  'Contact us at support@xerin.co.tz',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,

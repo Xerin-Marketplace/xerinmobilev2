@@ -1,7 +1,7 @@
 /// General app constants.
 abstract class AppConstants {
   static const String appName = 'XerinMarket';
-  static const String appVersion = '1.0.2';
+  static const String appVersion = '1.0.3';
 
   // Routes
   static const String splashRoute = '/splash';
@@ -41,6 +41,7 @@ abstract class AppConstants {
   static const String settingsRoute = '/settings';
   static const String helpSupportRoute = '/help-support';
   static const String checkoutRoute = '/checkout';
+  static const String paymentProcessingRoute = '/payment-processing';
 
   // Recommendation & discovery routes
   static const String forYouRoute = '/for-you';
@@ -56,6 +57,22 @@ abstract class AppConstants {
 
   // Admin routes
   static const String adminDashboardRoute = '/admin-dashboard';
+  static const String adminDashboardDetailRoute = '/admin-dashboard/detail';
+
+  // Review & Q&A routes
+  static const String productReviewsRoute = '/product-reviews';
+  static const String productQaRoute = '/product-qa';
+
+  // Search & Promotions routes
+  static const String searchRoute = '/search';
+  static const String promotionsRoute = '/promotions';
+
+  // Notification preferences route
+  static const String notificationPreferencesRoute = '/notification-preferences';
+
+  // Seller orders & inventory routes
+  static const String sellerOrdersManagementRoute = '/seller/orders-management';
+  static const String sellerInventoryRoute = '/seller/inventory';
 
   // Timeouts
   static const int connectionTimeoutSeconds = 30;

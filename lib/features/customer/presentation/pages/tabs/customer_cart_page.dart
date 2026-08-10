@@ -168,6 +168,8 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
+                  _buildFreeShippingProgress(cart, colorScheme),
+                  const SizedBox(height: 16),
                   Column(
                     children: cart.items.map((item) {
                       return _buildCartItem(item, colorScheme);
@@ -321,6 +323,71 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFreeShippingProgress(CartModel cart, ColorScheme colorScheme) {
+    const freeShippingThreshold = 100000.0;
+    final currentTotal = cart.subtotal;
+    final remaining = freeShippingThreshold - currentTotal;
+    final progress = (currentTotal / freeShippingThreshold).clamp(0.0, 1.0);
+
+    if (currentTotal >= freeShippingThreshold) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF22C55E).withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.local_shipping_rounded, color: Color(0xFF22C55E), size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text('You\'ve unlocked FREE shipping!',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF22C55E)),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colorScheme.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.local_shipping_rounded, color: colorScheme.primary, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Add TZS ${remaining.toStringAsFixed(0)} more for FREE shipping',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.7)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: colorScheme.onSurface.withValues(alpha: 0.06),
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+            ),
           ),
         ],
       ),

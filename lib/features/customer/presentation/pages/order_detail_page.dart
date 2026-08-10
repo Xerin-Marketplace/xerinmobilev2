@@ -70,7 +70,7 @@ class OrderDetailPage extends StatelessWidget {
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
-                      'Order ${order.orderNumber}',
+                      'Order ${order.orderRef}',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,

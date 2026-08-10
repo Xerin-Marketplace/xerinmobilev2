@@ -263,12 +263,19 @@ class AuthErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEF2F2),
+        color: isDark
+            ? const Color(0xFFDC2626).withValues(alpha: 0.12)
+            : const Color(0xFFFEF2F2),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFFCA5A5)),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFFDC2626).withValues(alpha: 0.3)
+              : const Color(0xFFFCA5A5),
+        ),
       ),
       child: Row(
         children: [

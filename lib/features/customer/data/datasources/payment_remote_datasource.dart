@@ -15,6 +15,8 @@ class PaymentRemoteDataSource {
     required String method,
     String? provider,
     String? phoneNumber,
+    String? successUrl,
+    String? failureUrl,
   }) async {
     try {
       final response = await _client.post(
@@ -24,6 +26,8 @@ class PaymentRemoteDataSource {
           'method': method,
           if (provider != null) 'provider': provider,
           if (phoneNumber != null) 'phone_number': phoneNumber,
+          if (successUrl != null) 'success_url': successUrl,
+          if (failureUrl != null) 'failure_url': failureUrl,
         },
       );
       return PaymentModel.fromJson(response.data as Map<String, dynamic>);

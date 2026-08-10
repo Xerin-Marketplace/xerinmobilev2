@@ -2,21 +2,21 @@
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/logo/appicon.png"
+  image_path: "assets/logo/newappicon.png"
   min_sdk_android: 21
   remove_alpha_ios: true
   background_color_ios: "#FFFFFF"
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/logo/appicon.png"
+  adaptive_icon_foreground: "assets/logo/newappicon.png"
   web:
     generate: true
-    image_path: "assets/logo/appicon.png"
+    image_path: "assets/logo/newappicon.png"
     background_color: "#FFFFFF"
     theme_color: "#F47524"
   windows:
     generate: true
-    image_path: "assets/logo/appicon.png"
+    image_path: "assets/logo/newappicon.png"
     icon_size: 48
   macos:
     generate: true
-    image_path: "assets/logo/appicon.png"
+    image_path: "assets/logo/newappicon.png"

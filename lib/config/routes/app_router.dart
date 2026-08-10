@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/notifications/notification_service.dart';
 import '../../features/admin/presentation/pages/admin_dashboard.dart';
+import '../../features/admin/presentation/pages/admin_dashboard_detail_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/legal_page.dart';
 import '../../features/auth/presentation/pages/lock_screen_page.dart';
@@ -20,16 +22,22 @@ import '../../features/customer/data/models/order_model.dart';
 import '../../features/customer/presentation/pages/explore_products_page.dart';
 import '../../features/customer/presentation/pages/help_support_page.dart';
 import '../../features/customer/presentation/pages/checkout_page.dart';
+import '../../features/customer/presentation/pages/payment_processing_page.dart';
 import '../../features/customer/presentation/pages/coupons_page.dart';
 import '../../features/customer/presentation/pages/for_you_page.dart';
 import '../../features/customer/presentation/pages/notifications_page.dart';
+import '../../features/customer/presentation/pages/notification_preferences_page.dart';
 import '../../features/customer/presentation/pages/order_detail_page.dart';
 import '../../features/customer/presentation/pages/order_history_page.dart';
 import '../../features/customer/presentation/pages/order_tracking_page.dart';
 import '../../features/customer/presentation/pages/payment_methods_page.dart';
 import '../../features/customer/presentation/pages/product_detail_page.dart';
+import '../../features/customer/presentation/pages/product_reviews_page.dart';
+import '../../features/customer/presentation/pages/product_qa_page.dart';
 import '../../features/customer/presentation/pages/profile_info_page.dart';
+import '../../features/customer/presentation/pages/promotions_page.dart';
 import '../../features/customer/presentation/pages/recently_viewed_page.dart';
+import '../../features/customer/presentation/pages/search_page.dart';
 import '../../features/customer/presentation/pages/settings_page.dart';
 import '../../features/customer/presentation/pages/stores_page.dart';
 import '../../features/customer/presentation/pages/trending_page.dart';
@@ -39,7 +47,9 @@ import '../../features/seller/presentation/pages/payouts_page.dart';
 import '../../features/seller/presentation/pages/reports_page.dart';
 import '../../features/seller/presentation/pages/seller_dashboard.dart';
 import '../../features/seller/presentation/pages/seller_details_page.dart';
+import '../../features/seller/presentation/pages/seller_inventory_page.dart';
 import '../../features/seller/presentation/pages/seller_onboarding_page.dart';
+import '../../features/seller/presentation/pages/seller_orders_management_page.dart';
 import '../../features/seller/presentation/pages/seller_support_page.dart';
 import '../../features/seller/presentation/pages/shipping_options_page.dart';
 import '../../features/seller/presentation/pages/shop_details_page.dart';
@@ -48,6 +58,7 @@ import '../constants/app_constants.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
+    navigatorKey: NotificationService.navigatorKey,
     initialLocation: AppConstants.splashRoute,
     debugLogDiagnostics: true,
     routes: [
@@ -240,6 +251,19 @@ class AppRouter {
         path: AppConstants.checkoutRoute,
         builder: (context, state) => const CheckoutPage(),
       ),
+      GoRoute(
+        path: AppConstants.paymentProcessingRoute,
+        builder: (context, state) {
+          final paymentId = state.uri.queryParameters['payment_id'];
+          final orderId = state.uri.queryParameters['order_id'];
+          final checkoutUrl = state.uri.queryParameters['checkout_url'];
+          return PaymentProcessingPage(
+            paymentId: paymentId,
+            orderId: orderId,
+            checkoutUrl: checkoutUrl,
+          );
+        },
+      ),
       // Recommendation & discovery routes
       GoRoute(
         path: AppConstants.forYouRoute,
@@ -293,6 +317,51 @@ class AppRouter {
       GoRoute(
         path: AppConstants.adminDashboardRoute,
         builder: (context, state) => const AdminDashboard(),
+      ),
+      GoRoute(
+        path: AppConstants.adminDashboardDetailRoute,
+        builder: (context, state) => const AdminDashboardDetailPage(),
+      ),
+      // New feature routes
+      GoRoute(
+        path: AppConstants.productReviewsRoute,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ProductReviewsPage(
+            productId: extra?['productId'] as String? ?? '',
+            productName: extra?['productName'] as String? ?? 'Product',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppConstants.productQaRoute,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ProductQaPage(
+            productId: extra?['productId'] as String? ?? '',
+            productName: extra?['productName'] as String? ?? 'Product',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppConstants.searchRoute,
+        builder: (context, state) => const SearchPage(),
+      ),
+      GoRoute(
+        path: AppConstants.promotionsRoute,
+        builder: (context, state) => const PromotionsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.notificationPreferencesRoute,
+        builder: (context, state) => const NotificationPreferencesPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerOrdersManagementRoute,
+        builder: (context, state) => const SellerOrdersManagementPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerInventoryRoute,
+        builder: (context, state) => const SellerInventoryPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
