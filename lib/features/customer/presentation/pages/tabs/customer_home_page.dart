@@ -193,14 +193,14 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
           children: [
             _iconBadge(
               Icons.notifications_outlined,
-              badge: '3',
+              badge: '',
               colorScheme: colorScheme,
               onTap: () => _showNotificationsPopup(context, colorScheme),
             ),
             const SizedBox(width: 8),
             _iconBadge(
               Icons.favorite_outline_rounded,
-              badge: '2',
+              badge: '',
               colorScheme: colorScheme,
               onTap: () => _showWishlistPopup(context, colorScheme),
             ),
@@ -265,10 +265,10 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
 
   void _showNotificationsPopup(BuildContext context, ColorScheme colorScheme) {
     final notifications = [
-      {'title': 'Order shipped', 'body': 'Your order #ORD-2024001 is on the way', 'time': '2m ago'},
+      {'title': 'Order shipped', 'body': 'Your order XM-260811-00125 is on the way', 'time': '2m ago'},
       {'title': 'Flash Sale!', 'body': 'Get 50% off on electronics today', 'time': '1h ago'},
       {'title': 'New arrival', 'body': 'New running shoes are now available', 'time': '3h ago'},
-      {'title': 'Order delivered', 'body': 'Your order #ORD-2023998 was delivered', 'time': '5h ago'},
+      {'title': 'Order delivered', 'body': 'Your order XM-260810-00098 was delivered', 'time': '5h ago'},
     ];
     _showIconPopup(
       context: context,
@@ -1245,7 +1245,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         itemBuilder: (context, index) {
           final cat = categories[index];
           return GestureDetector(
-            onTap: () => context.go(
+            onTap: () => context.push(
               AppConstants.categoryProductsRoute,
               extra: {'category': cat.name, 'categoryId': cat.id},
             ),
@@ -2048,9 +2048,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      order.orderNumber.isNotEmpty
-                          ? order.orderNumber
-                          : 'Order ${order.id}',
+                      order.orderRef,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
