@@ -1,3 +1,5 @@
+double _pd(dynamic v) { if (v == null) return 0.0; if (v is num) return v.toDouble(); if (v is String) return double.tryParse(v) ?? 0.0; return 0.0; }
+
 class ProductModel {
   final String id;
   final String sellerId;
@@ -93,7 +95,7 @@ class ProductModel {
       isActive: json['is_active'] as bool? ?? true,
       createdAt: json['created_at'] as String?,
       categoryName: json['category_name'] as String?,
-      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      rating: _pd(json['rating']),
       images: imageUrls,
     );
   }

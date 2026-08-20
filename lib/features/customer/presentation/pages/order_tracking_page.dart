@@ -15,7 +15,8 @@ class OrderTrackingPage extends StatelessWidget {
       case 'delivered':
         return const Color(0xFF22C55E);
       case 'processing':
-      case 'confirmed':
+      case 'received_at_hub':
+      case 'paid':
         return const Color(0xFF3B82F6);
       case 'shipped':
         return const Color(0xFF8B5CF6);
@@ -34,14 +35,15 @@ class OrderTrackingPage extends StatelessWidget {
         return 0;
       case 'paid':
         return 1;
-      case 'confirmed':
       case 'processing':
         return 2;
-      case 'shipped':
+      case 'received_at_hub':
         return 3;
+      case 'shipped':
+        return 4;
       case 'delivered':
       case 'completed':
-        return 4;
+        return 5;
       case 'cancelled':
       case 'failed':
         return -1;
@@ -61,6 +63,7 @@ class OrderTrackingPage extends StatelessWidget {
       {'icon': Icons.receipt_long_rounded, 'title': 'Order Confirmed', 'desc': 'Your order has been received and confirmed'},
       {'icon': Icons.verified_rounded, 'title': 'Payment Verified', 'desc': 'Payment has been verified and seller notified'},
       {'icon': Icons.inventory_rounded, 'title': 'Seller Preparing', 'desc': 'The seller is preparing your order for dispatch'},
+      {'icon': Icons.warehouse_rounded, 'title': 'Received at Xerin Hub', 'desc': 'Your order has arrived at the Xerin fulfilment centre'},
       {'icon': Icons.local_shipping_rounded, 'title': 'Out for Delivery', 'desc': 'Your order is on the way via Xerin Express'},
       {'icon': Icons.check_circle_rounded, 'title': 'Delivered', 'desc': 'Order has been delivered successfully'},
     ];

@@ -1,4 +1,7 @@
-import '../../../core/utils/helpers.dart';
+import '../../../../core/utils/helpers.dart';
+
+double _pd(dynamic v) { if (v == null) return 0.0; if (v is num) return v.toDouble(); if (v is String) return double.tryParse(v) ?? 0.0; return 0.0; }
+int _pi(dynamic v) { if (v == null) return 0; if (v is num) return v.toInt(); if (v is String) return int.tryParse(v) ?? 0; return 0; }
 
 class SellerOrderSummary {
   final int totalOrders;
@@ -27,16 +30,16 @@ class SellerOrderSummary {
 
   factory SellerOrderSummary.fromJson(Map<String, dynamic> json) {
     return SellerOrderSummary(
-      totalOrders: (json['total_orders'] as num?)?.toInt() ?? 0,
-      newOrders: (json['new_orders'] as num?)?.toInt() ?? 0,
-      acceptedOrders: (json['accepted_orders'] as num?)?.toInt() ?? 0,
-      processingOrders: (json['processing_orders'] as num?)?.toInt() ?? 0,
-      readyToShipOrders: (json['ready_to_ship_orders'] as num?)?.toInt() ?? 0,
-      shippedOrders: (json['shipped_orders'] as num?)?.toInt() ?? 0,
-      deliveredOrders: (json['delivered_orders'] as num?)?.toInt() ?? 0,
-      cancellationRequests: (json['cancellation_requests'] as num?)?.toInt() ?? 0,
-      grossSales: (json['gross_sales'] as num?)?.toDouble() ?? 0.0,
-      unitsSold: (json['units_sold'] as num?)?.toInt() ?? 0,
+      totalOrders: _pi(json['total_orders']),
+      newOrders: _pi(json['new_orders']),
+      acceptedOrders: _pi(json['accepted_orders']),
+      processingOrders: _pi(json['processing_orders']),
+      readyToShipOrders: _pi(json['ready_to_ship_orders']),
+      shippedOrders: _pi(json['shipped_orders']),
+      deliveredOrders: _pi(json['delivered_orders']),
+      cancellationRequests: _pi(json['cancellation_requests']),
+      grossSales: _pd(json['gross_sales']),
+      unitsSold: _pi(json['units_sold']),
     );
   }
 }
@@ -96,8 +99,8 @@ class SellerOrderDetail {
       orderStatus: json['order_status'] as String? ?? '',
       sellerStatus: json['seller_status'] as String? ?? '',
       currency: json['currency'] as String? ?? 'TZS',
-      sellerSubtotal: (json['seller_subtotal'] as num?)?.toDouble() ?? 0.0,
-      itemCount: (json['item_count'] as num?)?.toInt() ?? 0,
+      sellerSubtotal: _pd(json['seller_subtotal']),
+      itemCount: _pi(json['item_count']),
       customerName: json['customer_name'] as String? ?? '',
       customerPhone: json['customer_phone'] as String?,
       shippingMethodName: json['shipping_method_name'] as String?,
@@ -148,9 +151,9 @@ class SellerOrderDetailItem {
       sellerId: json['seller_id']?.toString() ?? '',
       productName: json['product_name'] as String? ?? '',
       variantName: json['variant_name'] as String?,
-      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
-      unitPrice: (json['unit_price'] as num?)?.toDouble() ?? 0.0,
-      totalPrice: (json['total_price'] as num?)?.toDouble() ?? 0.0,
+      quantity: _pi(json['quantity']) == 0 ? 1 : _pi(json['quantity']),
+      unitPrice: _pd(json['unit_price']),
+      totalPrice: _pd(json['total_price']),
     );
   }
 }
@@ -249,7 +252,7 @@ class DeliveryQuoteModel {
     return DeliveryQuoteModel(
       provider: json['provider'] as String? ?? '',
       quoteId: json['quote_id']?.toString(),
-      fee: (json['fee'] as num?)?.toDouble() ?? 0.0,
+      fee: _pd(json['fee']),
       currency: json['currency'] as String? ?? 'TZS',
       estimatedPickupAt: json['estimated_pickup_at'] as String?,
       estimatedDeliveryAt: json['estimated_delivery_at'] as String?,
@@ -295,7 +298,7 @@ class DeliveryJobModel {
       trackingUrl: json['tracking_url'] as String?,
       courierName: json['courier_name'] as String?,
       courierPhone: json['courier_phone'] as String?,
-      deliveryFee: (json['delivery_fee'] as num?)?.toDouble(),
+      deliveryFee: json['delivery_fee'] == null ? null : _pd(json['delivery_fee']),
       currency: json['currency'] as String?,
       estimatedPickupAt: json['estimated_pickup_at'] as String?,
       estimatedDeliveryAt: json['estimated_delivery_at'] as String?,

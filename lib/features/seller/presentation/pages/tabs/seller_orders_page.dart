@@ -15,14 +15,6 @@ class SellerOrdersPage extends StatefulWidget {
 class _SellerOrdersPageState extends State<SellerOrdersPage> {
   String _selectedFilter = 'All';
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SellerCubit>().refreshOrders();
-    });
-  }
-
   static const _filters = ['All', 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
 
   List<SellerOrderModel> _filterOrders(List<SellerOrderModel> orders) {

@@ -14,14 +14,6 @@ class SellerAnalyticsPage extends StatefulWidget {
 
 class _SellerAnalyticsPageState extends State<SellerAnalyticsPage> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SellerCubit>().loadDashboard();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 

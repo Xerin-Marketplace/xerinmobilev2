@@ -48,9 +48,11 @@ import '../../features/seller/presentation/pages/reports_page.dart';
 import '../../features/seller/presentation/pages/seller_dashboard.dart';
 import '../../features/seller/presentation/pages/seller_details_page.dart';
 import '../../features/seller/presentation/pages/seller_inventory_page.dart';
+import '../../features/seller/presentation/pages/seller_fulfilment_page.dart';
 import '../../features/seller/presentation/pages/seller_onboarding_page.dart';
 import '../../features/seller/presentation/pages/seller_orders_management_page.dart';
 import '../../features/seller/presentation/pages/seller_support_page.dart';
+import '../../features/seller/presentation/pages/seller_wallet_page.dart';
 import '../../features/seller/presentation/pages/shipping_options_page.dart';
 import '../../features/seller/presentation/pages/shop_details_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
@@ -176,6 +178,10 @@ class AppRouter {
         builder: (context, state) => const PayoutsPage(),
       ),
       GoRoute(
+        path: AppConstants.sellerWalletRoute,
+        builder: (context, state) => const SellerWalletPage(),
+      ),
+      GoRoute(
         path: AppConstants.sellerReportsRoute,
         builder: (context, state) => const ReportsPage(),
       ),
@@ -186,6 +192,10 @@ class AppRouter {
       GoRoute(
         path: AppConstants.sellerKycRoute,
         builder: (context, state) => const KycPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerFulfilmentRoute,
+        builder: (context, state) => const SellerFulfilmentPage(),
       ),
       GoRoute(
         path: AppConstants.registrationSuccessRoute,

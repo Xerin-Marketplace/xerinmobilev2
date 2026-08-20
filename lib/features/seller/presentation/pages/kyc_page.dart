@@ -36,7 +36,7 @@ class _KycPageState extends State<KycPage>
   late final Animation<double> _fadeAnim;
 
   String _selectedRegion = 'Dar es Salaam';
-  String _selectedCity = 'Dar es Salaam';
+  String _selectedCity = 'Ilala';
   String _selectedPayment = 'Mobile Money';
   String _selectedIdType = 'NIDA';
   bool _isSubmitting = false;
@@ -240,7 +240,7 @@ class _KycPageState extends State<KycPage>
             ],
           ),
           child: DropdownButtonFormField<String>(
-            initialValue: value,
+            initialValue: items.contains(value) ? value : null,
             items: items.map((item) {
               return DropdownMenuItem(value: item, child: Text(item));
             }).toList(),
@@ -316,22 +316,33 @@ class _KycPageState extends State<KycPage>
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: FadeTransition(
-                opacity: _fadeAnim,
-                child: SlideTransition(
-                  position: _slideAnim,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+    return BlocListener<SellerCubit, SellerState>(
+      listener: (context, state) {
+        if (state is SellerDashboardLoaded) {
+          final kycStatus = state.kycStatus?.sellerStatus ??
+              state.profile?.status ??
+              'pending';
+          if (kycStatus == 'approved') {
+            context.go(AppConstants.sellerDashboardRoute);
+          }
+        }
+      },
+      child: Scaffold(
+        backgroundColor: colorScheme.surface,
+        body: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: FadeTransition(
+                  opacity: _fadeAnim,
+                  child: SlideTransition(
+                    position: _slideAnim,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 28),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 16),
                           Row(
@@ -436,7 +447,7 @@ class _KycPageState extends State<KycPage>
                           _buildDropdown(
                             label: 'City / District',
                             value: _selectedCity,
-                            items: _cities[_selectedRegion] ?? ['Dar es Salaam'],
+                            items: _cities[_selectedRegion] ?? ['Ilala'],
                             onChanged: (v) =>
                                 setState(() => _selectedCity = v ?? _selectedCity),
                             colorScheme: colorScheme,
@@ -606,6 +617,7 @@ class _KycPageState extends State<KycPage>
             ),
           ],
         ),
+      ),
       ),
     );
   }

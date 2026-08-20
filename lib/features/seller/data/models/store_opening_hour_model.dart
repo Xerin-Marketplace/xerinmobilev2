@@ -1,3 +1,5 @@
+int _pi(dynamic v) { if (v == null) return 0; if (v is num) return v.toInt(); if (v is String) return int.tryParse(v) ?? 0; return 0; }
+
 class StoreOpeningHourModel {
   final String id;
   final String storeId;
@@ -26,7 +28,7 @@ class StoreOpeningHourModel {
       id: json['id']?.toString() ?? '',
       storeId: json['store_id']?.toString() ?? '',
       dayOfWeek: json['day_of_week'] as String? ?? '',
-      dayPosition: (json['day_position'] as num?)?.toInt() ?? 0,
+      dayPosition: _pi(json['day_position']),
       openingTime: json['opening_time']?.toString(),
       closingTime: json['closing_time']?.toString(),
       isClosed: json['is_closed'] as bool? ?? false,

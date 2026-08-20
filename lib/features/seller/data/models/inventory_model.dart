@@ -1,3 +1,6 @@
+double _pd(dynamic v) { if (v == null) return 0.0; if (v is num) return v.toDouble(); if (v is String) return double.tryParse(v) ?? 0.0; return 0.0; }
+int _pi(dynamic v) { if (v == null) return 0; if (v is num) return v.toInt(); if (v is String) return int.tryParse(v) ?? 0; return 0; }
+
 class InventoryModel {
   final String id;
   final String productId;
@@ -31,11 +34,11 @@ class InventoryModel {
       id: json['id']?.toString() ?? '',
       productId: json['product_id']?.toString() ?? '',
       variantId: json['variant_id']?.toString(),
-      quantity: (json['quantity'] as num?)?.toInt() ?? 0,
-      reservedQuantity: (json['reserved_quantity'] as num?)?.toInt() ?? 0,
-      availableQuantity: (json['available_quantity'] as num?)?.toInt() ?? 0,
+      quantity: _pi(json['quantity']),
+      reservedQuantity: _pi(json['reserved_quantity']),
+      availableQuantity: _pi(json['available_quantity']),
       warehouseLocation: json['warehouse_location'] as String?,
-      lowStockThreshold: (json['low_stock_threshold'] as num?)?.toInt() ?? 10,
+      lowStockThreshold: _pi(json['low_stock_threshold']) == 0 ? 10 : _pi(json['low_stock_threshold']),
       restockDate: json['restock_date'] as String?,
       updatedAt: json['updated_at'] as String?,
     );

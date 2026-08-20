@@ -150,6 +150,11 @@ class AuthCubit extends Cubit<AuthState> {
       final isSeller = user?.isSeller ?? false;
       final isAdmin = user?.isAdmin ?? false;
 
+      await _tokenStorage.saveUserRole(
+        accountType: user?.accountType ?? 'customer',
+        isSeller: isSeller,
+      );
+
       emit(AuthLoginSuccess(
         token: token,
         isSeller: isSeller,
@@ -262,4 +267,8 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   void resetState() => emit(const AuthInitial());
+
+  void clearError() {
+    if (state is AuthError) emit(const AuthInitial());
+  }
 }

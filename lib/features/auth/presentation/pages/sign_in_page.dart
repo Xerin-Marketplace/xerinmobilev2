@@ -30,6 +30,8 @@ class _SignInPageState extends State<SignInPage>
   late final Animation<Offset> _slideAnim;
   late final Animation<double> _fadeAnim;
 
+  static final _emailRegex = RegExp(r'^[\w.\-]+@[\w\-]+\.[\w.\-]+$');
+
   @override
   void initState() {
     super.initState();
@@ -55,8 +57,13 @@ class _SignInPageState extends State<SignInPage>
     super.dispose();
   }
 
+  void _clearError(BuildContext context) {
+    context.read<AuthCubit>().clearError();
+  }
+
   Future<void> _onSignIn() async {
     if (!_formKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
     context.read<AuthCubit>().login(
           email: _emailCtrl.text.trim(),
           password: _passCtrl.text,
@@ -65,7 +72,9 @@ class _SignInPageState extends State<SignInPage>
 
   void _onStateChange(BuildContext context, AuthState state) {
     if (state is AuthLoginSuccess) {
-      NotificationService().success('Signed in successfully!');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        NotificationService().success('Signed in successfully!');
+      });
       if (state.isAdmin) {
         context.go(AppConstants.adminDashboardRoute);
       } else if (state.isSeller) {
@@ -74,13 +83,29 @@ class _SignInPageState extends State<SignInPage>
         context.go(AppConstants.homeRoute);
       }
     } else if (state is AuthGuest) {
-      NotificationService().success('Welcome, Guest!');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        NotificationService().success('Welcome, Guest!');
+      });
       context.go(AppConstants.homeRoute);
     } else if (state is AuthNeedsVerification) {
       _showVerifyDialog(context, state.email);
     } else if (state is AuthError) {
-      NotificationService().error(state.message);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        NotificationService().error(state.message);
+      });
     }
+  }
+
+  String? _validateEmail(String? v) {
+    if (v == null || v.trim().isEmpty) return 'Enter your email';
+    if (!_emailRegex.hasMatch(v.trim())) return 'Enter a valid email';
+    return null;
+  }
+
+  String? _validatePassword(String? v) {
+    if (v == null || v.isEmpty) return 'Enter your password';
+    if (v.length < 6) return 'Password must be at least 6 characters';
+    return null;
   }
 
   void _showVerifyDialog(BuildContext context, String email) {
@@ -159,7 +184,9 @@ class _SignInPageState extends State<SignInPage>
         final isLoading = state is AuthLoading;
         final errorMessage = state is AuthError ? state.message : null;
         return Scaffold(
-      body: Stack(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
         children: [
           Positioned(
             top: 0,
@@ -238,8 +265,8 @@ class _SignInPageState extends State<SignInPage>
                       hint: 'name@email.com',
                       icon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
-                      validator: (v) =>
-                          v == null || v.isEmpty ? 'Enter your email' : null,
+                      validator: _validateEmail,
+                      onChanged: (_) => _clearError(context),
                     ),
                     const SizedBox(height: 18),
                     AuthTextField(
@@ -249,9 +276,8 @@ class _SignInPageState extends State<SignInPage>
                       hint: 'Enter your password',
                       icon: Icons.lock_outlined,
                       obscureText: _obscurePass,
-                      validator: (v) => v == null || v.isEmpty
-                          ? 'Enter your password'
-                          : null,
+                      validator: _validatePassword,
+                      onChanged: (_) => _clearError(context),
                       suffix: IconButton(
                         icon: Icon(
                           _obscurePass
@@ -320,6 +346,7 @@ class _SignInPageState extends State<SignInPage>
                     const SizedBox(height: 32),
                     AuthPrimaryButton(
                       label: 'Sign In',
+                      icon: Icons.login_rounded,
                       onPressed: isLoading ? null : _onSignIn,
                       isLoading: isLoading,
                     ),
@@ -407,6 +434,7 @@ class _SignInPageState extends State<SignInPage>
         ),
       ),
         ],
+      ),
       ),
     );
       },

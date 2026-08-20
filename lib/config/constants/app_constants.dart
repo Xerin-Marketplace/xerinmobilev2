@@ -24,9 +24,11 @@ abstract class AppConstants {
   static const String sellerShopDetailsRoute = '/seller/shop-details';
   static const String sellerShippingOptionsRoute = '/seller/shipping-options';
   static const String sellerPayoutsRoute = '/seller/payouts';
+  static const String sellerWalletRoute = '/seller/wallet';
   static const String sellerReportsRoute = '/seller/reports';
   static const String sellerSupportRoute = '/seller/support';
   static const String sellerKycRoute = '/seller/kyc';
+  static const String sellerFulfilmentRoute = '/seller/fulfilment';
   static const String registrationSuccessRoute = '/registration-success';
   static const String termsRoute = '/terms';
   static const String privacyRoute = '/privacy';

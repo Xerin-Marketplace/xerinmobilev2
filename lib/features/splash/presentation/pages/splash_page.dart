@@ -66,7 +66,16 @@ class _SplashPageState extends State<SplashPage>
 
     if ((isLoggedIn || isGuest) && securityService.isPinLockEnabled) {
       context.go(AppConstants.lockRoute);
-    } else if (isLoggedIn || isGuest) {
+    } else if (isLoggedIn) {
+      // Redirect to role-specific dashboard
+      if (tokenStorage.isAdmin) {
+        context.go(AppConstants.adminDashboardRoute);
+      } else if (tokenStorage.isSeller) {
+        context.go(AppConstants.sellerDashboardRoute);
+      } else {
+        context.go(AppConstants.homeRoute);
+      }
+    } else if (isGuest) {
       context.go(AppConstants.homeRoute);
     } else if (hasSeenOnboarding) {
       context.go(AppConstants.signInRoute);

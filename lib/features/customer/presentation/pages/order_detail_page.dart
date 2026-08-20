@@ -16,7 +16,8 @@ class OrderDetailPage extends StatelessWidget {
       case 'delivered':
         return const Color(0xFF22C55E);
       case 'processing':
-      case 'confirmed':
+      case 'received_at_hub':
+      case 'paid':
         return const Color(0xFF3B82F6);
       case 'shipped':
         return const Color(0xFF8B5CF6);
@@ -35,7 +36,8 @@ class OrderDetailPage extends StatelessWidget {
       case 'delivered':
         return Icons.check_circle_rounded;
       case 'processing':
-      case 'confirmed':
+      case 'received_at_hub':
+      case 'paid':
         return Icons.pending_actions_rounded;
       case 'shipped':
         return Icons.local_shipping_rounded;

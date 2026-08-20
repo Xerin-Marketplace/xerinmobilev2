@@ -16,14 +16,6 @@ class _SellerProductsPageState extends State<SellerProductsPage> {
   String _selectedFilter = 'All';
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SellerCubit>().refreshProducts();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 

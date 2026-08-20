@@ -29,8 +29,35 @@ class NotificationService {
     final context = navigatorKey.currentContext;
     if (context == null) return;
 
-    final overlay = Overlay.of(context);
-    if (overlay == null) return;
+    final overlay = Overlay.maybeOf(context);
+
+    if (overlay == null) {
+      // Fallback to SnackBar when no Overlay is available
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      if (messenger != null) {
+        final colors = _getSnackBarColors(type);
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(colors['icon'], size: 20, color: Colors.white),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title != null ? '$title: $message' : message,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: colors['bg'],
+            behavior: SnackBarBehavior.floating,
+            duration: duration,
+          ),
+        );
+      }
+      return;
+    }
 
     _currentEntry = OverlayEntry(
       builder: (context) => _NotificationWidget(
@@ -91,6 +118,19 @@ class NotificationService {
   void _dismiss() {
     _currentEntry?.remove();
     _currentEntry = null;
+  }
+
+  Map<String, dynamic> _getSnackBarColors(NotificationType type) {
+    switch (type) {
+      case NotificationType.success:
+        return {'icon': Icons.check_circle_rounded, 'bg': const Color(0xFF16A34A)};
+      case NotificationType.error:
+        return {'icon': Icons.error_rounded, 'bg': const Color(0xFFDC2626)};
+      case NotificationType.warning:
+        return {'icon': Icons.warning_rounded, 'bg': const Color(0xFFF59E0B)};
+      case NotificationType.info:
+        return {'icon': Icons.info_rounded, 'bg': const Color(0xFF2563EB)};
+    }
   }
 }
 

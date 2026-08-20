@@ -483,6 +483,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
               ),
             ],
           ),
+          ),
         );
       },
     );

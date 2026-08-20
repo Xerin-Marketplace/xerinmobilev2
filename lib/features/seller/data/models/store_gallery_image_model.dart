@@ -1,3 +1,5 @@
+int _pi(dynamic v) { if (v == null) return 0; if (v is num) return v.toInt(); if (v is String) return int.tryParse(v) ?? 0; return 0; }
+
 class StoreGalleryImageModel {
   final String id;
   final String storeId;
@@ -25,7 +27,7 @@ class StoreGalleryImageModel {
       storeId: json['store_id']?.toString() ?? '',
       imageUrl: json['image_url'] as String? ?? '',
       caption: json['caption'] as String?,
-      displayOrder: (json['display_order'] as num?)?.toInt() ?? 0,
+      displayOrder: _pi(json['display_order']),
       isActive: json['is_active'] as bool? ?? true,
       createdAt: json['created_at']?.toString(),
       updatedAt: json['updated_at']?.toString(),

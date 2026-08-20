@@ -31,6 +31,16 @@ class SellerProfilePage extends StatelessWidget {
         'route': AppConstants.sellerShippingOptionsRoute,
       },
       {
+        'icon': Icons.warehouse_outlined,
+        'label': 'Fulfilment (FBX)',
+        'route': AppConstants.sellerFulfilmentRoute,
+      },
+      {
+        'icon': Icons.account_balance_wallet_outlined,
+        'label': 'My Wallet',
+        'route': AppConstants.sellerWalletRoute,
+      },
+      {
         'icon': Icons.payment_outlined,
         'label': 'Payouts',
         'route': AppConstants.sellerPayoutsRoute,
@@ -233,33 +243,36 @@ class SellerProfilePage extends StatelessWidget {
                     child: Column(
                       children: menuItems.map((item) {
                         final color = item['color'] as Color? ?? colorScheme.onSurface;
-                        return ListTile(
-                          leading: Icon(
-                            item['icon'] as IconData,
-                            color: color.withValues(alpha: 0.7),
-                            size: 22,
-                          ),
-                          title: Text(
-                            item['label'] as String,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: color,
+                        return Material(
+                          color: Colors.transparent,
+                          child: ListTile(
+                            leading: Icon(
+                              item['icon'] as IconData,
+                              color: color.withValues(alpha: 0.7),
+                              size: 22,
                             ),
+                            title: Text(
+                              item['label'] as String,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: color,
+                              ),
+                            ),
+                            trailing: Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 14,
+                              color: colorScheme.onSurface.withValues(alpha: 0.3),
+                            ),
+                            onTap: () {
+                              final route = item['route'] as String?;
+                              if (route != null) {
+                                context.go(route);
+                              } else if (item['label'] == 'Logout') {
+                                _showLogoutDialog(context);
+                              }
+                            },
                           ),
-                          trailing: Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 14,
-                            color: colorScheme.onSurface.withValues(alpha: 0.3),
-                          ),
-                          onTap: () {
-                            final route = item['route'] as String?;
-                            if (route != null) {
-                              context.go(route);
-                            } else if (item['label'] == 'Logout') {
-                              _showLogoutDialog(context);
-                            }
-                          },
                         );
                       }).toList(),
                     ),

@@ -537,6 +537,33 @@ class SellerRemoteDataSource {
     }
   }
 
+  Future<Map<String, dynamic>> getSellerOrderSummary() async {
+    try {
+      final response = await _client.get(ApiConstants.sellerOrdersSummary);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<SellerOrderModel>> getSellerOrders({
+    int page = 1,
+    int pageSize = 5,
+  }) async {
+    try {
+      final response = await _client.get(
+        ApiConstants.sellerOrders,
+        queryParameters: {'page': page, 'page_size': pageSize},
+      );
+      final list = _extractList(response.data);
+      return list
+          .map((e) => SellerOrderModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
   Future<SellerOrderModel> getOrderById(String orderId) async {
     try {
       final response = await _client.get(ApiConstants.orderById(orderId));

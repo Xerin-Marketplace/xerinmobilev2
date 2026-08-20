@@ -1,6 +1,20 @@
 import 'store_gallery_image_model.dart';
 import 'store_opening_hour_model.dart';
 
+double _parseDouble(dynamic v) {
+  if (v == null) return 0.0;
+  if (v is num) return v.toDouble();
+  if (v is String) return double.tryParse(v) ?? 0.0;
+  return 0.0;
+}
+
+int _parseInt(dynamic v) {
+  if (v == null) return 0;
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v) ?? 0;
+  return 0;
+}
+
 class StoreModel {
   final String id;
   final String sellerId;
@@ -97,8 +111,8 @@ class StoreModel {
       district: json['district'] as String?,
       ward: json['ward'] as String?,
       street: json['street'] as String?,
-      latitude: (json['latitude'] as num?)?.toDouble(),
-      longitude: (json['longitude'] as num?)?.toDouble(),
+      latitude: json['latitude'] == null ? null : _parseDouble(json['latitude']),
+      longitude: json['longitude'] == null ? null : _parseDouble(json['longitude']),
       openingTime: json['opening_time']?.toString(),
       closingTime: json['closing_time']?.toString(),
       shippingPolicy: json['shipping_policy'] as String?,
@@ -112,9 +126,9 @@ class StoreModel {
       status: json['status'] as String? ?? 'draft',
       isVerified: json['is_verified'] as bool? ?? false,
       isFeatured: json['is_featured'] as bool? ?? false,
-      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
-      reviewCount: (json['review_count'] as num?)?.toInt() ?? 0,
-      followersCount: (json['followers_count'] as num?)?.toInt() ?? 0,
+      rating: _parseDouble(json['rating']),
+      reviewCount: _parseInt(json['review_count']),
+      followersCount: _parseInt(json['followers_count']),
       galleryImages: (json['gallery_images'] as List<dynamic>?)
               ?.map((e) => StoreGalleryImageModel.fromJson(e as Map<String, dynamic>))
               .toList() ??

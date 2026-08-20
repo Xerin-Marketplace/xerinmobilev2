@@ -1,3 +1,6 @@
+double _pd(dynamic v) { if (v == null) return 0.0; if (v is num) return v.toDouble(); if (v is String) return double.tryParse(v) ?? 0.0; return 0.0; }
+int _pi(dynamic v) { if (v == null) return 0; if (v is num) return v.toInt(); if (v is String) return int.tryParse(v) ?? 0; return 0; }
+
 class SellerInventoryItemModel {
   final String inventoryId;
   final String productId;
@@ -48,14 +51,14 @@ class SellerInventoryItemModel {
       variantId: json['variant_id']?.toString(),
       variantName: json['variant_name'] as String?,
       variantSku: json['variant_sku'] as String?,
-      quantity: (json['quantity'] as num?)?.toInt() ?? 0,
-      reservedQuantity: (json['reserved_quantity'] as num?)?.toInt() ?? 0,
-      availableQuantity: (json['available_quantity'] as num?)?.toInt() ?? 0,
-      lowStockThreshold: (json['low_stock_threshold'] as num?)?.toInt() ?? 0,
+      quantity: _pi(json['quantity']),
+      reservedQuantity: _pi(json['reserved_quantity']),
+      availableQuantity: _pi(json['available_quantity']),
+      lowStockThreshold: _pi(json['low_stock_threshold']),
       warehouseLocation: json['warehouse_location'] as String?,
       restockDate: json['restock_date'] as String?,
-      unitPrice: (json['unit_price'] as num?)?.toDouble() ?? 0.0,
-      inventoryValue: (json['inventory_value'] as num?)?.toDouble() ?? 0.0,
+      unitPrice: _pd(json['unit_price']),
+      inventoryValue: _pd(json['inventory_value']),
       isLowStock: json['is_low_stock'] as bool? ?? false,
       isOutOfStock: json['is_out_of_stock'] as bool? ?? false,
       updatedAt: json['updated_at'] as String?,
@@ -86,14 +89,14 @@ class SellerInventorySummary {
 
   factory SellerInventorySummary.fromJson(Map<String, dynamic> json) {
     return SellerInventorySummary(
-      totalProducts: (json['total_products'] as num?)?.toInt() ?? 0,
-      totalVariants: (json['total_variants'] as num?)?.toInt() ?? 0,
-      totalStockUnits: (json['total_stock_units'] as num?)?.toInt() ?? 0,
-      reservedUnits: (json['reserved_units'] as num?)?.toInt() ?? 0,
-      availableUnits: (json['available_units'] as num?)?.toInt() ?? 0,
-      lowStockVariants: (json['low_stock_variants'] as num?)?.toInt() ?? 0,
-      outOfStockVariants: (json['out_of_stock_variants'] as num?)?.toInt() ?? 0,
-      inventoryValue: (json['inventory_value'] as num?)?.toDouble() ?? 0.0,
+      totalProducts: _pi(json['total_products']),
+      totalVariants: _pi(json['total_variants']),
+      totalStockUnits: _pi(json['total_stock_units']),
+      reservedUnits: _pi(json['reserved_units']),
+      availableUnits: _pi(json['available_units']),
+      lowStockVariants: _pi(json['low_stock_variants']),
+      outOfStockVariants: _pi(json['out_of_stock_variants']),
+      inventoryValue: _pd(json['inventory_value']),
     );
   }
 }
@@ -138,9 +141,9 @@ class SellerInventoryMovement {
       variantId: json['variant_id']?.toString(),
       variantName: json['variant_name'] as String?,
       movementType: json['movement_type'] as String? ?? '',
-      adjustment: (json['adjustment'] as num?)?.toInt() ?? 0,
-      beforeQuantity: (json['before_quantity'] as num?)?.toInt() ?? 0,
-      afterQuantity: (json['after_quantity'] as num?)?.toInt() ?? 0,
+      adjustment: _pi(json['adjustment']),
+      beforeQuantity: _pi(json['before_quantity']),
+      afterQuantity: _pi(json['after_quantity']),
       reference: json['reference'] as String?,
       note: json['note'] as String?,
       createdAt: json['created_at'] as String?,

@@ -1,4 +1,7 @@
-import '../../../core/utils/helpers.dart';
+import '../../../../core/utils/helpers.dart';
+
+double _pd(dynamic v) { if (v == null) return 0.0; if (v is num) return v.toDouble(); if (v is String) return double.tryParse(v) ?? 0.0; return 0.0; }
+int _pi(dynamic v) { if (v == null) return 0; if (v is num) return v.toInt(); if (v is String) return int.tryParse(v) ?? 0; return 0; }
 
 class SellerOrderModel {
   final String id;
@@ -53,11 +56,11 @@ class SellerOrderModel {
       userId: json['user_id']?.toString() ?? '',
       status: json['status'] as String? ?? 'pending',
       currency: json['currency'] as String? ?? 'TZS',
-      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
-      discountAmount: (json['discount_amount'] as num?)?.toDouble() ?? 0.0,
-      shippingAmount: (json['shipping_amount'] as num?)?.toDouble() ?? 0.0,
-      taxAmount: (json['tax_amount'] as num?)?.toDouble() ?? 0.0,
-      total: (json['total'] as num?)?.toDouble() ?? 0.0,
+      subtotal: _pd(json['subtotal']),
+      discountAmount: _pd(json['discount_amount']),
+      shippingAmount: _pd(json['shipping_amount']),
+      taxAmount: _pd(json['tax_amount']),
+      total: _pd(json['total']),
       couponCode: json['coupon_code'] as String?,
       notes: json['notes'] as String?,
       createdAt: json['created_at'] as String?,
@@ -108,9 +111,9 @@ class SellerOrderItemModel {
       sellerId: json['seller_id']?.toString() ?? '',
       productName: json['product_name'] as String? ?? '',
       variantName: json['variant_name'] as String?,
-      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
-      unitPrice: (json['unit_price'] as num?)?.toDouble() ?? 0.0,
-      totalPrice: (json['total_price'] as num?)?.toDouble() ?? 0.0,
+      quantity: _pi(json['quantity']) == 0 ? 1 : _pi(json['quantity']),
+      unitPrice: _pd(json['unit_price']),
+      totalPrice: _pd(json['total_price']),
     );
   }
 }

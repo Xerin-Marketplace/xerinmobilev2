@@ -5,13 +5,10 @@ import 'package:logger/logger.dart';
 
 import '../../../../core/errors/exceptions.dart';
 import '../../data/datasources/seller_remote_datasource.dart';
-import '../../data/models/inventory_model.dart';
 import '../../data/models/seller_kyc_model.dart';
 import '../../data/models/seller_order_model.dart';
-import '../../data/models/seller_payout_model.dart';
-import '../../data/models/seller_profile_model.dart';
+import '../../data/models/seller_wallet_model.dart';
 import '../../data/models/store_gallery_image_model.dart';
-import '../../data/models/store_model.dart';
 import '../../data/models/store_opening_hour_model.dart';
 import 'seller_state.dart';
 
@@ -27,71 +24,122 @@ class SellerCubit extends Cubit<SellerState> {
         super(const SellerInitial());
 
   Future<void> loadDashboard() async {
+    if (state is SellerLoading) return;
     emit(const SellerLoading());
 
-    final profileFuture = _dataSource.getMyProfile().then<dynamic>((v) => v).catchError((e) {
-      _logger.e('Seller profile error: $e');
-      return null;
-    });
-    final storeFuture = _dataSource.getMyStore().then<dynamic>((v) => v).catchError((e) {
-      _logger.e('Store error: $e');
-      return null;
-    });
-    final ordersFuture = _dataSource.getMyOrders(pageSize: 50).then<dynamic>((v) => v).catchError((e) {
-      _logger.e('Orders error: $e');
-      return null;
-    });
-    final productsFuture = _dataSource.getMyProducts(limit: 50).then<dynamic>((v) => v).catchError((e) {
-      _logger.e('Products error: $e');
-      return null;
-    });
-    final inventoryFuture = _dataSource.getMyInventory().then<dynamic>((v) => v).catchError((e) {
-      _logger.e('Inventory error: $e');
-      return null;
-    });
-    final lowStockFuture = _dataSource.getLowStock().then<dynamic>((v) => v).catchError((e) {
-      _logger.e('Low stock error: $e');
-      return null;
-    });
-    final kycFuture = _dataSource.getKycStatus().then<dynamic>((v) => v).catchError((e) {
-      _logger.e('KYC status error: $e');
-      return null;
-    });
-    final payoutsFuture = _dataSource.getPayoutAccounts(pageSize: 50).then<dynamic>((v) => v).catchError((e) {
-      _logger.e('Payouts error: $e');
-      return null;
-    });
-
     final results = await Future.wait([
-      profileFuture, storeFuture, ordersFuture, productsFuture,
-      inventoryFuture, lowStockFuture, kycFuture, payoutsFuture,
+      _dataSource.getSellerAnalyticsOverview().then<dynamic>((v) => v).catchError((e) {
+        _logger.e('Analytics overview error: $e');
+        return null;
+      }),
+      _dataSource.getSellerAnalyticsSales().then<dynamic>((v) => v).catchError((e) {
+        _logger.e('Analytics sales error: $e');
+        return null;
+      }),
+      _dataSource.getSellerAnalyticsProducts(limit: 5).then<dynamic>((v) => v).catchError((e) {
+        _logger.e('Analytics products error: $e');
+        return null;
+      }),
+      _dataSource.getSellerOrderSummary().then<dynamic>((v) => v).catchError((e) {
+        _logger.e('Order summary error: $e');
+        return null;
+      }),
+      _dataSource.getSellerOrders(page: 1, pageSize: 5).then<dynamic>((v) => v).catchError((e) {
+        _logger.e('Seller orders error: $e');
+        return null;
+      }),
+      _dataSource.getKycStatus().then<dynamic>((v) => v).catchError((e) {
+        _logger.e('KYC status error: $e');
+        return null;
+      }),
     ]);
 
-    final profile = results[0] is SellerProfileModel ? results[0] as SellerProfileModel : null;
-    final store = results[1] is StoreModel ? results[1] as StoreModel : null;
-    final orders = results[2] is List<SellerOrderModel> ? results[2] as List<SellerOrderModel> : <SellerOrderModel>[];
-    final products = results[3] is List<Map<String, dynamic>> ? results[3] as List<Map<String, dynamic>> : <Map<String, dynamic>>[];
-    final inventory = results[4] is List<InventoryModel> ? results[4] as List<InventoryModel> : <InventoryModel>[];
-    final lowStock = results[5] is List<InventoryModel> ? results[5] as List<InventoryModel> : <InventoryModel>[];
-    final kycStatus = results[6] is SellerKycStatusModel ? results[6] as SellerKycStatusModel : null;
-    final payouts = results[7] is List<SellerPayoutAccountModel> ? results[7] as List<SellerPayoutAccountModel> : <SellerPayoutAccountModel>[];
+    final analyticsOverview = results[0] is Map<String, dynamic> ? results[0] as Map<String, dynamic> : null;
+    final analyticsSales = results[1] is List<Map<String, dynamic>> ? results[1] as List<Map<String, dynamic>> : <Map<String, dynamic>>[];
+    final analyticsProducts = results[2] is List<Map<String, dynamic>> ? results[2] as List<Map<String, dynamic>> : <Map<String, dynamic>>[];
+    final orderSummary = results[3] is Map<String, dynamic> ? results[3] as Map<String, dynamic> : null;
+    final recentOrders = results[4] is List<SellerOrderModel> ? results[4] as List<SellerOrderModel> : <SellerOrderModel>[];
+    final kycStatus = results[5] is SellerKycStatusModel ? results[5] as SellerKycStatusModel : null;
 
     _logger.i(
-      '✅ Seller dashboard loaded — profile: ${profile?.businessName ?? "none"}, '
-      'orders: ${orders.length}, products: ${products.length}, '
-      'inventory: ${inventory.length}, lowStock: ${lowStock.length}',
+      '✅ Seller dashboard loaded — orders: ${recentOrders.length}, '
+      'analyticsSales: ${analyticsSales.length}, '
+      'kyc: ${kycStatus?.sellerStatus ?? "unknown"}',
     );
 
     emit(SellerDashboardLoaded(
-      profile: profile,
-      store: store,
-      orders: orders,
-      products: products,
-      inventory: inventory,
-      lowStockItems: lowStock,
+      orders: recentOrders,
       kycStatus: kycStatus,
-      payoutAccounts: payouts,
+      analyticsOverview: analyticsOverview,
+      analyticsSales: analyticsSales,
+      analyticsProducts: analyticsProducts,
+      orderSummary: orderSummary,
     ));
+  }
+
+  Future<void> loadProfileAndStore() async {
+    final current = state;
+    if (current is! SellerDashboardLoaded) return;
+    try {
+      final profile = await _dataSource.getMyProfile();
+      final store = await _dataSource.getMyStore();
+      emit(current.copyWith(profile: profile, store: store));
+    } on ServerException catch (e) {
+      _logger.e('Profile/store error: ${e.message}');
+    }
+  }
+
+  Future<void> loadProductsTab() async {
+    final current = state;
+    if (current is! SellerDashboardLoaded) return;
+    try {
+      final products = await _dataSource.getMyProducts(limit: 50);
+      emit(current.copyWith(products: products));
+    } on ServerException catch (e) {
+      _logger.e('Products error: ${e.message}');
+    }
+  }
+
+  Future<void> loadOrdersTab() async {
+    final current = state;
+    if (current is! SellerDashboardLoaded) return;
+    try {
+      final orders = await _dataSource.getMyOrders(pageSize: 50);
+      emit(current.copyWith(orders: orders));
+    } on ServerException catch (e) {
+      _logger.e('Orders error: ${e.message}');
+    }
+  }
+
+  Future<void> loadInventoryTab() async {
+    final current = state;
+    if (current is! SellerDashboardLoaded) return;
+    try {
+      final inventory = await _dataSource.getMyInventory();
+      final lowStock = await _dataSource.getLowStock();
+      emit(current.copyWith(inventory: inventory, lowStockItems: lowStock));
+    } on ServerException catch (e) {
+      _logger.e('Inventory error: ${e.message}');
+    }
+  }
+
+  Future<void> loadWalletData() async {
+    final current = state;
+    if (current is! SellerDashboardLoaded) return;
+    try {
+      final wallet = await _dataSource.getMyWallet();
+      final walletTx = await _dataSource.getWalletTransactions();
+      final walletPayouts = await _dataSource.getMyPayouts();
+      final payouts = await _dataSource.getPayoutAccounts(pageSize: 50);
+      emit(current.copyWith(
+        wallet: SellerWalletModel.fromJson(wallet),
+        walletTransactions: walletTx.map((e) => WalletTransactionModel.fromJson(e)).toList(),
+        walletPayouts: walletPayouts.map((e) => WalletPayoutModel.fromJson(e)).toList(),
+        payoutAccounts: payouts,
+      ));
+    } on ServerException catch (e) {
+      _logger.e('Wallet error: ${e.message}');
+    }
   }
 
   Future<void> refreshProducts() async {
@@ -175,6 +223,80 @@ class SellerCubit extends Cubit<SellerState> {
       emit(current.copyWith(payoutAccounts: payouts));
     } on ServerException catch (e) {
       _logger.e('Refresh payouts error: ${e.message}');
+    }
+  }
+
+  Future<void> refreshWallet() async {
+    final current = state;
+    if (current is! SellerDashboardLoaded) return;
+    try {
+      final walletJson = await _dataSource.getMyWallet();
+      final wallet = SellerWalletModel.fromJson(walletJson);
+      final txList = await _dataSource.getWalletTransactions();
+      final txns = txList.map((e) => WalletTransactionModel.fromJson(e)).toList();
+      final payoutList = await _dataSource.getMyPayouts();
+      final payouts = payoutList.map((e) => WalletPayoutModel.fromJson(e)).toList();
+      emit(current.copyWith(
+        wallet: wallet,
+        walletTransactions: txns,
+        walletPayouts: payouts,
+      ));
+    } on ServerException catch (e) {
+      _logger.e('Refresh wallet error: ${e.message}');
+    }
+  }
+
+  Future<void> requestPayout({
+    required String payoutAccountId,
+    required double amount,
+    String? note,
+  }) async {
+    final current = state is SellerDashboardLoaded ? state as SellerDashboardLoaded : null;
+    emit(const SellerActionLoading());
+    try {
+      await _dataSource.requestPayout(
+        payoutAccountId: payoutAccountId,
+        amount: amount,
+        note: note,
+      );
+      emit(const SellerActionSuccess(message: 'Payout requested successfully'));
+      if (current != null) {
+        await _refreshWalletFromState(current);
+      }
+    } on ServerException catch (e) {
+      emit(SellerActionError(message: e.message));
+    }
+  }
+
+  Future<void> cancelPayout(String payoutId) async {
+    final current = state is SellerDashboardLoaded ? state as SellerDashboardLoaded : null;
+    emit(const SellerActionLoading());
+    try {
+      await _dataSource.cancelPayout(payoutId);
+      emit(const SellerActionSuccess(message: 'Payout cancelled'));
+      if (current != null) {
+        await _refreshWalletFromState(current);
+      }
+    } on ServerException catch (e) {
+      emit(SellerActionError(message: e.message));
+    }
+  }
+
+  Future<void> _refreshWalletFromState(SellerDashboardLoaded current) async {
+    try {
+      final walletJson = await _dataSource.getMyWallet();
+      final wallet = SellerWalletModel.fromJson(walletJson);
+      final txList = await _dataSource.getWalletTransactions();
+      final txns = txList.map((e) => WalletTransactionModel.fromJson(e)).toList();
+      final payoutList = await _dataSource.getMyPayouts();
+      final payouts = payoutList.map((e) => WalletPayoutModel.fromJson(e)).toList();
+      emit(current.copyWith(
+        wallet: wallet,
+        walletTransactions: txns,
+        walletPayouts: payouts,
+      ));
+    } on ServerException catch (e) {
+      _logger.e('Refresh wallet from state error: ${e.message}');
     }
   }
 
