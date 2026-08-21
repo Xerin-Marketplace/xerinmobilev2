@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../config/constants/api_constants.dart';
 import '../../../../config/di/service_locator.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../data/models/product_model.dart';
@@ -119,7 +120,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                               minScale: 0.8,
                                               maxScale: 4.0,
                                               child: Image.network(
-                                                widget.product.images[index],
+                                                ApiConstants.resolveImageUrl(widget.product.images[index]) ?? '',
                                                 height: 340,
                                                 width: double.infinity,
                                                 fit: BoxFit.cover,
@@ -290,7 +291,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
                                     child: Image.network(
-                                      widget.product.images[index],
+                                      ApiConstants.resolveImageUrl(widget.product.images[index]) ?? '',
                                       fit: BoxFit.cover,
                                       errorBuilder: (_, __, ___) => Container(
                                         color: colorScheme.primary.withValues(alpha: 0.06),
@@ -644,7 +645,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             maxScale: 5.0,
                             child: Center(
                               child: Image.network(
-                                widget.product.images[index],
+                                ApiConstants.resolveImageUrl(widget.product.images[index]) ?? '',
                                 fit: BoxFit.contain,
                                 loadingBuilder: (context, child, progress) {
                                   if (progress == null) return child;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../config/constants/api_constants.dart';
 import '../cubit/search_cubit.dart';
 import '../../data/models/product_model.dart';
 import 'product_detail_page.dart';
@@ -154,7 +155,7 @@ class _SearchProductCard extends StatelessWidget {
             Expanded(
               child: product.images.isNotEmpty
                   ? Image.network(
-                      product.images.first,
+                      ApiConstants.resolveImageUrl(product.images.first) ?? '',
                       fit: BoxFit.cover,
                       width: double.infinity,
                       errorBuilder: (_, __, ___) => const Icon(Uicons.image, size: 48),

@@ -37,6 +37,9 @@ import '../../features/customer/presentation/pages/product_reviews_page.dart';
 import '../../features/customer/presentation/pages/product_qa_page.dart';
 import '../../features/customer/presentation/pages/profile_info_page.dart';
 import '../../features/customer/presentation/pages/promotions_page.dart';
+import '../../features/customer/presentation/pages/buy_from_abroad_page.dart';
+import '../../features/customer/presentation/pages/shop_tanzania_page.dart';
+import '../../features/customer/presentation/pages/wholesale_page.dart';
 import '../../features/customer/presentation/pages/recently_viewed_page.dart';
 import '../../features/customer/presentation/pages/search_page.dart';
 import '../../features/customer/presentation/pages/settings_page.dart';
@@ -332,6 +335,19 @@ class AppRouter {
       GoRoute(
         path: AppConstants.notificationPreferencesRoute,
         builder: (context, state) => const NotificationPreferencesPage(),
+      ),
+      // Marketplace expansion routes
+      GoRoute(
+        path: AppConstants.buyFromAbroadRoute,
+        builder: (context, state) => const BuyFromAbroadPage(),
+      ),
+      GoRoute(
+        path: AppConstants.shopTanzaniaRoute,
+        builder: (context, state) => const ShopTanzaniaPage(),
+      ),
+      GoRoute(
+        path: AppConstants.wholesaleRoute,
+        builder: (context, state) => const WholesalePage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

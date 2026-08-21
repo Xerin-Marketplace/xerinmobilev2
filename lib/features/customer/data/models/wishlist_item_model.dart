@@ -1,3 +1,4 @@
+import '../../../../config/constants/api_constants.dart';
 import 'product_model.dart';
 
 class WishlistItemModel {
@@ -121,7 +122,7 @@ class WishlistItemModel {
       price: productPrice,
       salePrice: productSalePrice,
       currency: product?['currency'] as String? ?? json['currency'] as String? ?? 'TZS',
-      imageUrl: productImage as String?,
+      imageUrl: ApiConstants.resolveImageUrl(productImage as String?),
       categoryName: product?['category_name'] as String?
           ?? json['category_name'] as String?
           ?? json['store_name'] as String?,

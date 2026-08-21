@@ -1,3 +1,5 @@
+import '../../../../config/constants/api_constants.dart';
+
 class CartModel {
   final String id;
   final String userId;
@@ -133,7 +135,7 @@ class ProductSummary {
     this.isActive = true,
   });
 
-  String? get thumbnailUrl => images.isNotEmpty ? images.first : null;
+  String? get thumbnailUrl => images.isNotEmpty ? ApiConstants.resolveImageUrl(images.first) : null;
 
   factory ProductSummary.fromJson(Map<String, dynamic> json) {
     final rawImages = json['images'];

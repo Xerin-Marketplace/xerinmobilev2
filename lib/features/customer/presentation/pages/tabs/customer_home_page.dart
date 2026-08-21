@@ -127,6 +127,8 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                   ),
                   const SizedBox(height: 14),
                   _buildCategories(colorScheme, categories, isLoadingData),
+                  const SizedBox(height: 28),
+                  _buildMarketplaceSections(colorScheme, featured, isLoadingData),
                   const SizedBox(height: 24),
                   _buildSectionTitle(
                     'Featured',
@@ -1477,6 +1479,356 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMarketplaceSections(ColorScheme cs, List<ProductModel> featured, bool isLoading) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildMarketplaceBanner(
+          cs,
+          title: 'Local Tanzania',
+          subtitle: 'Shop from local sellers across the country',
+          icon: Uicons.storeAlt,
+          gradientColors: [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)],
+          badgeText: 'AVAILABLE NOW',
+          badgeColor: const Color(0xFF22C55E),
+          isAvailable: true,
+          onTap: () => context.push(AppConstants.exploreProductsRoute),
+        ),
+        const SizedBox(height: 14),
+        _buildMarketplaceProducts(cs, featured, isLoading),
+        const SizedBox(height: 28),
+        _buildMarketplaceBanner(
+          cs,
+          title: 'Buy from Abroad',
+          subtitle: 'Dubai • China • Turkey • India & more',
+          icon: Uicons.globe,
+          gradientColors: [const Color(0xFF00A651), const Color(0xFF00732F)],
+          badgeText: 'COMING SOON',
+          badgeColor: const Color(0xFFF59E0B),
+          isAvailable: false,
+          onTap: () => context.push(AppConstants.buyFromAbroadRoute),
+        ),
+        const SizedBox(height: 28),
+        _buildMarketplaceBanner(
+          cs,
+          title: 'Shop Tanzania',
+          subtitle: 'Local goods delivered worldwide',
+          icon: Uicons.shippingFast,
+          gradientColors: [const Color(0xFF1EB53A), const Color(0xFF15803D)],
+          badgeText: 'COMING SOON',
+          badgeColor: const Color(0xFFF59E0B),
+          isAvailable: false,
+          onTap: () => context.push(AppConstants.shopTanzaniaRoute),
+        ),
+        const SizedBox(height: 28),
+        _buildMarketplaceBanner(
+          cs,
+          title: 'Wholesale & B2B',
+          subtitle: 'Bulk pricing, MOQ & Request for Quotation',
+          icon: Uicons.warehouse,
+          gradientColors: [const Color(0xFFF59E0B), const Color(0xFFB45309)],
+          badgeText: 'COMING SOON',
+          badgeColor: const Color(0xFFF59E0B),
+          isAvailable: false,
+          onTap: () => context.push(AppConstants.wholesaleRoute),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMarketplaceBanner(
+    ColorScheme cs, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Color> gradientColors,
+    required String badgeText,
+    required Color badgeColor,
+    required bool isAvailable,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 150,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: gradientColors[0].withValues(alpha: 0.2),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(
+                'assets/images/retro-style-organic-turing-lines-pattern-background-design.png',
+                fit: BoxFit.cover,
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      gradientColors[0].withValues(alpha: 0.85),
+                      gradientColors[1].withValues(alpha: 0.55),
+                      gradientColors[1].withValues(alpha: 0.2),
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    stops: const [0.0, 0.5, 1.0],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(icon, color: Colors.white, size: 24),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white.withValues(alpha: 0.95),
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.25),
+                            blurRadius: 6,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: badgeColor,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.15),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            badgeText,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        if (isAvailable)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('Shop Now',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: gradientColors[0],
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                Icon(Uicons.arrowRight, size: 14, color: gradientColors[0]),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMarketplaceProducts(ColorScheme cs, List<ProductModel> products, bool isLoading) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (isLoading) {
+      return SizedBox(
+        height: 220,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: 4,
+          separatorBuilder: (_, _) => const SizedBox(width: 12),
+          itemBuilder: (_, _) => Container(
+            width: 140,
+            decoration: BoxDecoration(
+              color: cs.onSurface.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (products.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: cs.onSurface.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          children: [
+            Icon(Uicons.box, size: 32, color: cs.onSurface.withValues(alpha: 0.2)),
+            const SizedBox(height: 8),
+            Text('Products loading...',
+              style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 220,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: products.take(8).length,
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          final product = products[index];
+          return GestureDetector(
+            onTap: () => context.push(AppConstants.productDetailRoute, extra: {
+              'product': product,
+              'category': product.categoryName ?? 'All',
+            }),
+            child: Container(
+              width: 140,
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF252525) : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                    child: product.thumbnailUrl != null
+                        ? Image.network(
+                            product.thumbnailUrl!,
+                            height: 120,
+                            width: 140,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, progress) {
+                              if (progress == null) return child;
+                              return Container(
+                                height: 120,
+                                width: 140,
+                                color: cs.primary.withValues(alpha: 0.06),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: cs.primary,
+                                  ),
+                                ),
+                              );
+                            },
+                            errorBuilder: (_, _, _) => Container(
+                              height: 120,
+                              width: 140,
+                              color: cs.primary.withValues(alpha: 0.06),
+                              child: Icon(Uicons.box, size: 24, color: cs.primary.withValues(alpha: 0.3)),
+                            ),
+                          )
+                        : Container(
+                            height: 120,
+                            width: 140,
+                            color: cs.primary.withValues(alpha: 0.06),
+                            child: Icon(Uicons.box, size: 24, color: cs.primary.withValues(alpha: 0.3)),
+                          ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(product.name,
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: cs.onSurface),
+                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(product.formattedPrice,
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: cs.primary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

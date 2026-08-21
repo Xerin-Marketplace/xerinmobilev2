@@ -58,6 +58,11 @@ abstract class AppConstants {
   // Notification preferences route
   static const String notificationPreferencesRoute = '/notification-preferences';
 
+  // Marketplace expansion routes
+  static const String buyFromAbroadRoute = '/buy-from-abroad';
+  static const String shopTanzaniaRoute = '/shop-tanzania';
+  static const String wholesaleRoute = '/wholesale';
+
   // Timeouts
   static const int connectionTimeoutSeconds = 30;
   static const int receiveTimeoutSeconds = 30;

@@ -1,3 +1,5 @@
+import '../../../../config/constants/api_constants.dart';
+
 double _pd(dynamic v) { if (v == null) return 0.0; if (v is num) return v.toDouble(); if (v is String) return double.tryParse(v) ?? 0.0; return 0.0; }
 
 class ProductModel {
@@ -53,7 +55,7 @@ class ProductModel {
 
   String get displayPrice => formattedPrice;
 
-  String? get thumbnailUrl => images.isNotEmpty ? images.first : null;
+  String? get thumbnailUrl => images.isNotEmpty ? ApiConstants.resolveImageUrl(images.first) : null;
 
   static double _parsePrice(dynamic value) {
     if (value is num) return value.toDouble();

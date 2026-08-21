@@ -333,4 +333,16 @@ abstract class ApiConstants {
   static const String contentType = 'application/json';
   static const String authorizationHeader = 'Authorization';
   static const String bearerPrefix = 'Bearer';
+
+  /// Resolves a relative image path to a full URL using the API base URL.
+  /// If [path] is already a full URL (starts with http), it is returned as-is.
+  /// If [path] is null or empty, null is returned.
+  static String? resolveImageUrl(String? path) {
+    if (path == null || path.trim().isEmpty) return null;
+    final trimmed = path.trim();
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    return '$baseUrl$trimmed';
+  }
 }
