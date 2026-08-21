@@ -1,7 +1,7 @@
 /// General app constants.
 abstract class AppConstants {
   static const String appName = 'XerinMarket';
-  static const String appVersion = '1.0.3';
+  static const String appVersion = '1.0.7';
 
   // Routes
   static const String splashRoute = '/splash';

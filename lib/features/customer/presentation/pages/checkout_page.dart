@@ -28,18 +28,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final _recipientPhoneController = TextEditingController();
   String? _selectedAddressId;
   String _selectedPaymentMethod = 'mobile_money';
-  String _selectedMnoProvider = 'mpesa';
   bool _isProcessing = false;
   bool _isFetchingLocation = false;
   String? _locationStatusText;
-
-  static const _mnoProviders = [
-    {'value': 'mpesa', 'label': 'M-Pesa', 'color': Color(0xFFE53935), 'short': 'M-PESA'},
-    {'value': 'airtel', 'label': 'Airtel Money', 'color': Color(0xFFE53935), 'short': 'AIRTEL'},
-    {'value': 'tigo', 'label': 'Tigo Pesa', 'color': Color(0xFF0066B3), 'short': 'TIGO'},
-    {'value': 'halopesa', 'label': 'Halo Pesa', 'color': Color(0xFF00A651), 'short': 'HALO'},
-    {'value': 'azampesa', 'label': 'Azam Pesa', 'color': Color(0xFFE94B1B), 'short': 'AZAM'},
-  ];
 
   static const _paymentTypes = [
     {'value': 'mobile_money', 'label': 'Mobile Money', 'icon': Uicons.mobile, 'color': Color(0xFF22C55E), 'subtitle': 'Pay via MNO'},
@@ -116,7 +107,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       shippingAddressId: _selectedAddressId,
       notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
       paymentMethod: _selectedPaymentMethod,
-      provider: _selectedPaymentMethod == 'mobile_money' ? _selectedMnoProvider : null,
+      provider: null,
       phoneNumber: _selectedPaymentMethod == 'mobile_money' ? _phoneController.text.trim() : null,
     );
 
@@ -291,12 +282,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                     ..._paymentTypes.map((type) => _buildPaymentOption(type, colorScheme, isDark)),
                                     if (_selectedPaymentMethod == 'mobile_money') ...[
                                       const SizedBox(height: 16),
-                                      Text('Select Provider',
-                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.6)),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      _buildMnoProviderGrid(colorScheme, isDark),
-                                      const SizedBox(height: 16),
                                       _buildPhoneInput(colorScheme),
                                     ],
                                     if (_selectedPaymentMethod == 'card') ...[
@@ -438,51 +423,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _buildMnoProviderGrid(ColorScheme cs, bool isDark) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 3,
-      childAspectRatio: 1.8,
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      children: _mnoProviders.map((provider) {
-        final isSelected = _selectedMnoProvider == provider['value'];
-        final color = provider['color'] as Color;
-        return GestureDetector(
-          onTap: () => setState(() => _selectedMnoProvider = provider['value'] as String),
-          child: Container(
-            decoration: BoxDecoration(
-              color: isSelected ? color.withValues(alpha: 0.08) : (isDark ? const Color(0xFF1E1E1E) : cs.surface),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isSelected ? color : cs.onSurface.withValues(alpha: 0.08),
-                width: isSelected ? 1.5 : 1,
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 10, height: 10,
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                ),
-                const SizedBox(height: 6),
-                Text(provider['short'] as String,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: isSelected ? color : cs.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
   Widget _buildSummaryContent(double cartTotal, ColorScheme cs) {
     return Column(
       children: [
@@ -537,29 +477,57 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildPhoneInput(ColorScheme cs) {
-    return TextField(
-      controller: _phoneController,
-      keyboardType: TextInputType.phone,
-      decoration: InputDecoration(
-        labelText: 'Phone Number',
-        labelStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
-        hintText: 'e.g. 0712345678',
-        hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.3)),
-        prefixIcon: const Icon(Uicons.phone, size: 20),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: _phoneController,
+          keyboardType: TextInputType.phone,
+          decoration: InputDecoration(
+            labelText: 'Mobile Money Number',
+            labelStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
+            hintText: 'e.g. 0712345678',
+            hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.3)),
+            prefixIcon: const Icon(Uicons.phone, size: 20),
+            prefixText: '+255 ',
+            prefixStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: cs.primary, width: 1.5),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
+        const SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF22C55E).withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.15)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Uicons.circleInfo, color: Color(0xFF22C55E), size: 16),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('Enter your mobile money number. We\'ll detect the provider automatically.',
+                  style: TextStyle(fontSize: 12, height: 1.4, color: cs.onSurface.withValues(alpha: 0.5)),
+                ),
+              ),
+            ],
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: cs.primary, width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      ),
+      ],
     );
   }
 

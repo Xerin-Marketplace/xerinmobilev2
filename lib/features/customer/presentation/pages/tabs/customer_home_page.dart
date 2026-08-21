@@ -140,7 +140,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                   const SizedBox(height: 24),
                   _buildFlashSaleBanner(colorScheme),
                   const SizedBox(height: 24),
-                  _buildDiscoverMix(colorScheme),
+                  _buildDiscoverMix(colorScheme, featured),
                   const SizedBox(height: 24),
                   _buildRecommendationSections(colorScheme),
                   const SizedBox(height: 24),
@@ -1481,49 +1481,70 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     );
   }
 
-  Widget _buildDiscoverMix(ColorScheme colorScheme) {
+  Widget _buildDiscoverMix(ColorScheme colorScheme, List<ProductModel> featured) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocBuilder<RecommendationCubit, RecommendationState>(
       builder: (context, state) {
-        if (state is! RecommendationLoaded) {
-          return SizedBox(
-            height: 240,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.zero,
-              itemCount: 6,
-              separatorBuilder: (_, _) => const SizedBox(width: 12),
-              itemBuilder: (_, _) => Container(
-                width: 160,
-                decoration: BoxDecoration(
-                  color: colorScheme.onSurface.withValues(alpha: 0.04),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-            ),
-          );
-        }
+        final recLoaded = state is RecommendationLoaded;
 
+        // Combine all available product sources — mixed and dynamic
         final all = <ProductModel>[
-          ...state.trending,
-          ...state.newArrivals,
-          ...state.topRated,
-          ...state.recommended.map((r) => r.product),
+          if (recLoaded) ...state.trending,
+          if (recLoaded) ...state.newArrivals,
+          if (recLoaded) ...state.topRated,
+          if (recLoaded) ...state.bestSellers,
+          if (recLoaded) ...state.recommended.map((r) => r.product),
+          ...featured,
         ];
 
-        if (all.isEmpty) {
-          return const SizedBox(
-            height: 100,
-            child: Center(
-                child: Text('No products to discover',
-                    style: TextStyle(fontSize: 13))),
+        // De-duplicate by id while preserving order
+        final seen = <String>{};
+        final unique = all.where((p) {
+          final key = p.id;
+          if (seen.contains(key)) return false;
+          seen.add(key);
+          return true;
+        }).toList();
+
+        if (unique.isEmpty) {
+          // Shimmer-like skeleton placeholders
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle(
+                'Discover Mix',
+                'See all',
+                colorScheme,
+                icon: Uicons.compass,
+                onActionTap: () =>
+                    context.push(AppConstants.exploreProductsRoute),
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                height: 240,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.zero,
+                  itemCount: 6,
+                  separatorBuilder: (_, _) => const SizedBox(width: 12),
+                  itemBuilder: (_, _) => Container(
+                    width: 160,
+                    decoration: BoxDecoration(
+                      color: colorScheme.onSurface.withValues(alpha: 0.04),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           );
         }
 
-        all.shuffle();
+        // Shuffle so the mix changes on every rebuild
+        unique.shuffle();
 
-        final mixed = all.take(20).toList();
+        final mixed = unique.take(20).toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

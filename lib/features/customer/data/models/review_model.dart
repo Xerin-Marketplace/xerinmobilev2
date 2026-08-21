@@ -40,7 +40,7 @@ class ReviewModel {
       storeId: json['store_id']?.toString(),
       customerId: json['customer_id']?.toString() ?? '',
       sellerId: json['seller_id']?.toString(),
-      rating: (json['rating'] as num?)?.toInt() ?? 0,
+      rating: _toNum(json['rating'])?.toInt() ?? 0,
       title: json['title'] as String?,
       comment: json['comment'] as String?,
       verifiedPurchase: json['verified_purchase'] as bool? ?? false,
@@ -72,11 +72,18 @@ class ReviewListResponse {
   factory ReviewListResponse.fromJson(Map<String, dynamic> json) {
     final list = json['results'] as List<dynamic>? ?? [];
     return ReviewListResponse(
-      total: (json['total'] as num?)?.toInt() ?? 0,
-      page: (json['page'] as num?)?.toInt() ?? 1,
-      pageSize: (json['page_size'] as num?)?.toInt() ?? 20,
-      averageRating: (json['average_rating'] as num?)?.toDouble() ?? 0.0,
+      total: _toNum(json['total'])?.toInt() ?? 0,
+      page: _toNum(json['page'])?.toInt() ?? 1,
+      pageSize: _toNum(json['page_size'])?.toInt() ?? 20,
+      averageRating: _toNum(json['average_rating'])?.toDouble() ?? 0.0,
       results: list.map((e) => ReviewModel.fromJson(e as Map<String, dynamic>)).toList(),
     );
   }
+}
+
+num? _toNum(dynamic value) {
+  if (value == null) return null;
+  if (value is num) return value;
+  if (value is String) return num.tryParse(value);
+  return null;
 }
