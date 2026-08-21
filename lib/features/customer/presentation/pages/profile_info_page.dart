@@ -6,6 +6,7 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../config/di/service_locator.dart';
 import '../../../auth/data/datasources/auth_remote_datasource.dart';
+import '../../../auth/data/models/user_model.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../../presentation/cubit/home_cubit.dart';
 import '../../presentation/cubit/home_state.dart';
@@ -77,6 +78,7 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final state = context.read<HomeCubit>().state;
     final user = state is HomeLoaded ? state.user : null;
     final initials = user?.fullName.isNotEmpty == true
@@ -86,229 +88,199 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    BackIconButton(
-                      onTap: () => context.pop(),
-                      color: colorScheme.primary,
-                    ),
-                    const SizedBox(width: 16),
-                    Text('Profile Information',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.75)],
-                      begin: Alignment.topLeft, end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
-                  ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              _buildAppBar(colorScheme),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Stack(
+                      _buildAvatarSection(user, initials, colorScheme),
+                      const SizedBox(height: 28),
+                      _buildSectionLabel('Personal Information', colorScheme),
+                      const SizedBox(height: 14),
+                      _buildCard(cs: colorScheme, isDark: isDark, child: Column(
                         children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.white.withValues(alpha: 0.2),
-                            child: Text(initials,
-                              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 0, right: 0,
-                            child: Container(
-                              width: 34, height: 34,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: colorScheme.primary, width: 2),
-                              ),
-                              child: Icon(Uicons.camera, color: colorScheme.primary, size: 16),
-                            ),
-                          ),
+                          _buildField('First Name', _firstNameCtrl, colorScheme, icon: Uicons.user),
+                          _buildDivider(colorScheme),
+                          _buildField('Last Name', _lastNameCtrl, colorScheme, icon: Uicons.user),
+                          _buildDivider(colorScheme),
+                          _buildField('Email', _emailCtrl, colorScheme, enabled: false, icon: Uicons.envelope),
+                          _buildDivider(colorScheme),
+                          _buildField('Phone Number', _phoneCtrl, colorScheme, keyboardType: TextInputType.phone, icon: Uicons.phone),
                         ],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(user?.fullName ?? 'Guest',
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                      if (user?.email.isNotEmpty == true) ...[
-                        const SizedBox(height: 4),
-                        Text(user!.email,
-                          style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.85)),
-                        ),
-                      ],
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: (user?.isVerified == true ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)).withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: (user?.isVerified == true ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)).withValues(alpha: 0.4),
+                      )),
+                      const SizedBox(height: 24),
+                      _buildSectionLabel('Account Status', colorScheme),
+                      const SizedBox(height: 14),
+                      _buildCard(cs: colorScheme, isDark: isDark, child: Column(
+                        children: [
+                          _buildStatusRow(Uicons.circleUser, 'Account Type', _capitalize(user?.accountType ?? 'Customer'), colorScheme),
+                          _buildDivider(colorScheme),
+                          _buildStatusRow(
+                            user?.isVerified == true ? Uicons.badgeCheck : Uicons.clock,
+                            'Verification',
+                            user?.isVerified == true ? 'Verified' : 'Pending',
+                            colorScheme,
+                            valueColor: user?.isVerified == true ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
                           ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              user?.isVerified == true ? Uicons.badgeCheck : Uicons.clock,
-                              size: 14,
-                              color: user?.isVerified == true ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              user?.isVerified == true ? 'Verified' : 'Not verified',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: user?.isVerified == true ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
-                              ),
-                            ),
+                          _buildDivider(colorScheme),
+                          _buildStatusRow(Uicons.shield, 'Status', _capitalize(user?.status ?? 'Active'), colorScheme),
+                          if (user?.isSeller == true) ...[
+                            _buildDivider(colorScheme),
+                            _buildStatusRow(Uicons.shop, 'Seller Account', _capitalize(user?.sellerStatus ?? 'Active'), colorScheme),
                           ],
-                        ),
-                      ),
+                        ],
+                      )),
+                      const SizedBox(height: 32),
+                      _buildSaveButton(colorScheme),
+                      const SizedBox(height: 28),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Account Details', colorScheme),
-                const SizedBox(height: 12),
-                _buildInfoCard(colorScheme,
-                  child: Column(
-                    children: [
-                      _buildField('First Name', _firstNameCtrl, colorScheme, icon: Uicons.user),
-                      const SizedBox(height: 16),
-                      _buildField('Last Name', _lastNameCtrl, colorScheme, icon: Uicons.user),
-                      const SizedBox(height: 16),
-                      _buildField('Email', _emailCtrl, colorScheme, enabled: false, icon: Uicons.envelope),
-                      const SizedBox(height: 16),
-                      _buildField('Phone Number', _phoneCtrl, colorScheme, keyboardType: TextInputType.phone, icon: Uicons.phone),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Account Status', colorScheme),
-                const SizedBox(height: 12),
-                _buildInfoCard(colorScheme,
-                  child: Column(
-                    children: [
-                      _buildStatusRow(Uicons.badge, 'Account ID', user?.id ?? '—', colorScheme),
-                      _buildStatusRow(Uicons.shield, 'Status', _capitalize(user?.status ?? '—'), colorScheme),
-                      _buildStatusRow(Uicons.shieldCheck, 'Verification', user?.isVerified == true ? 'Verified' : 'Pending', colorScheme),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity, height: 54,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _save,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      elevation: 0,
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text('Save Changes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title, ColorScheme colorScheme) {
-    return Row(
-      children: [
-        Container(
-          width: 32, height: 32,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.7)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.primary.withValues(alpha: 0.2),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
+  Widget _buildAppBar(ColorScheme cs) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Row(
+        children: [
+          BackIconButton(
+            onTap: () => context.pop(),
+            color: cs.primary,
           ),
-          child: Icon(Uicons.note, color: Colors.white, size: 16),
-        ),
-        const SizedBox(width: 10),
-        Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
-      ],
+          const SizedBox(width: 16),
+          Text('Personal Information',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: cs.onSurface),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildInfoCard(ColorScheme colorScheme, {required Widget child}) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+  Widget _buildAvatarSection(UserModel? user, String initials, ColorScheme cs) {
+    final isVerified = user?.isVerified == true;
+    return Center(
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [cs.primary, cs.primary.withValues(alpha: 0.5)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(color: cs.surface, shape: BoxShape.circle),
+              child: CircleAvatar(
+                radius: 48,
+                backgroundColor: cs.primary.withValues(alpha: 0.08),
+                child: Text(initials,
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: cs.primary),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(user?.fullName ?? 'Guest',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: cs.onSurface),
+          ),
+          if (user?.email.isNotEmpty == true) ...[
+            const SizedBox(height: 4),
+            Text(user!.email,
+              style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4)),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            decoration: BoxDecoration(
+              color: (isVerified ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)).withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: (isVerified ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)).withValues(alpha: 0.2),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isVerified ? Uicons.badgeCheck : Uicons.clock,
+                  size: 13,
+                  color: isVerified ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  isVerified ? 'Verified Account' : 'Not Verified',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: isVerified ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSectionLabel(String label, ColorScheme cs) {
+    return Text(label,
+      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurface.withValues(alpha: 0.6)),
+    );
+  }
+
+  Widget _buildCard({required ColorScheme cs, required bool isDark, required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF252525) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: child,
     );
   }
 
-  Widget _buildField(String label, TextEditingController controller, ColorScheme colorScheme, {
+  Widget _buildDivider(ColorScheme cs) {
+    return Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06));
+  }
+
+  Widget _buildField(String label, TextEditingController controller, ColorScheme cs, {
     bool enabled = true,
     TextInputType? keyboardType,
     IconData? icon,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.6))),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: enabled ? colorScheme.onSurface.withValues(alpha: 0.03) : colorScheme.onSurface.withValues(alpha: 0.02),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.08)),
-          ),
-          child: Row(
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.4))),
+          const SizedBox(height: 6),
+          Row(
             children: [
               if (icon != null) ...[
-                Padding(
-                  padding: const EdgeInsets.only(left: 12),
-                  child: Icon(icon, size: 18, color: colorScheme.onSurface.withValues(alpha: 0.4)),
-                ),
+                Icon(icon, size: 18, color: enabled ? cs.primary.withValues(alpha: 0.5) : cs.onSurface.withValues(alpha: 0.2)),
+                const SizedBox(width: 10),
               ],
               Expanded(
                 child: TextFormField(
@@ -316,50 +288,68 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                   enabled: enabled,
                   keyboardType: keyboardType,
                   validator: (v) => (v == null || v.trim().isEmpty) && enabled ? 'Required' : null,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: enabled ? cs.onSurface : cs.onSurface.withValues(alpha: 0.4),
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Enter $label',
+                    hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.2), fontSize: 15),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.3)),
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
                   ),
                 ),
               ),
+              if (!enabled)
+                Icon(Uicons.lock, size: 14, color: cs.onSurface.withValues(alpha: 0.2)),
             ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildStatusRow(IconData icon, String label, String value, ColorScheme colorScheme) {
+  Widget _buildStatusRow(IconData icon, String label, String value, ColorScheme cs, {Color? valueColor}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
           Container(
-            width: 36, height: 36,
+            width: 34, height: 34,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.7)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: (valueColor ?? cs.primary).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, size: 18, color: Colors.white),
+            child: Icon(icon, size: 16, color: valueColor ?? cs.primary),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.5))),
-                const SizedBox(height: 2),
-                Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface)),
-              ],
-            ),
+            child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onSurface.withValues(alpha: 0.5))),
+          ),
+          Text(value,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: valueColor ?? cs.onSurface),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSaveButton(ColorScheme cs) {
+    return SizedBox(
+      width: double.infinity, height: 52,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _save,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: cs.primary,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          elevation: 0,
+        ),
+        child: _isLoading
+            ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+            : const Text('Save Changes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
       ),
     );
   }

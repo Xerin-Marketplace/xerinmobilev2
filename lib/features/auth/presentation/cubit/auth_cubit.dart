@@ -123,12 +123,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> continueAsGuest() async {
-    await _tokenStorage.setGuestMode(true);
-    _logger.i('✅ Continued as guest');
-    emit(const AuthGuest());
-  }
-
   Future<void> logout() async {
     final refreshToken = _tokenStorage.refreshToken;
     if (refreshToken == null) {
@@ -217,6 +211,19 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   void resetState() => emit(const AuthInitial());
+
+  Future<bool> validateSession() async {
+    if (!_tokenStorage.hasTokens) return false;
+    try {
+      final user = await _dataSource.getMyProfile();
+      _logger.i('✅ Session valid — user: ${user.fullName}');
+      return true;
+    } catch (e) {
+      _logger.w('❌ Session invalid: $e');
+      await _tokenStorage.clearTokens();
+      return false;
+    }
+  }
 
   void clearError() {
     if (state is AuthError) emit(const AuthInitial());

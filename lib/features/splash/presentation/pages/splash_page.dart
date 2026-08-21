@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/constants/app_constants.dart';
 import '../../../../core/security/security_service.dart';
 import '../../../../core/storage/token_storage.dart';
+import '../../../auth/data/datasources/auth_remote_datasource.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -60,20 +61,37 @@ class _SplashPageState extends State<SplashPage>
     final tokenStorage = GetIt.instance<TokenStorage>();
     final prefs = GetIt.instance<SharedPreferences>();
     final securityService = GetIt.instance<SecurityService>();
-    final isLoggedIn = tokenStorage.hasTokens;
-    final isGuest = tokenStorage.isGuestMode;
     final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
 
-    if ((isLoggedIn || isGuest) && securityService.isPinLockEnabled) {
+    if (!tokenStorage.hasTokens) {
+      if (hasSeenOnboarding) {
+        context.go(AppConstants.signInRoute);
+      } else {
+        context.go(AppConstants.onboardingRoute);
+      }
+      return;
+    }
+
+    // Validate the stored token by fetching the user profile.
+    bool sessionValid = false;
+    try {
+      final dataSource = GetIt.instance<AuthRemoteDataSource>();
+      await dataSource.getMyProfile();
+      sessionValid = true;
+    } catch (_) {
+      sessionValid = false;
+    }
+
+    if (!mounted) return;
+
+    if (sessionValid && securityService.isPinLockEnabled) {
       context.go(AppConstants.lockRoute);
-    } else if (isLoggedIn) {
+    } else if (sessionValid) {
       context.go(AppConstants.homeRoute);
-    } else if (isGuest) {
-      context.go(AppConstants.homeRoute);
-    } else if (hasSeenOnboarding) {
-      context.go(AppConstants.signInRoute);
     } else {
-      context.go(AppConstants.onboardingRoute);
+      // Token is invalid and refresh already failed in the interceptor.
+      await tokenStorage.clearTokens();
+      context.go(AppConstants.signInRoute);
     }
   }
 

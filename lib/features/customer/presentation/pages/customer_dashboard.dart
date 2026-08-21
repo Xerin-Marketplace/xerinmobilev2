@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../common/presentation/widgets/modern_bottom_nav.dart';
 import '../cubit/cart_cubit.dart';
 import '../cubit/cart_state.dart';
-import 'tabs/customer_analytics_page.dart';
 import 'tabs/customer_cart_page.dart';
 import 'tabs/customer_explore_page.dart';
 import 'tabs/customer_home_page.dart';
@@ -27,7 +26,6 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     CustomerExplorePage(),
     CustomerCartPage(),
     CustomerWishlistPage(),
-    CustomerAnalyticsPage(),
     CustomerProfilePage(),
   ];
 
@@ -58,10 +56,6 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
               icon: Uicons.heart,
               activeIcon: Uicons.heart,
               label: 'Wishlist'),
-          const NavItem(
-              icon: Uicons.barChart,
-              activeIcon: Uicons.barChart,
-              label: 'Stats'),
           const NavItem(
               icon: Uicons.user,
               activeIcon: Uicons.user,

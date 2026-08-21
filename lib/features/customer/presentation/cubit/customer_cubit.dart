@@ -135,6 +135,14 @@ class CustomerCubit extends Cubit<CustomerState> {
     required String city,
     required String street,
     String? postalCode,
+    String? label,
+    String? recipientName,
+    String? recipientPhone,
+    String? district,
+    String? ward,
+    String? landmark,
+    double? latitude,
+    double? longitude,
     bool isDefault = false,
   }) async {
     emit(const CustomerActionInProgress());
@@ -145,6 +153,14 @@ class CustomerCubit extends Cubit<CustomerState> {
         city: city,
         street: street,
         postalCode: postalCode,
+        label: label,
+        recipientName: recipientName,
+        recipientPhone: recipientPhone,
+        district: district,
+        ward: ward,
+        landmark: landmark,
+        latitude: latitude,
+        longitude: longitude,
         isDefault: isDefault,
       );
       _logger.i('✅ Address added: ${address.id}');
@@ -164,6 +180,14 @@ class CustomerCubit extends Cubit<CustomerState> {
     required String city,
     required String street,
     String? postalCode,
+    String? label,
+    String? recipientName,
+    String? recipientPhone,
+    String? district,
+    String? ward,
+    String? landmark,
+    double? latitude,
+    double? longitude,
     bool isDefault = false,
   }) async {
     emit(const CustomerActionInProgress());
@@ -175,6 +199,14 @@ class CustomerCubit extends Cubit<CustomerState> {
         city: city,
         street: street,
         postalCode: postalCode,
+        label: label,
+        recipientName: recipientName,
+        recipientPhone: recipientPhone,
+        district: district,
+        ward: ward,
+        landmark: landmark,
+        latitude: latitude,
+        longitude: longitude,
         isDefault: isDefault,
       );
       _logger.i('✅ Address updated: $addressId');

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../../config/constants/app_constants.dart';
 import '../../../../../config/di/service_locator.dart';
-import '../../../../../core/storage/token_storage.dart';
 import '../../../data/models/wishlist_item_model.dart';
 import '../../cubit/wishlist_cubit.dart';
 import '../../cubit/wishlist_state.dart';
@@ -35,61 +34,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-
-    if (sl<TokenStorage>().isGuestMode) {
-      return SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(28),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Uicons.heart, size: 72, color: colorScheme.primary.withValues(alpha: 0.25)),
-                const SizedBox(height: 20),
-                Text('Save your favorites',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text('Sign in to view and manage your wishlist.',
-                  style: TextStyle(fontSize: 14, color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: () => context.go(AppConstants.signInRoute),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      elevation: 0,
-                    ),
-                    child: const Text('Sign In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: OutlinedButton(
-                    onPressed: () => context.go(AppConstants.registerRoute),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: colorScheme.primary,
-                      side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.3)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: const Text('Create Account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BlocProvider.value(
       value: _wishlistCubit,
@@ -106,7 +51,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                  sliver: _buildBody(colorScheme, state),
+                  sliver: _buildBody(colorScheme, state, isDark),
                 ),
               ],
             ),
@@ -124,21 +69,60 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Wishlist',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          count == 1 ? '1 saved item' : '$count saved items',
-          style: TextStyle(
-            fontSize: 15,
-            color: colorScheme.onSurface.withValues(alpha: 0.45),
-          ),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.favorite,
+                size: 22,
+                color: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Wishlist',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    count == 1 ? '1 saved item' : '$count saved items',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colorScheme.onSurface.withValues(alpha: 0.45),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (count > 0)
+              GestureDetector(
+                onTap: () => _wishlistCubit.loadWishlist(),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.refresh,
+                    size: 18,
+                    color: colorScheme.primary,
+                  ),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 16),
         if (count > 0) ...[
@@ -147,7 +131,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
               _buildActionChip(
                 colorScheme,
                 icon: Uicons.listCheck,
-                label: selected.isEmpty ? 'Select all' : 'Clear selection',
+                label: selected.isEmpty ? 'Select all' : 'Clear',
                 onTap: () {
                   if (selected.isEmpty) {
                     context.read<WishlistCubit>().selectAll();
@@ -167,7 +151,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
         ],
       ],
     );
@@ -213,59 +197,79 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
     );
   }
 
-  Widget _buildBody(ColorScheme colorScheme, WishlistState state) {
+  Widget _buildBody(ColorScheme colorScheme, WishlistState state, bool isDark) {
     if (state is WishlistLoading) {
       return const SliverFillRemaining(
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
       );
     }
 
     if (state is WishlistError) {
       return SliverFillRemaining(
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Uicons.circleExclamation,
-                  size: 48, color: colorScheme.onSurface.withValues(alpha: 0.3)),
-              const SizedBox(height: 12),
-              Text(
-                'Failed to load wishlist',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                state.message,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: colorScheme.onSurface.withValues(alpha: 0.5),
-                ),
-              ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () => context.read<WishlistCubit>().loadWishlist(),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: colorScheme.primary,
-                    borderRadius: BorderRadius.circular(10),
+                    color: const Color(0xFFE53935).withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
                   ),
-                  child: Text(
-                    'Retry',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: colorScheme.onPrimary,
+                  child: Icon(
+                    Uicons.circleExclamation,
+                    size: 36,
+                    color: const Color(0xFFE53935).withValues(alpha: 0.6),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to load wishlist',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  state.message.replaceAll('ServerException: ', ''),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () => context.read<WishlistCubit>().loadWishlist(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.refresh, size: 16, color: Colors.white),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Retry',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
@@ -274,30 +278,63 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
     if (state is WishlistLoaded && state.items.isEmpty) {
       return SliverFillRemaining(
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Uicons.heart,
-                  size: 64, color: colorScheme.onSurface.withValues(alpha: 0.2)),
-              const SizedBox(height: 16),
-              Text(
-                'Your wishlist is empty',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: colorScheme.onSurface,
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(28),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.06),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.favorite_border,
+                    size: 56,
+                    color: colorScheme.primary.withValues(alpha: 0.3),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Tap the heart icon on products to save them here',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                const SizedBox(height: 20),
+                Text(
+                  'Your wishlist is empty',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  'Tap the heart icon on products\nto save them here',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.5,
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                GestureDetector(
+                  onTap: () => context.go('/home'),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'Browse Products',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -307,7 +344,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
       return SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 0.72,
+          childAspectRatio: 0.68,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
@@ -315,7 +352,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
           (context, index) {
             final item = state.items[index];
             final isSelected = state.selectedIds.contains(item.id);
-            return _buildWishlistCard(context, colorScheme, item, isSelected);
+            return _buildWishlistCard(context, colorScheme, item, isSelected, isDark);
           },
           childCount: state.items.length,
         ),
@@ -330,6 +367,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
     ColorScheme colorScheme,
     WishlistItemModel item,
     bool isSelected,
+    bool isDark,
   ) {
     return GestureDetector(
       onTap: () => context.go(
@@ -341,14 +379,18 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected
-                ? colorScheme.primary
-                : colorScheme.onSurface.withValues(alpha: 0.06),
-            width: isSelected ? 1.5 : 1,
-          ),
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          border: isSelected
+              ? Border.all(color: colorScheme.primary, width: 2)
+              : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,12 +402,12 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                     decoration: BoxDecoration(
                       color: colorScheme.primary.withValues(alpha: 0.06),
                       borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(18),
+                        top: Radius.circular(16),
                       ),
                     ),
                     child: ClipRRect(
                       borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(18),
+                        top: Radius.circular(16),
                       ),
                       child: item.imageUrl != null
                           ? Image.network(
@@ -373,6 +415,15 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                               fit: BoxFit.cover,
                               width: double.infinity,
                               height: double.infinity,
+                              loadingBuilder: (context, child, progress) {
+                                if (progress == null) return child;
+                                return Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: colorScheme.primary,
+                                  ),
+                                );
+                              },
                               errorBuilder: (_, __, ___) => _buildPlaceholder(colorScheme),
                             )
                           : _buildPlaceholder(colorScheme),
@@ -384,13 +435,13 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                     child: GestureDetector(
                       onTap: () => context.read<WishlistCubit>().toggleSelection(item.id),
                       child: Container(
-                        width: 26,
-                        height: 26,
+                        width: 28,
+                        height: 28,
                         decoration: BoxDecoration(
-                          color: isSelected ? colorScheme.primary : Colors.white,
+                          color: isSelected ? colorScheme.primary : Colors.white.withValues(alpha: 0.9),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: isSelected ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.2),
+                            color: isSelected ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.15),
                           ),
                         ),
                         child: Icon(
@@ -407,11 +458,18 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                     child: GestureDetector(
                       onTap: () => context.read<WishlistCubit>().removeItem(item.id),
                       child: Container(
-                        width: 26,
-                        height: 26,
+                        width: 28,
+                        height: 28,
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.9),
                           shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
                         ),
                         child: Icon(
                           Uicons.crossSmall,
@@ -421,25 +479,49 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: item.inStock ? const Color(0xFF22C55E) : const Color(0xFFE53935),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        item.inStock ? 'In stock' : 'Out of stock',
-                        style: const TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                  if (item.hasDiscount)
+                    Positioned(
+                      bottom: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE53935),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '-${item.discountPercent}%',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  if (!item.inStock)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE53935),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'Out of stock',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -448,39 +530,37 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (item.storeName != null) ...[
+                    Text(
+                      item.storeName!,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.primary.withValues(alpha: 0.7),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                  ],
                   Text(
                     item.name,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: colorScheme.onSurface,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(Uicons.star,
-                          size: 14, color: Colors.amber.shade600),
-                      const SizedBox(width: 2),
-                      Text(
-                        item.rating.toStringAsFixed(1),
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colorScheme.onSurface.withValues(alpha: 0.5),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       if (item.hasDiscount) ...[
                         Text(
                           item.formattedSalePrice!,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 15,
                             fontWeight: FontWeight.bold,
                             color: colorScheme.primary,
                           ),
@@ -490,7 +570,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                           item.formattedPrice,
                           style: TextStyle(
                             fontSize: 11,
-                            color: colorScheme.onSurface.withValues(alpha: 0.4),
+                            color: colorScheme.onSurface.withValues(alpha: 0.35),
                             decoration: TextDecoration.lineThrough,
                           ),
                         ),
@@ -498,7 +578,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                         Text(
                           item.formattedPrice,
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 15,
                             fontWeight: FontWeight.bold,
                             color: colorScheme.primary,
                           ),
@@ -517,9 +597,9 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
   Widget _buildPlaceholder(ColorScheme colorScheme) {
     return Center(
       child: Icon(
-        Uicons.heart,
+        Icons.image_outlined,
         size: 40,
-        color: colorScheme.primary.withValues(alpha: 0.3),
+        color: colorScheme.onSurface.withValues(alpha: 0.2),
       ),
     );
   }

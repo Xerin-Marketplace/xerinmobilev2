@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 class TokenStorage {
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
-  static const String _guestModeKey = 'guest_mode';
 
   final SharedPreferences _prefs;
   final FlutterSecureStorage _secureStorage;
@@ -47,7 +46,7 @@ class TokenStorage {
   String? get accessToken => _accessToken;
   String? get refreshToken => _refreshToken;
   bool get hasTokens => accessToken != null;
-  bool get isGuestMode => _prefs.getBool(_guestModeKey) ?? false;
+  bool get isAuthenticated => accessToken != null;
 
   Future<void> saveTokens({
     required String accessToken,
@@ -58,11 +57,6 @@ class TokenStorage {
 
     await _secureStorage.write(key: _accessTokenKey, value: accessToken);
     await _secureStorage.write(key: _refreshTokenKey, value: refreshToken);
-    await _prefs.setBool(_guestModeKey, false);
-  }
-
-  Future<void> setGuestMode(bool value) async {
-    await _prefs.setBool(_guestModeKey, value);
   }
 
   Future<void> clearTokens() async {
@@ -75,6 +69,5 @@ class TokenStorage {
     // Clean up any legacy token values if they still exist.
     await _prefs.remove(_accessTokenKey);
     await _prefs.remove(_refreshTokenKey);
-    await _prefs.remove(_guestModeKey);
   }
 }

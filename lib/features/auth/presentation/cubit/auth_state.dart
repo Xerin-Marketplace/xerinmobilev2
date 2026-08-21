@@ -88,7 +88,3 @@ class AuthNeedsVerification extends AuthState {
 class AuthLoggedOut extends AuthState {
   const AuthLoggedOut();
 }
-
-class AuthGuest extends AuthState {
-  const AuthGuest();
-}

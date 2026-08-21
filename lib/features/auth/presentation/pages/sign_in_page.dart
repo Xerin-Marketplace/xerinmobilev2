@@ -77,11 +77,6 @@ class _SignInPageState extends State<SignInPage>
         NotificationService().success('Signed in successfully!');
       });
       context.go(AppConstants.homeRoute);
-    } else if (state is AuthGuest) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        NotificationService().success('Welcome, Guest!');
-      });
-      context.go(AppConstants.homeRoute);
     } else if (state is AuthNeedsVerification) {
       _showVerifyDialog(context, state.email);
     } else if (state is AuthError) {

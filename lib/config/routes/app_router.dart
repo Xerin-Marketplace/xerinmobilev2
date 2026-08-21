@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/notifications/notification_service.dart';
+import '../../core/storage/token_storage.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/legal_page.dart';
 import '../../features/auth/presentation/pages/lock_screen_page.dart';
@@ -27,6 +29,7 @@ import '../../features/customer/presentation/pages/notifications_page.dart';
 import '../../features/customer/presentation/pages/notification_preferences_page.dart';
 import '../../features/customer/presentation/pages/order_detail_page.dart';
 import '../../features/customer/presentation/pages/order_history_page.dart';
+import '../../features/customer/presentation/pages/invoice_page.dart';
 import '../../features/customer/presentation/pages/order_tracking_page.dart';
 import '../../features/customer/presentation/pages/payment_methods_page.dart';
 import '../../features/customer/presentation/pages/product_detail_page.dart';
@@ -44,10 +47,36 @@ import '../../features/splash/presentation/pages/splash_page.dart';
 import '../constants/app_constants.dart';
 
 class AppRouter {
+  static const _publicRoutes = [
+    '/splash',
+    '/onboarding',
+    '/sign-in',
+    '/register',
+    '/verify-otp',
+    '/forgot-password',
+    '/reset-password',
+    '/terms',
+    '/privacy',
+    '/registration-success',
+  ];
+
   static final GoRouter router = GoRouter(
     navigatorKey: NotificationService.navigatorKey,
     initialLocation: AppConstants.splashRoute,
     debugLogDiagnostics: true,
+    redirect: (context, state) {
+      final path = state.uri.path;
+      final isPublic = _publicRoutes.contains(path);
+      final isAuthenticated = GetIt.instance<TokenStorage>().isAuthenticated;
+
+      if (!isPublic && !isAuthenticated) {
+        return AppConstants.signInRoute;
+      }
+      if (isPublic && isAuthenticated && path != '/splash' && path != '/onboarding') {
+        return AppConstants.homeRoute;
+      }
+      return null;
+    },
     routes: [
       GoRoute(
         path: AppConstants.splashRoute,
@@ -177,6 +206,19 @@ class AppRouter {
             );
           }
           return OrderDetailPage(order: order);
+        },
+      ),
+      GoRoute(
+        path: AppConstants.invoiceRoute,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final order = extra?['order'] as OrderModel?;
+          if (order == null) {
+            return const Scaffold(
+              body: Center(child: Text('Order not found')),
+            );
+          }
+          return InvoicePage(order: order);
         },
       ),
       GoRoute(

@@ -6,6 +6,7 @@ import '../../../../config/constants/app_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/security/security_service.dart';
 import '../../../../core/theme/uicons.dart';
+import '../widgets/auth_logo.dart';
 
 class LockScreenPage extends StatefulWidget {
   const LockScreenPage({super.key});
@@ -114,17 +115,19 @@ class _LockScreenPageState extends State<LockScreenPage>
         child: Column(
           children: [
             const Spacer(flex: 2),
+            const AuthLogo(width: 140, height: 80),
+            const SizedBox(height: 20),
             Container(
-              width: 80,
-              height: 80,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.1),
+                color: colorScheme.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Uicons.lock,
                 color: colorScheme.primary,
-                size: 40,
+                size: 28,
               ),
             ),
             const SizedBox(height: 24),

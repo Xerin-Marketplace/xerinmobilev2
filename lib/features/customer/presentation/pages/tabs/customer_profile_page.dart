@@ -3,9 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../config/constants/app_constants.dart';
-import '../../../../../config/di/service_locator.dart';
-import '../../../../../core/storage/token_storage.dart';
 import '../../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../../common/presentation/widgets/kpi_widgets.dart';
 import '../../cubit/customer_cubit.dart';
 import '../../cubit/customer_state.dart';
 import '../../cubit/home_cubit.dart';
@@ -20,18 +19,30 @@ class CustomerProfilePage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final menuItems = [
-      {'icon': Uicons.user, 'label': 'Personal info'},
-      {'icon': Uicons.mapPin, 'label': 'Addresses'},
-      {'icon': Uicons.creditCard, 'label': 'Payment Methods'},
-      {'icon': Uicons.shoppingBag, 'label': 'Order History'},
-      {'icon': Uicons.hashtag, 'label': 'Promotions & Deals'},
-      {'icon': Uicons.bell, 'label': 'Notifications'},
-      {'icon': Uicons.settingsSliders, 'label': 'Notification Preferences'},
-      {'icon': Uicons.search, 'label': 'Search Products'},
-      {'icon': Uicons.settings, 'label': 'Settings'},
-      {'icon': Uicons.circleQuestion, 'label': 'Help & Support'},
-      {'icon': Uicons.rightFromBracket, 'label': 'Logout', 'color': const Color(0xFFE53935)},
+    final menuGroups = [
+      {
+        'title': 'Account',
+        'items': [
+          {'icon': Uicons.user, 'label': 'Personal Info', 'route': AppConstants.profileInfoRoute},
+          {'icon': Uicons.mapPin, 'label': 'Addresses', 'route': AppConstants.addressesRoute},
+          {'icon': Uicons.creditCard, 'label': 'Payment Methods', 'route': AppConstants.paymentMethodsRoute},
+        ],
+      },
+      {
+        'title': 'Shopping',
+        'items': [
+          {'icon': Uicons.shoppingBag, 'label': 'Order History', 'route': AppConstants.orderHistoryRoute},
+          {'icon': Uicons.hashtag, 'label': 'Promotions & Deals', 'route': AppConstants.promotionsRoute},
+        ],
+      },
+      {
+        'title': 'Preferences',
+        'items': [
+          {'icon': Uicons.settingsSliders, 'label': 'Notification Preferences', 'route': AppConstants.notificationPreferencesRoute},
+          {'icon': Uicons.settings, 'label': 'Settings', 'route': AppConstants.settingsRoute},
+          {'icon': Uicons.circleQuestion, 'label': 'Help & Support', 'route': AppConstants.helpSupportRoute},
+        ],
+      },
     ];
 
     return BlocBuilder<HomeCubit, HomeState>(
@@ -49,27 +60,39 @@ class CustomerProfilePage extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 8),
-            // Powa avatar with two gradient rings
+            // Avatar with gradient ring
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: colorScheme.primary.withValues(alpha: 0.1),
+                gradient: LinearGradient(
+                  colors: [
+                    colorScheme.primary,
+                    colorScheme.primary.withValues(alpha: 0.4),
+                  ],
+                ),
               ),
-              child: CircleAvatar(
-                radius: 48,
-                backgroundColor: isDark
-                    ? const Color(0xFF2A2A2A)
-                    : colorScheme.primary.withValues(alpha: 0.08),
-                backgroundImage: const AssetImage('assets/images/avatar.png'),
-                child: initials.isNotEmpty
-                    ? Text(initials,
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          color: isDark ? Colors.white : colorScheme.primary,
-                        ))
-                    : null,
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                ),
+                child: CircleAvatar(
+                  radius: 46,
+                  backgroundColor: isDark
+                      ? const Color(0xFF2A2A2A)
+                      : colorScheme.primary.withValues(alpha: 0.08),
+                  backgroundImage: const AssetImage('assets/images/avatar.png'),
+                  child: initials.isNotEmpty
+                      ? Text(initials,
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            color: isDark ? Colors.white : colorScheme.primary,
+                          ))
+                      : null,
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -91,8 +114,33 @@ class CustomerProfilePage extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 20),
-            // KPI row from CustomerCubit
+            if (user != null && user.isVerified) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF22C55E).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Uicons.checkCircle, size: 12, color: Colors.green.shade600),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Verified',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.green.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
+            // KPI cards in two-column grid
             BlocBuilder<CustomerCubit, CustomerState>(
               builder: (context, cState) {
                 final totalOrders = cState is CustomerLoaded ? cState.totalOrders : 0;
@@ -100,128 +148,61 @@ class CustomerProfilePage extends StatelessWidget {
                 final unreadNotifs = cState is CustomerLoaded ? cState.unreadNotifications : 0;
                 final addresses = cState is CustomerLoaded ? cState.addresses.length : 0;
 
-                return Row(
+                return GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 2.2,
                   children: [
-                    Expanded(child: _buildStatCard('Orders', '$totalOrders', Uicons.shoppingBag, const Color(0xFFF47524), colorScheme)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildStatCard('Spent', _formatCompact(totalSpent), Uicons.accountBalanceWallet, const Color(0xFF22C55E), colorScheme)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildStatCard('Alerts', '$unreadNotifs', Uicons.bellRing, const Color(0xFF3B82F6), colorScheme)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildStatCard('Addresses', '$addresses', Uicons.mapPin, const Color(0xFF8B5CF6), colorScheme)),
+                    WhiteKpiCard(
+                      label: 'Orders',
+                      value: '$totalOrders',
+                      icon: Uicons.shoppingBag,
+                      color: const Color(0xFFF47524),
+                    ),
+                    WhiteKpiCard(
+                      label: 'Total Spent',
+                      value: _formatCompact(totalSpent),
+                      icon: Uicons.accountBalanceWallet,
+                      color: const Color(0xFF22C55E),
+                    ),
+                    WhiteKpiCard(
+                      label: 'Alerts',
+                      value: '$unreadNotifs',
+                      icon: Uicons.bellRing,
+                      color: const Color(0xFF3B82F6),
+                    ),
+                    WhiteKpiCard(
+                      label: 'Addresses',
+                      value: '$addresses',
+                      icon: Uicons.mapPin,
+                      color: const Color(0xFF8B5CF6),
+                    ),
                   ],
                 );
               },
             ),
             const SizedBox(height: 24),
-            if (sl<TokenStorage>().isGuestMode)
-              _buildGuestBanner(context, colorScheme),
-            if (sl<TokenStorage>().isGuestMode)
-              const SizedBox(height: 24),
-            // Menu items with gradient icons
+            // Menu groups
+            ...menuGroups.map((group) => _buildMenuGroup(
+              context, group, colorScheme, isDark,
+            )),
+            // Logout
+            const SizedBox(height: 8),
             Container(
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF252525) : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: colorScheme.onSurface.withValues(alpha: 0.06),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE53935).withValues(alpha: 0.15)),
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 3))],
               ),
               child: Material(
                 color: Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
                 clipBehavior: Clip.antiAlias,
-                child: Column(
-                  children: menuItems.map((item) {
-                    final color = item['color'] as Color? ?? colorScheme.onSurface;
-                    final isLogout = item['label'] == 'Logout';
-                    return InkWell(
-                      onTap: () {
-                        final label = item['label'] as String;
-                        switch (label) {
-                          case 'Logout':
-                            _showLogoutConfirmation(context);
-                            break;
-                          case 'Personal Info':
-                            context.push(AppConstants.profileInfoRoute);
-                            break;
-                          case 'Addresses':
-                            context.push(AppConstants.addressesRoute);
-                            break;
-                          case 'Payment Methods':
-                            context.push(AppConstants.paymentMethodsRoute);
-                            break;
-                          case 'Order History':
-                            context.push(AppConstants.orderHistoryRoute);
-                            break;
-                          case 'Notifications':
-                            context.push(AppConstants.notificationsRoute);
-                            break;
-                          case 'Promotions & Deals':
-                            context.push(AppConstants.promotionsRoute);
-                            break;
-                          case 'Notification Preferences':
-                            context.push(AppConstants.notificationPreferencesRoute);
-                            break;
-                          case 'Search Products':
-                            context.push(AppConstants.searchRoute);
-                            break;
-                          case 'Settings':
-                            context.push(AppConstants.settingsRoute);
-                            break;
-                          case 'Help & Support':
-                            context.push(AppConstants.helpSupportRoute);
-                            break;
-                        }
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 38, height: 38,
-                              decoration: BoxDecoration(
-                                color: isLogout
-                                    ? const Color(0xFFE53935).withValues(alpha: 0.1)
-                                    : colorScheme.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(
-                                item['icon'] as IconData,
-                                color: isLogout ? const Color(0xFFE53935) : colorScheme.primary,
-                                size: 18,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Text(
-                                item['label'] as String,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: isLogout ? const Color(0xFFE53935) : colorScheme.onSurface,
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              Uicons.arrowForwardIos,
-                              size: 14,
-                              color: colorScheme.onSurface.withValues(alpha: 0.3),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                child: _buildLogoutTile(context, colorScheme, isDark),
               ),
             ),
             const SizedBox(height: 24),
@@ -233,97 +214,148 @@ class CustomerProfilePage extends StatelessWidget {
     );
   }
 
+  Widget _buildMenuGroup(BuildContext context, Map<String, dynamic> group, ColorScheme cs, bool isDark) {
+    final items = group['items'] as List<dynamic>;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(group['title'] as String,
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: cs.onSurface.withValues(alpha: 0.4)),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF252525) : Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 3))],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(14),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: List.generate(items.length, (index) {
+                  final item = items[index] as Map<String, dynamic>;
+                  return Column(
+                    children: [
+                      _buildMenuTile(context, item, cs),
+                      if (index < items.length - 1) _buildDivider(cs),
+                    ],
+                  );
+                }),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuTile(BuildContext context, Map<String, dynamic> item, ColorScheme colorScheme) {
+    return InkWell(
+      onTap: () => context.push(item['route'] as String),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        child: Row(
+          children: [
+            Container(
+              width: 34, height: 34,
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                item['icon'] as IconData,
+                color: colorScheme.primary,
+                size: 16,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                item['label'] as String,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+            ),
+            Icon(
+              Uicons.arrowForwardIos,
+              size: 12,
+              color: colorScheme.onSurface.withValues(alpha: 0.25),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutTile(BuildContext context, ColorScheme colorScheme, bool isDark) {
+    return InkWell(
+      onTap: () => _showLogoutConfirmation(context),
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE53935).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Uicons.rightFromBracket,
+                color: Color(0xFFE53935),
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                'Logout',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFFE53935),
+                ),
+              ),
+            ),
+            Icon(
+              Uicons.arrowForwardIos,
+              size: 14,
+              color: const Color(0xFFE53935).withValues(alpha: 0.4),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider(ColorScheme colorScheme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Divider(
+        height: 1,
+        thickness: 0.5,
+        color: colorScheme.onSurface.withValues(alpha: 0.06),
+      ),
+    );
+  }
+
   String _formatCompact(double amount) {
     if (amount >= 1000000000) return '${(amount / 1000000000).toStringAsFixed(1)}B';
     if (amount >= 1000000) return '${(amount / 1000000).toStringAsFixed(1)}M';
     if (amount >= 1000) return '${(amount / 1000).toStringAsFixed(1)}K';
     return amount.toStringAsFixed(0);
-  }
-
-  Widget _buildStatCard(String label, String value, IconData icon, Color color, ColorScheme cs) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      decoration: BoxDecoration(
-        color: cs.onSurface.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 28, height: 28,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: color, size: 14),
-          ),
-          const SizedBox(height: 6),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(value,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: cs.onSurface),
-            ),
-          ),
-          const SizedBox(height: 2),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(label,
-              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.4)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGuestBanner(BuildContext context, ColorScheme colorScheme) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Uicons.user, color: Color(0xFFF59E0B), size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Browsing as Guest',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colorScheme.onSurface),
-                ),
-                const SizedBox(height: 2),
-                Text('Sign in to access your orders, wishlist, and saved addresses.',
-                  style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () => context.go(AppConstants.signInRoute),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF59E0B),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Text('Sign In', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showLogoutConfirmation(BuildContext context) {

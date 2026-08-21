@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'config/constants/app_constants.dart';
 import 'config/di/service_locator.dart';
 import 'config/routes/app_router.dart';
 import 'config/theme/app_theme.dart';
-import 'core/notifications/notification_service.dart';
+import 'core/network/api_client.dart';
 import 'core/theme/app_theme_cubit.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/customer/presentation/cubit/cart_cubit.dart';
@@ -17,8 +18,21 @@ import 'features/customer/presentation/cubit/search_cubit.dart';
 import 'features/customer/presentation/cubit/wishlist_cubit.dart';
 
 /// Root app widget.
-class XerinApp extends StatelessWidget {
+class XerinApp extends StatefulWidget {
   const XerinApp({super.key});
+
+  @override
+  State<XerinApp> createState() => _XerinAppState();
+}
+
+class _XerinAppState extends State<XerinApp> {
+  @override
+  void initState() {
+    super.initState();
+    sl<ApiClient>().setSessionExpiredCallback(() {
+      AppRouter.router.go(AppConstants.signInRoute);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

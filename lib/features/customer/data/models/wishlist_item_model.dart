@@ -10,8 +10,10 @@ class WishlistItemModel {
   final String currency;
   final String? imageUrl;
   final String? categoryName;
+  final String? storeName;
   final double rating;
   final bool inStock;
+  final bool isAvailable;
   final int stockQuantity;
   final String? createdAt;
 
@@ -25,8 +27,10 @@ class WishlistItemModel {
     this.currency = 'TZS',
     this.imageUrl,
     this.categoryName,
+    this.storeName,
     this.rating = 0.0,
     this.inStock = true,
+    this.isAvailable = true,
     this.stockQuantity = 0,
     this.createdAt,
   });
@@ -97,12 +101,20 @@ class WishlistItemModel {
         firstImage = first['image_url'] ?? first['url'] ?? first['src'];
       }
     }
-    final productImage = product?['thumbnail_url'] ?? json['thumbnail_url'] ?? firstImage;
+    final productImage = product?['thumbnail_url']
+        ?? json['thumbnail_url']
+        ?? json['primary_image_url']
+        ?? firstImage;
     final stockQuantity = product?['stock_quantity'] ?? json['stock_quantity'];
-    final inStock = product?['in_stock'] ?? json['in_stock'] ?? (stockQuantity != null && (stockQuantity as num) > 0);
+    final inStockRaw = product?['in_stock'] ?? json['in_stock'] ?? json['is_in_stock'];
+    final inStock = inStockRaw is bool
+        ? inStockRaw
+        : (stockQuantity != null && (stockQuantity as num) > 0);
+
+    final id = json['id']?.toString() ?? json['wishlist_id']?.toString() ?? '';
 
     return WishlistItemModel(
-      id: json['id']?.toString() ?? '',
+      id: id,
       productId: productId,
       name: productName,
       description: product?['description'] as String? ?? json['description'] as String?,
@@ -110,11 +122,15 @@ class WishlistItemModel {
       salePrice: productSalePrice,
       currency: product?['currency'] as String? ?? json['currency'] as String? ?? 'TZS',
       imageUrl: productImage as String?,
-      categoryName: product?['category_name'] as String? ?? json['category_name'] as String?,
+      categoryName: product?['category_name'] as String?
+          ?? json['category_name'] as String?
+          ?? json['store_name'] as String?,
+      storeName: json['store_name'] as String?,
       rating: (product?['rating'] as num?)?.toDouble() ?? (json['rating'] as num?)?.toDouble() ?? 0.0,
-      inStock: inStock is bool ? inStock : true,
-      stockQuantity: (stockQuantity as num?)?.toInt() ?? (inStock == true ? 1 : 0),
-      createdAt: json['created_at'] as String?,
+      inStock: inStock,
+      isAvailable: json['is_available'] as bool? ?? true,
+      stockQuantity: (stockQuantity as num?)?.toInt() ?? (inStock ? 1 : 0),
+      createdAt: json['created_at']?.toString(),
     );
   }
 

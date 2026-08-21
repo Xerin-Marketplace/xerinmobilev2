@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/notifications/notification_service.dart';
+import '../../../../core/services/location_service.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/cart_cubit.dart';
 import '../cubit/cart_state.dart';
@@ -22,23 +24,27 @@ class CheckoutPage extends StatefulWidget {
 class _CheckoutPageState extends State<CheckoutPage> {
   final _notesController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _recipientNameController = TextEditingController();
+  final _recipientPhoneController = TextEditingController();
   String? _selectedAddressId;
   String _selectedPaymentMethod = 'mobile_money';
   String _selectedMnoProvider = 'mpesa';
   bool _isProcessing = false;
+  bool _isFetchingLocation = false;
+  String? _locationStatusText;
 
   static const _mnoProviders = [
-    {'value': 'mpesa', 'label': 'M-Pesa', 'color': Color(0xFFE53935)},
-    {'value': 'airtel', 'label': 'Airtel Money', 'color': Color(0xFFE53935)},
-    {'value': 'tigo', 'label': 'Tigo Pesa', 'color': Color(0xFF0066B3)},
-    {'value': 'halopesa', 'label': 'Halo Pesa', 'color': Color(0xFF00A651)},
-    {'value': 'azampesa', 'label': 'Azam Pesa', 'color': Color(0xFFE94B1B)},
+    {'value': 'mpesa', 'label': 'M-Pesa', 'color': Color(0xFFE53935), 'short': 'M-PESA'},
+    {'value': 'airtel', 'label': 'Airtel Money', 'color': Color(0xFFE53935), 'short': 'AIRTEL'},
+    {'value': 'tigo', 'label': 'Tigo Pesa', 'color': Color(0xFF0066B3), 'short': 'TIGO'},
+    {'value': 'halopesa', 'label': 'Halo Pesa', 'color': Color(0xFF00A651), 'short': 'HALO'},
+    {'value': 'azampesa', 'label': 'Azam Pesa', 'color': Color(0xFFE94B1B), 'short': 'AZAM'},
   ];
 
   static const _paymentTypes = [
-    {'value': 'mobile_money', 'label': 'Mobile Money', 'icon': Uicons.mobile, 'color': Color(0xFF22C55E)},
-    {'value': 'card', 'label': 'Card', 'icon': Uicons.creditCard, 'color': Color(0xFFF59E0B)},
-    {'value': 'cash_on_delivery', 'label': 'Cash on Delivery', 'icon': Uicons.shippingFast, 'color': Color(0xFF3B82F6)},
+    {'value': 'mobile_money', 'label': 'Mobile Money', 'icon': Uicons.mobile, 'color': Color(0xFF22C55E), 'subtitle': 'Pay via MNO'},
+    {'value': 'card', 'label': 'Card', 'icon': Uicons.creditCard, 'color': Color(0xFFF59E0B), 'subtitle': 'Visa / Mastercard'},
+    {'value': 'cash_on_delivery', 'label': 'Cash on Delivery', 'icon': Uicons.shippingFast, 'color': Color(0xFF3B82F6), 'subtitle': 'Pay on arrival'},
   ];
 
   @override
@@ -53,6 +59,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
   void dispose() {
     _notesController.dispose();
     _phoneController.dispose();
+    _recipientNameController.dispose();
+    _recipientPhoneController.dispose();
     super.dispose();
   }
 
@@ -62,6 +70,31 @@ class _CheckoutPageState extends State<CheckoutPage> {
       (m) => '${m[1]},',
     );
     return 'TZS $formatted';
+  }
+
+  Future<void> _acquireLocation() async {
+    setState(() {
+      _isFetchingLocation = true;
+      _locationStatusText = null;
+    });
+    try {
+      final location = await GetIt.instance<LocationService>().getCurrentLocation();
+      setState(() {
+        _isFetchingLocation = false;
+        _locationStatusText = '${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}';
+      });
+      if (mounted) {
+        NotificationService().success('Location acquired successfully');
+      }
+    } catch (e) {
+      setState(() {
+        _isFetchingLocation = false;
+        _locationStatusText = null;
+      });
+      if (mounted) {
+        NotificationService().error(e.toString().replaceFirst('Exception: ', ''));
+      }
+    }
   }
 
   Future<void> _placeOrder() async {
@@ -79,7 +112,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     final cubit = context.read<CustomerCubit>();
 
-    final payment = await cubit.placeOrderAndPay(
+    await cubit.placeOrderAndPay(
       shippingAddressId: _selectedAddressId,
       notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
       paymentMethod: _selectedPaymentMethod,
@@ -102,13 +135,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
       NotificationService().success('Order placed successfully!');
 
       if (state.checkoutUrl != null) {
-        // Card payment - redirect to webview
         context.go('/payment-processing?payment_id=${state.paymentId}&order_id=${state.orderId}&checkout_url=${Uri.encodeComponent(state.checkoutUrl!)}');
       } else if (state.paymentId.isNotEmpty) {
-        // Mobile money - poll for status
         context.go('/payment-processing?payment_id=${state.paymentId}&order_id=${state.orderId}');
       } else {
-        // Cash on delivery
         context.go('/');
       }
     }
@@ -182,58 +212,138 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 ),
                               ),
                             ] else ...[
-                              _buildSectionHeader('Order Items', Uicons.shoppingBag, colorScheme),
-                              const SizedBox(height: 12),
-                              ...cartItems.map((item) => _buildCartItemCard(item, colorScheme, isDark)),
-                              const SizedBox(height: 24),
-                              _buildSectionHeader('Delivery Address', Uicons.mapPin, colorScheme),
-                              const SizedBox(height: 12),
-                              if (addresses.isEmpty)
-                                _buildEmptyState('No addresses', 'Add an address to continue', Uicons.mapMarker, colorScheme)
-                              else
-                                ...addresses.map((addr) => _buildAddressSelector(addr, colorScheme, isDark)),
-                              const SizedBox(height: 24),
-                              _buildSectionHeader('Payment Method', Uicons.creditCard, colorScheme),
-                              const SizedBox(height: 12),
-                              _buildPaymentTypeSelector(colorScheme, isDark),
-                              if (_selectedPaymentMethod == 'mobile_money') ...[
-                                const SizedBox(height: 16),
-                                _buildMnoProviderSelector(colorScheme, isDark),
-                                const SizedBox(height: 16),
-                                _buildPhoneInput(colorScheme),
-                              ],
-                              if (_selectedPaymentMethod == 'card') ...[
-                                const SizedBox(height: 16),
-                                _buildCardInfoBanner(colorScheme),
-                              ],
-                              if (_selectedPaymentMethod == 'cash_on_delivery') ...[
-                                const SizedBox(height: 16),
-                                _buildCodInfoBanner(colorScheme),
-                              ],
-                              const SizedBox(height: 24),
-                              _buildSectionHeader('Order Notes (Optional)', Uicons.note, colorScheme),
-                              const SizedBox(height: 12),
-                              TextField(
-                                controller: _notesController,
-                                maxLines: 3,
-                                decoration: InputDecoration(
-                                  hintText: 'Any special instructions?',
-                                  hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.3)),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.1)),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.1)),
-                                  ),
-                                  contentPadding: const EdgeInsets.all(16),
+                              // Order Items
+                              _buildSectionCard(
+                                title: 'Order Items',
+                                icon: Uicons.shoppingBag,
+                                cs: colorScheme,
+                                child: Column(
+                                  children: cartItems.map((item) => _buildCartItemRow(item, colorScheme)).toList(),
                                 ),
                               ),
-                              const SizedBox(height: 24),
-                              _buildSectionHeader('Order Summary', Uicons.receipt, colorScheme),
-                              const SizedBox(height: 12),
-                              _buildSummaryCard(cartTotal, colorScheme, isDark),
+                              const SizedBox(height: 16),
+
+                              // Delivery Details
+                              _buildSectionCard(
+                                title: 'Delivery Details',
+                                icon: Uicons.truckBox,
+                                cs: colorScheme,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Recipient info
+                                    _buildTextField('Recipient Name', _recipientNameController, colorScheme),
+                                    const SizedBox(height: 10),
+                                    _buildTextField('Recipient Phone', _recipientPhoneController, colorScheme,
+                                        keyboardType: TextInputType.phone),
+                                    const SizedBox(height: 16),
+
+                                    // Address selection
+                                    Text('Select Address',
+                                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    if (addresses.isEmpty)
+                                      _buildEmptyState('No addresses', 'Add an address to continue', Uicons.mapMarker, colorScheme)
+                                    else
+                                      ...addresses.map((addr) => _buildAddressSelector(addr, colorScheme, isDark)),
+
+                                    const SizedBox(height: 16),
+
+                                    // Use Current Location
+                                    _buildUseLocationButton(colorScheme),
+                                    if (_locationStatusText != null) ...[
+                                      const SizedBox(height: 10),
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF22C55E).withValues(alpha: 0.06),
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.2)),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(Uicons.location, color: Color(0xFF22C55E), size: 16),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text('GPS: $_locationStatusText',
+                                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF22C55E)),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Payment Method
+                              _buildSectionCard(
+                                title: 'Payment Method',
+                                icon: Uicons.creditCard,
+                                cs: colorScheme,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ..._paymentTypes.map((type) => _buildPaymentOption(type, colorScheme, isDark)),
+                                    if (_selectedPaymentMethod == 'mobile_money') ...[
+                                      const SizedBox(height: 16),
+                                      Text('Select Provider',
+                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      _buildMnoProviderGrid(colorScheme, isDark),
+                                      const SizedBox(height: 16),
+                                      _buildPhoneInput(colorScheme),
+                                    ],
+                                    if (_selectedPaymentMethod == 'card') ...[
+                                      const SizedBox(height: 12),
+                                      _buildCardInfoBanner(colorScheme),
+                                    ],
+                                    if (_selectedPaymentMethod == 'cash_on_delivery') ...[
+                                      const SizedBox(height: 12),
+                                      _buildCodInfoBanner(colorScheme),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Order Notes
+                              _buildSectionCard(
+                                title: 'Order Notes',
+                                icon: Uicons.note,
+                                cs: colorScheme,
+                                child: TextField(
+                                  controller: _notesController,
+                                  maxLines: 3,
+                                  decoration: InputDecoration(
+                                    hintText: 'Any special instructions?',
+                                    hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.3)),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.1)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.1)),
+                                    ),
+                                    contentPadding: const EdgeInsets.all(16),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Order Summary
+                              _buildSectionCard(
+                                title: 'Order Summary',
+                                icon: Uicons.receipt,
+                                cs: colorScheme,
+                                child: _buildSummaryContent(cartTotal, colorScheme),
+                              ),
                               const SizedBox(height: 24),
                             ],
                           ],
@@ -328,46 +438,44 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _buildPaymentTypeSelector(ColorScheme cs, bool isDark) {
-    return Row(
-      children: _paymentTypes.map((type) {
-        final isSelected = _selectedPaymentMethod == type['value'];
-        final color = type['color'] as Color;
-        return Expanded(
-          child: GestureDetector(
-            onTap: () => setState(() => _selectedPaymentMethod = type['value'] as String),
-            child: Container(
-              margin: const EdgeInsets.only(right: 10),
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? color.withValues(alpha: 0.08) : (isDark ? const Color(0xFF252525) : Colors.white),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isSelected ? color : cs.onSurface.withValues(alpha: 0.08),
-                  width: isSelected ? 1.5 : 1,
+  Widget _buildMnoProviderGrid(ColorScheme cs, bool isDark) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 3,
+      childAspectRatio: 1.8,
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      children: _mnoProviders.map((provider) {
+        final isSelected = _selectedMnoProvider == provider['value'];
+        final color = provider['color'] as Color;
+        return GestureDetector(
+          onTap: () => setState(() => _selectedMnoProvider = provider['value'] as String),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isSelected ? color.withValues(alpha: 0.08) : (isDark ? const Color(0xFF1E1E1E) : cs.surface),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? color : cs.onSurface.withValues(alpha: 0.08),
+                width: isSelected ? 1.5 : 1,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 10, height: 10,
+                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                 ),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    width: 36, height: 36,
-                    decoration: BoxDecoration(
-                      color: isSelected ? color.withValues(alpha: 0.15) : cs.onSurface.withValues(alpha: 0.04),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(type['icon'] as IconData, color: isSelected ? color : cs.onSurface.withValues(alpha: 0.4), size: 18),
+                const SizedBox(height: 6),
+                Text(provider['short'] as String,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: isSelected ? color : cs.onSurface.withValues(alpha: 0.5),
                   ),
-                  const SizedBox(height: 8),
-                  Text(type['label'] as String,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? color : cs.onSurface.withValues(alpha: 0.5),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
@@ -375,52 +483,54 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _buildMnoProviderSelector(ColorScheme cs, bool isDark) {
+  Widget _buildSummaryContent(double cartTotal, ColorScheme cs) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Select Provider',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
+        _summaryRow('Subtotal', _formatCurrency(cartTotal), cs),
+        const SizedBox(height: 8),
+        _summaryRow('Shipping', 'Calculated at checkout', cs),
+        const SizedBox(height: 8),
+        _summaryRow('Tax', 'Included', cs),
+        const SizedBox(height: 12),
+        Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface)),
+            Text(_formatCurrency(cartTotal),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: cs.primary)),
+          ],
         ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: _mnoProviders.map((provider) {
-            final isSelected = _selectedMnoProvider == provider['value'];
-            final color = provider['color'] as Color;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedMnoProvider = provider['value'] as String),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isSelected ? color.withValues(alpha: 0.08) : (isDark ? const Color(0xFF252525) : Colors.white),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isSelected ? color : cs.onSurface.withValues(alpha: 0.08),
-                    width: isSelected ? 1.5 : 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: cs.primary.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: cs.primary.withValues(alpha: 0.12)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Uicons.shield, color: cs.primary, size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 8, height: 8,
-                      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                    Text('Buyer Protection',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: cs.primary),
                     ),
-                    const SizedBox(width: 8),
-                    Text(provider['label'] as String,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected ? color : cs.onSurface.withValues(alpha: 0.5),
-                      ),
+                    const SizedBox(height: 2),
+                    Text('Your payment is held securely until you confirm delivery.',
+                      style: TextStyle(fontSize: 11, height: 1.4, color: cs.onSurface.withValues(alpha: 0.5)),
                     ),
                   ],
                 ),
               ),
-            );
-          }).toList(),
+            ],
+          ),
         ),
       ],
     );
@@ -497,38 +607,116 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon, ColorScheme cs) {
-    return Row(
-      children: [
-        Container(
-          width: 32, height: 32,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [cs.primary, cs.primary.withValues(alpha: 0.7)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(10),
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required ColorScheme cs,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.brightness == Brightness.dark ? const Color(0xFF252525) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 12, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32, height: 32,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [cs.primary, cs.primary.withValues(alpha: 0.7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: Colors.white, size: 16),
+              ),
+              const SizedBox(width: 10),
+              Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface)),
+            ],
           ),
-          child: Icon(icon, color: Colors.white, size: 16),
-        ),
-        const SizedBox(width: 10),
-        Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface)),
-      ],
+          const SizedBox(height: 16),
+          child,
+        ],
+      ),
     );
   }
 
-  Widget _buildCartItemCard(CartItemModel item, ColorScheme cs, bool isDark) {
-    final imageUrl = item.product?.thumbnailUrl;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 3))],
+  Widget _buildTextField(String label, TextEditingController controller, ColorScheme cs, {TextInputType? keyboardType}) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.primary, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
+    );
+  }
+
+  Widget _buildUseLocationButton(ColorScheme cs) {
+    return GestureDetector(
+      onTap: _isFetchingLocation ? null : _acquireLocation,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [cs.primary, cs.primary.withValues(alpha: 0.8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [BoxShadow(color: cs.primary.withValues(alpha: 0.2), blurRadius: 8, offset: const Offset(0, 4))],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (_isFetchingLocation)
+              SizedBox(
+                width: 20, height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withValues(alpha: 0.9)),
+                ),
+              )
+            else
+              const Icon(Uicons.location, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Text(
+              _isFetchingLocation ? 'Detecting location...' : 'Use My Current Location',
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCartItemRow(CartItemModel item, ColorScheme cs) {
+    final imageUrl = item.product?.thumbnailUrl;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
           Container(
@@ -563,51 +751,57 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _buildAddressSelector(AddressModel address, ColorScheme cs, bool isDark) {
-    final isSelected = _selectedAddressId == address.id;
-
+  Widget _buildPaymentOption(Map<String, dynamic> type, ColorScheme cs, bool isDark) {
+    final isSelected = _selectedPaymentMethod == type['value'];
+    final color = type['color'] as Color;
     return GestureDetector(
-      onTap: () => setState(() => _selectedAddressId = address.id),
+      onTap: () => setState(() => _selectedPaymentMethod = type['value'] as String),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isSelected ? cs.primary.withValues(alpha: 0.03) : (isDark ? const Color(0xFF252525) : Colors.white),
-          borderRadius: BorderRadius.circular(10),
+          color: isSelected ? color.withValues(alpha: 0.06) : (isDark ? const Color(0xFF1E1E1E) : cs.surface),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.06),
+            color: isSelected ? color : cs.onSurface.withValues(alpha: 0.08),
             width: isSelected ? 1.5 : 1,
           ),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 3))],
         ),
         child: Row(
           children: [
             Container(
-              width: 40, height: 40,
+              width: 44, height: 44,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [cs.primary, cs.primary.withValues(alpha: 0.7)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: isSelected ? color.withValues(alpha: 0.12) : cs.onSurface.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Uicons.mapPin, color: Colors.white, size: 20),
+              child: Icon(type['icon'] as IconData, color: isSelected ? color : cs.onSurface.withValues(alpha: 0.4), size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(address.street, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface)),
+                  Text(type['label'] as String,
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: isSelected ? color : cs.onSurface),
+                  ),
                   const SizedBox(height: 2),
-                  Text(address.fullAddress, style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
-                    maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(type['subtitle'] as String,
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
+                  ),
                 ],
               ),
             ),
-            Icon(isSelected ? Uicons.circle : Uicons.circle,
-              color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.3), size: 22),
+            Container(
+              width: 22, height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: isSelected ? color : cs.onSurface.withValues(alpha: 0.2), width: 2),
+              ),
+              child: isSelected
+                  ? Center(child: Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)))
+                  : null,
+            ),
           ],
         ),
       ),
@@ -634,64 +828,65 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _buildSummaryCard(double cartTotal, ColorScheme cs, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 12, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        children: [
-          _summaryRow('Subtotal', _formatCurrency(cartTotal), cs),
-          const SizedBox(height: 8),
-          _summaryRow('Shipping', 'Calculated at checkout', cs),
-          const SizedBox(height: 8),
-          _summaryRow('Tax', 'Included', cs),
-          const SizedBox(height: 12),
-          Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface)),
-              Text(_formatCurrency(cartTotal),
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: cs.primary)),
-            ],
+  Widget _buildAddressSelector(AddressModel address, ColorScheme cs, bool isDark) {
+    final isSelected = _selectedAddressId == address.id;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedAddressId = address.id),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isSelected ? cs.primary.withValues(alpha: 0.03) : (isDark ? const Color(0xFF1E1E1E) : cs.surface),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.06),
+            width: isSelected ? 1.5 : 1,
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: cs.primary.withValues(alpha: 0.12)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Uicons.shield, color: cs.primary, size: 18),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Buyer Protection',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: cs.primary),
-                      ),
-                      const SizedBox(height: 2),
-                      Text('Your payment is held securely until you confirm delivery.',
-                        style: TextStyle(fontSize: 11, height: 1.4, color: cs.onSurface.withValues(alpha: 0.5)),
-                      ),
-                    ],
-                  ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cs.primary, cs.primary.withValues(alpha: 0.7)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Uicons.mapPin, color: Colors.white, size: 20),
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (address.label != null && address.label!.isNotEmpty) ...[
+                    Text(address.label!,
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: cs.primary),
+                    ),
+                    const SizedBox(height: 2),
+                  ],
+                  Text(address.street, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface)),
+                  const SizedBox(height: 2),
+                  Text(address.fullAddress, style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
+                    maxLines: 2, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ),
+            Container(
+              width: 22, height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.2), width: 2),
+              ),
+              child: isSelected
+                  ? Center(child: Container(width: 10, height: 10, decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle)))
+                  : null,
+            ),
+          ],
+        ),
       ),
     );
   }

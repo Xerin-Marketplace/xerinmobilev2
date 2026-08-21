@@ -4,11 +4,14 @@ import 'package:logger/logger.dart';
 import '../../config/constants/api_constants.dart';
 import '../storage/token_storage.dart';
 
+typedef SessionExpiredCallback = void Function();
+
 class ApiClient {
   final Dio _dio;
   final TokenStorage _tokenStorage;
   final Logger _logger;
   bool _isRefreshing = false;
+  SessionExpiredCallback? _onSessionExpired;
 
   ApiClient(this._dio, this._tokenStorage, this._logger) {
     _dio.interceptors.add(
@@ -61,16 +64,27 @@ class ApiClient {
                 final response = await _dio.fetch(err.requestOptions);
                 handler.resolve(response);
                 return;
+              } else {
+                _notifySessionExpired();
               }
             } catch (e) {
               _isRefreshing = false;
               _logger.e('❌ Token refresh failed: $e');
+              _notifySessionExpired();
             }
           }
           handler.next(err);
         },
       ),
     );
+  }
+
+  void setSessionExpiredCallback(SessionExpiredCallback callback) {
+    _onSessionExpired = callback;
+  }
+
+  void _notifySessionExpired() {
+    _onSessionExpired?.call();
   }
 
   Future<bool> _refreshToken() async {

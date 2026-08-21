@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/network/api_client.dart';
 import '../../core/notifications/notification_service.dart';
 import '../../core/security/security_service.dart';
+import '../../core/services/location_service.dart';
 import '../../core/storage/token_storage.dart';
 import '../../core/theme/app_theme_cubit.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
@@ -56,6 +57,7 @@ Future<void> initServiceLocator({bool reset = false}) async {
     () => const FlutterSecureStorage(),
   );
   sl.registerLazySingleton<NotificationService>(() => NotificationService());
+  sl.registerLazySingleton<LocationService>(() => LocationService());
 
   sl.registerLazySingleton<Logger>(
     () => Logger(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../../config/constants/app_constants.dart';
 import '../../../../shared/widgets/app_icon.dart';
@@ -23,171 +24,73 @@ class SettingsPage extends StatelessWidget {
       backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: BlocBuilder<HomeCubit, HomeState>(
             builder: (context, homeState) {
               final user = homeState is HomeLoaded ? homeState.user : null;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      BackIconButton(
-                        onTap: () => context.pop(),
-                        color: colorScheme.primary,
-                      ),
-                      const SizedBox(width: 16),
-                      Text('Settings',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
+                  _buildHeader(context, colorScheme),
+                  const SizedBox(height: 20),
                   _buildProfileCard(context, colorScheme, user),
                   const SizedBox(height: 28),
-                  _buildSectionTitle('Appearance', colorScheme),
+                  _buildSectionLabel('Appearance', colorScheme),
                   const SizedBox(height: 12),
-                  _buildSettingCard(
-                    context,
-                    colorScheme,
-                    child: BlocBuilder<AppThemeCubit, AppThemeState>(
-                      builder: (context, themeState) {
-                        final isDark = themeState.themeMode == ThemeMode.dark ||
-                            (themeState.themeMode == ThemeMode.system &&
-                                MediaQuery.platformBrightnessOf(context) == Brightness.dark);
-                        return _buildTile(
-                          icon: Uicons.darkMode,
-                          iconColor: const Color(0xFF8B5CF6),
-                          title: 'Dark Mode',
-                          subtitle: isDark ? 'Enabled' : 'Disabled',
-                          trailing: Switch(
-                            value: isDark,
-                            onChanged: (_) => context.read<AppThemeCubit>().toggleTheme(),
-                            activeTrackColor: colorScheme.primary.withValues(alpha: 0.5),
-                            activeThumbColor: colorScheme.primary,
-                          ),
-                          colorScheme: colorScheme,
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  _buildSectionTitle('Notifications', colorScheme),
+                  _buildCard(context, colorScheme, child: BlocBuilder<AppThemeCubit, AppThemeState>(
+                    builder: (context, themeState) {
+                      final isDark = themeState.themeMode == ThemeMode.dark ||
+                          (themeState.themeMode == ThemeMode.system &&
+                              MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+                      return _buildSwitchTile(
+                        icon: Uicons.darkMode,
+                        iconColor: const Color(0xFF8B5CF6),
+                        title: 'Dark Mode',
+                        subtitle: isDark ? 'Enabled' : 'Disabled',
+                        value: isDark,
+                        onChanged: (_) => context.read<AppThemeCubit>().toggleTheme(),
+                        cs: colorScheme,
+                      );
+                    },
+                  )),
+                  const SizedBox(height: 24),
+                  _buildSectionLabel('Notifications', colorScheme),
                   const SizedBox(height: 12),
-                  _buildSettingCard(
-                    context,
-                    colorScheme,
-                    child: Column(
-                      children: [
-                        _buildTile(
-                          icon: Uicons.shoppingBag,
-                          iconColor: const Color(0xFF3B82F6),
-                          title: 'Order Updates',
-                          subtitle: 'Get notified about order status',
-                          trailing: Switch(value: true, onChanged: (v) {}, activeTrackColor: colorScheme.primary.withValues(alpha: 0.5), activeThumbColor: colorScheme.primary),
-                          colorScheme: colorScheme,
-                        ),
-                        _buildDivider(colorScheme),
-                        _buildTile(
-                          icon: Uicons.hashtag,
-                          iconColor: const Color(0xFFF59E0B),
-                          title: 'Promotions & Deals',
-                          subtitle: 'Receive offers and discounts',
-                          trailing: Switch(value: true, onChanged: (v) {}, activeTrackColor: colorScheme.primary.withValues(alpha: 0.5), activeThumbColor: colorScheme.primary),
-                          colorScheme: colorScheme,
-                        ),
-                        _buildDivider(colorScheme),
-                        _buildTile(
-                          icon: Uicons.creditCard,
-                          iconColor: const Color(0xFF22C55E),
-                          title: 'Payment Notifications',
-                          subtitle: 'Transaction alerts',
-                          trailing: Switch(value: false, onChanged: (v) {}, activeTrackColor: colorScheme.primary.withValues(alpha: 0.5), activeThumbColor: colorScheme.primary),
-                          colorScheme: colorScheme,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  _buildSectionTitle('Account', colorScheme),
+                  _buildCard(context, colorScheme, child: const _NotificationSection()),
+                  const SizedBox(height: 24),
+                  _buildSectionLabel('Security', colorScheme),
                   const SizedBox(height: 12),
-                  _buildSettingCard(
-                    context,
-                    colorScheme,
-                    child: Column(
-                      children: [
-                        _buildTile(
-                          icon: Uicons.user,
-                          iconColor: const Color(0xFF3B82F6),
-                          title: 'Personal Information',
-                          subtitle: 'View and edit your profile',
-                          trailing: TrailingChevron(color: colorScheme.onSurface.withValues(alpha: 0.3)),
-                          colorScheme: colorScheme,
-                          onTap: () => context.push(AppConstants.profileInfoRoute),
-                        ),
-                        _buildDivider(colorScheme),
-                        _buildTile(
-                          icon: Uicons.language,
-                          iconColor: const Color(0xFF06B6D4),
-                          title: 'Language',
-                          subtitle: 'English',
-                          trailing: TrailingChevron(color: colorScheme.onSurface.withValues(alpha: 0.3)),
-                          colorScheme: colorScheme,
-                        ),
-                        _buildDivider(colorScheme),
-                        _buildTile(
-                          icon: Uicons.sackDollar,
-                          iconColor: const Color(0xFFF59E0B),
-                          title: 'Currency',
-                          subtitle: 'TZS - Tanzanian Shilling',
-                          trailing: TrailingChevron(color: colorScheme.onSurface.withValues(alpha: 0.3)),
-                          colorScheme: colorScheme,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  _buildSectionTitle('Security', colorScheme),
+                  _buildCard(context, colorScheme, child: _SecuritySection(colorScheme: colorScheme)),
+                  const SizedBox(height: 24),
+                  _buildSectionLabel('About', colorScheme),
                   const SizedBox(height: 12),
-                  _buildSettingCard(
-                    context,
-                    colorScheme,
-                    child: _SecuritySection(colorScheme: colorScheme),
-                  ),
-                  const SizedBox(height: 28),
-                  _buildSectionTitle('About', colorScheme),
-                  const SizedBox(height: 12),
-                  _buildSettingCard(
-                    context,
-                    colorScheme,
-                    child: Column(
-                      children: [
-                        _buildTile(
-                          icon: Uicons.circleInfo,
-                          iconColor: colorScheme.primary,
-                          title: 'App Version',
-                          subtitle: '1.0.0',
-                          colorScheme: colorScheme,
-                        ),
-                        _buildDivider(colorScheme),
-                        _buildTile(
-                          icon: Uicons.description,
-                          iconColor: colorScheme.primary,
-                          title: 'Terms of Service',
-                          trailing: TrailingChevron(color: colorScheme.onSurface.withValues(alpha: 0.3)),
-                          colorScheme: colorScheme,
-                        ),
-                        _buildDivider(colorScheme),
-                        _buildTile(
-                          icon: Uicons.shield,
-                          iconColor: colorScheme.primary,
-                          title: 'Privacy Policy',
-                          trailing: TrailingChevron(color: colorScheme.onSurface.withValues(alpha: 0.3)),
-                          colorScheme: colorScheme,
-                        ),
-                      ],
-                    ),
-                  ),
+                  _buildCard(context, colorScheme, child: Column(
+                    children: [
+                      _buildTile(
+                        icon: Uicons.circleInfo,
+                        iconColor: colorScheme.primary,
+                        title: 'App Version',
+                        subtitle: AppConstants.appVersion,
+                        cs: colorScheme,
+                      ),
+                      _buildDivider(colorScheme),
+                      _buildTile(
+                        icon: Uicons.description,
+                        iconColor: colorScheme.primary,
+                        title: 'Terms of Service',
+                        cs: colorScheme,
+                        onTap: () => context.push(AppConstants.termsRoute),
+                      ),
+                      _buildDivider(colorScheme),
+                      _buildTile(
+                        icon: Uicons.shield,
+                        iconColor: colorScheme.primary,
+                        title: 'Privacy Policy',
+                        cs: colorScheme,
+                        onTap: () => context.push(AppConstants.privacyRoute),
+                      ),
+                    ],
+                  )),
                   const SizedBox(height: 32),
                 ],
               );
@@ -198,108 +101,97 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileCard(BuildContext context, ColorScheme colorScheme, UserModel? user) {
+  Widget _buildHeader(BuildContext context, ColorScheme cs) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Row(
+        children: [
+          BackIconButton(
+            onTap: () => context.pop(),
+            color: cs.primary,
+          ),
+          const SizedBox(width: 16),
+          Text('Settings',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: cs.onSurface),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileCard(BuildContext context, ColorScheme cs, UserModel? user) {
     final displayName = user?.fullName ?? 'Guest';
     final displayEmail = user?.email ?? '';
-    final initials = displayName.isNotEmpty ? displayName.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase() : '?';
+    final initials = displayName.isNotEmpty
+        ? displayName.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
+        : '?';
 
     return GestureDetector(
       onTap: () => context.push(AppConstants.profileInfoRoute),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.75)],
-            begin: Alignment.topLeft, end: Alignment.bottomRight,
-          ),
+          color: cs.primary.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(14),
-          boxShadow: [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
+          border: Border.all(color: cs.primary.withValues(alpha: 0.12)),
         ),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 34,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
-              child: Text(initials,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cs.primary, cs.primary.withValues(alpha: 0.4)],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: CircleAvatar(
+                radius: 30,
+                backgroundColor: cs.surface,
+                child: Text(initials,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: cs.primary),
+                ),
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(displayName,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface),
                   ),
                   if (displayEmail.isNotEmpty) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(displayEmail,
-                      style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.85)),
+                      style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4)),
                     ),
                   ],
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(6)),
-                    child: Text('View Profile',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white.withValues(alpha: 0.9)),
-                    ),
-                  ),
                 ],
               ),
             ),
-            TrailingChevron(color: Colors.white.withValues(alpha: 0.7)),
+            Icon(Uicons.arrowForwardIos, size: 14, color: cs.onSurface.withValues(alpha: 0.25)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title, ColorScheme colorScheme) {
-    return Row(
-      children: [
-        Container(
-          width: 32, height: 32,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.7)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.primary.withValues(alpha: 0.2),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Icon(Uicons.settingsSliders, color: Colors.white, size: 16),
-        ),
-        const SizedBox(width: 10),
-        Text(title,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-        ),
-      ],
+  Widget _buildSectionLabel(String label, ColorScheme cs) {
+    return Text(label,
+      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: cs.onSurface.withValues(alpha: 0.4)),
     );
   }
 
-  Widget _buildSettingCard(BuildContext context, ColorScheme colorScheme, {required Widget child}) {
+  Widget _buildCard(BuildContext context, ColorScheme cs, {required Widget child}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: child,
     );
@@ -310,49 +202,211 @@ class SettingsPage extends StatelessWidget {
     required Color iconColor,
     required String title,
     String? subtitle,
-    Widget? trailing,
-    required ColorScheme colorScheme,
+    required ColorScheme cs,
     VoidCallback? onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            IconContainer(
-              icon: icon,
-              color: iconColor,
-              size: 40,
-              iconSize: AppIconSize.md,
+            Container(
+              width: 34, height: 34,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: iconColor, size: 16),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
                   ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
                     Text(subtitle,
-                      style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.4)),
+                      style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
                     ),
                   ],
                 ],
               ),
             ),
-            if (trailing != null) trailing,
+            if (onTap != null)
+              Icon(Uicons.arrowForwardIos, size: 12, color: cs.onSurface.withValues(alpha: 0.25)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDivider(ColorScheme colorScheme) {
-    return Divider(height: 1, color: colorScheme.onSurface.withValues(alpha: 0.06), indent: 70);
+  Widget _buildSwitchTile({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    String? subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required ColorScheme cs,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 34, height: 34,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeTrackColor: cs.primary.withValues(alpha: 0.5),
+            activeThumbColor: cs.primary,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider(ColorScheme cs) {
+    return Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06), indent: 62);
+  }
+}
+
+class _NotificationSection extends StatefulWidget {
+  const _NotificationSection();
+
+  @override
+  State<_NotificationSection> createState() => _NotificationSectionState();
+}
+
+class _NotificationSectionState extends State<_NotificationSection> {
+  late SharedPreferences _prefs;
+  bool _orderUpdates = true;
+  bool _promotions = true;
+  bool _payments = false;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _orderUpdates = _prefs.getBool('notif_order_updates') ?? true;
+      _promotions = _prefs.getBool('notif_promotions') ?? true;
+      _payments = _prefs.getBool('notif_payments') ?? false;
+      _loaded = true;
+    });
+  }
+
+  void _toggle(String key, bool value) {
+    _prefs.setBool(key, value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    if (!_loaded) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+    return Column(
+      children: [
+        _buildNotifTile(Uicons.shoppingBag, const Color(0xFF3B82F6), 'Order Updates',
+            'Get notified about order status', _orderUpdates, (v) {
+          setState(() => _orderUpdates = v);
+          _toggle('notif_order_updates', v);
+        }, cs),
+        _buildDivider(cs),
+        _buildNotifTile(Uicons.hashtag, const Color(0xFFF59E0B), 'Promotions & Deals',
+            'Receive offers and discounts', _promotions, (v) {
+          setState(() => _promotions = v);
+          _toggle('notif_promotions', v);
+        }, cs),
+        _buildDivider(cs),
+        _buildNotifTile(Uicons.creditCard, const Color(0xFF22C55E), 'Payment Notifications',
+            'Transaction alerts', _payments, (v) {
+          setState(() => _payments = v);
+          _toggle('notif_payments', v);
+        }, cs),
+      ],
+    );
+  }
+
+  Widget _buildNotifTile(IconData icon, Color color, String title, String subtitle,
+      bool value, ValueChanged<bool> onChanged, ColorScheme cs) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 34, height: 34,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
+                ),
+                const SizedBox(height: 2),
+                Text(subtitle,
+                  style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeTrackColor: cs.primary.withValues(alpha: 0.5),
+            activeThumbColor: cs.primary,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider(ColorScheme cs) {
+    return Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06), indent: 62);
   }
 }
 
@@ -378,78 +432,53 @@ class _SecuritySectionState extends State<_SecuritySection> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        InkWell(
-          borderRadius: BorderRadius.circular(10),
-          onTap: () {
-            if (_pinEnabled) {
-              _showDisablePinDialog();
-            } else {
-              context.push(AppConstants.pinSetupRoute).then((_) {
-                if (mounted) {
-                  setState(() => _pinEnabled = _security.isPinLockEnabled);
-                }
-              });
-            }
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
+    final cs = widget.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 34, height: 34,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Uicons.lock, color: const Color(0xFFEF4444), size: 16),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconContainer(
-                  icon: Uicons.lock,
-                  color: const Color(0xFFEF4444),
-                  size: 40,
-                  iconSize: AppIconSize.md,
+                Text('App Lock PIN',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'App Lock PIN',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: widget.colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _pinEnabled
-                            ? 'Enabled - PIN required on startup'
-                            : 'Require a PIN to open the app',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: widget.colorScheme.onSurface.withValues(alpha: 0.4),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  value: _pinEnabled,
-                  onChanged: (v) {
-                    if (v) {
-                      context.push(AppConstants.pinSetupRoute).then((_) {
-                        if (mounted) {
-                          setState(() => _pinEnabled = _security.isPinLockEnabled);
-                        }
-                      });
-                    } else {
-                      _showDisablePinDialog();
-                    }
-                  },
-                  activeTrackColor: widget.colorScheme.primary.withValues(alpha: 0.5),
-                  activeThumbColor: widget.colorScheme.primary,
+                const SizedBox(height: 2),
+                Text(
+                  _pinEnabled ? 'Enabled - PIN required on startup' : 'Require a PIN to open the app',
+                  style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
                 ),
               ],
             ),
           ),
-        ),
-      ],
+          Switch(
+            value: _pinEnabled,
+            onChanged: (v) {
+              if (v) {
+                context.push(AppConstants.pinSetupRoute).then((_) {
+                  if (mounted) {
+                    setState(() => _pinEnabled = _security.isPinLockEnabled);
+                  }
+                });
+              } else {
+                _showDisablePinDialog();
+              }
+            },
+            activeTrackColor: cs.primary.withValues(alpha: 0.5),
+            activeThumbColor: cs.primary,
+          ),
+        ],
+      ),
     );
   }
 
@@ -457,14 +486,34 @@ class _SecuritySectionState extends State<_SecuritySection> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Disable PIN Lock?'),
-        content: const Text(
-          'Your app will no longer require a PIN on startup. Are you sure?',
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64, height: 64,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Uicons.lock, color: Color(0xFFEF4444), size: 28),
+            ),
+            const SizedBox(height: 16),
+            Text('Disable PIN Lock?',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: widget.colorScheme.onSurface),
+            ),
+            const SizedBox(height: 8),
+            Text('Your app will no longer require a PIN on startup.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: widget.colorScheme.onSurface.withValues(alpha: 0.5)),
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(color: widget.colorScheme.onSurface.withValues(alpha: 0.5))),
           ),
           FilledButton(
             onPressed: () async {
@@ -474,6 +523,10 @@ class _SecuritySectionState extends State<_SecuritySection> {
               }
               if (ctx.mounted) Navigator.of(ctx).pop();
             },
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
             child: const Text('Disable'),
           ),
         ],

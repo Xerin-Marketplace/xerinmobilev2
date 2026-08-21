@@ -183,46 +183,15 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
 
             return Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      BackIconButton(
-                        onTap: () => context.pop(),
-                        color: colorScheme.primary,
-                      ),
-                      const SizedBox(width: 16),
-                      Text('Payment Methods',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildHeader(colorScheme),
                 if (isLoading)
                   const Expanded(child: Center(child: CircularProgressIndicator()))
                 else if (methods.isEmpty)
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Uicons.creditCardXmark, size: 72, color: colorScheme.onSurface.withValues(alpha: 0.2)),
-                          const SizedBox(height: 16),
-                          Text('No payment methods',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                          ),
-                          const SizedBox(height: 8),
-                          Text('Add a payment method for faster checkout',
-                            style: TextStyle(fontSize: 14, color: colorScheme.onSurface.withValues(alpha: 0.3)),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
+                  _buildEmptyState(colorScheme)
                 else
                   Expanded(
                     child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 80),
                       itemCount: methods.length,
                       itemBuilder: (context, index) {
                         final method = methods[index];
@@ -243,7 +212,65 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
     );
   }
 
-  Widget _buildMethodCard(PaymentMethodModel method, ColorScheme colorScheme, bool isDark) {
+  Widget _buildHeader(ColorScheme cs) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Row(
+        children: [
+          BackIconButton(
+            onTap: () => context.pop(),
+            color: cs.primary,
+          ),
+          const SizedBox(width: 16),
+          Text('Payment Methods',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: cs.onSurface),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(ColorScheme cs) {
+    return Expanded(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 90, height: 90,
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.06),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Uicons.creditCard, size: 38, color: cs.primary.withValues(alpha: 0.3)),
+            ),
+            const SizedBox(height: 20),
+            Text('No payment methods',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+            const SizedBox(height: 8),
+            Text('Add a payment method for faster checkout',
+              style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3)),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _showAddSheet,
+              icon: const Icon(Uicons.add, size: 18),
+              label: const Text('Add Method', style: TextStyle(fontWeight: FontWeight.w600)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: cs.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMethodCard(PaymentMethodModel method, ColorScheme cs, bool isDark) {
     IconData icon;
     Color color;
     switch (method.type) {
@@ -261,104 +288,105 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
         break;
       default:
         icon = Uicons.creditCard;
-        color = colorScheme.primary;
+        color = cs.primary;
     }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: method.isDefault
-              ? colorScheme.primary.withValues(alpha: 0.3)
-              : colorScheme.onSurface.withValues(alpha: 0.06),
+              ? color.withValues(alpha: 0.3)
+              : cs.onSurface.withValues(alpha: 0.06),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 3))],
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 44, height: 44,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [color, color.withValues(alpha: 0.7)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: Colors.white, size: 22),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(method.provider,
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
-                        ),
-                        if (method.isDefault) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text('Default', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: colorScheme.primary)),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text('${method.accountName} • ${method.maskedNumber}',
-                      style: TextStyle(fontSize: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Uicons.checkCircle,
-                color: method.isDefault ? colorScheme.primary : Colors.transparent,
-                size: 22,
-              ),
-            ],
-          ),
-          if (method.typeLabel == 'Card' && method.expiryDate != null) ...[
-            const SizedBox(height: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Row(
               children: [
-                Text('Expires: ${method.expiryDate}',
-                  style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.4)),
+                Container(
+                  width: 38, height: 38,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: color, size: 18),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(method.provider,
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: cs.onSurface),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: cs.onSurface.withValues(alpha: 0.04),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(method.typeLabel,
+                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.4)),
+                            ),
+                          ),
+                          if (method.isDefault) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF22C55E).withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text('Default',
+                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF22C55E)),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text('${method.accountName} • ${method.maskedNumber}',
+                        style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (method.typeLabel == 'Card' && method.expiryDate != null) ...[
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.only(left: 50),
+                child: Text('Expires: ${method.expiryDate}',
+                  style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
+                ),
+              ),
+            ],
+            const SizedBox(height: 10),
+            Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () => _deleteMethod(method),
+                  icon: Icon(Uicons.trash, size: 15, color: const Color(0xFFE53935)),
+                  label: Text('Remove', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFFE53935))),
                 ),
               ],
             ),
           ],
-          const SizedBox(height: 8),
-          Divider(height: 1, color: colorScheme.onSurface.withValues(alpha: 0.06)),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton.icon(
-                onPressed: () => _deleteMethod(method),
-                icon: Icon(Uicons.trash, size: 16, color: const Color(0xFFE53935)),
-                label: Text('Remove', style: TextStyle(fontSize: 12, color: const Color(0xFFE53935))),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }

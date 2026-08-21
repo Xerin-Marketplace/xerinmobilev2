@@ -28,6 +28,7 @@ abstract class AppConstants {
   static const String paymentMethodsRoute = '/payment-methods';
   static const String orderHistoryRoute = '/order-history';
   static const String orderDetailRoute = '/order-detail';
+  static const String invoiceRoute = '/invoice';
   static const String notificationsRoute = '/notifications';
   static const String settingsRoute = '/settings';
   static const String helpSupportRoute = '/help-support';

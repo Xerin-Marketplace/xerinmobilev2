@@ -17,10 +17,16 @@ class WishlistRemoteDataSource {
       List<dynamic> list;
       if (data is List) {
         list = data;
-      } else if (data is Map && data['items'] != null) {
-        list = data['items'] as List;
-      } else if (data is Map && data['data'] != null) {
-        list = data['data'] as List;
+      } else if (data is Map) {
+        if (data['results'] != null) {
+          list = data['results'] as List;
+        } else if (data['items'] != null) {
+          list = data['items'] as List;
+        } else if (data['data'] != null) {
+          list = data['data'] as List;
+        } else {
+          list = [];
+        }
       } else {
         list = [];
       }
@@ -29,6 +35,8 @@ class WishlistRemoteDataSource {
           .toList();
     } on DioException catch (e) {
       throw ServerException(_client.getErrorMessage(e));
+    } catch (e) {
+      throw ServerException('Failed to parse wishlist: $e');
     }
   }
 
@@ -77,6 +85,10 @@ class WishlistRemoteDataSource {
       await _client.post(ApiConstants.wishlistAddProduct(productId));
       return true;
     } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        await removeFromWishlist(productId: productId);
+        return false;
+      }
       throw ServerException(_client.getErrorMessage(e));
     }
   }
