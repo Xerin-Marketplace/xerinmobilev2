@@ -8,6 +8,7 @@ import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
 import '../widgets/auth_text_field.dart';
+import '../../../../core/theme/uicons.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -75,13 +76,7 @@ class _SignInPageState extends State<SignInPage>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         NotificationService().success('Signed in successfully!');
       });
-      if (state.isAdmin) {
-        context.go(AppConstants.adminDashboardRoute);
-      } else if (state.isSeller) {
-        context.go(AppConstants.sellerDashboardRoute);
-      } else {
-        context.go(AppConstants.homeRoute);
-      }
+      context.go(AppConstants.homeRoute);
     } else if (state is AuthGuest) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         NotificationService().success('Welcome, Guest!');
@@ -133,7 +128,7 @@ class _SignInPageState extends State<SignInPage>
                   decoration: const InputDecoration(
                     labelText: 'Phone Number',
                     hintText: '+255XXXXXXXXX',
-                    prefixIcon: Icon(Icons.phone_outlined),
+                    prefixIcon: Icon(Uicons.phone),
                     border: OutlineInputBorder(),
                   ),
                   validator: (v) {
@@ -186,29 +181,7 @@ class _SignInPageState extends State<SignInPage>
         return Scaffold(
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
-        child: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 280,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    colorScheme.primary.withValues(alpha: 0.08),
-                    colorScheme.primary.withValues(alpha: 0.02),
-                    Colors.transparent,
-                  ],
-                  stops: const [0.0, 0.5, 1.0],
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
+        child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 28),
           child: Form(
@@ -218,42 +191,29 @@ class _SignInPageState extends State<SignInPage>
               child: SlideTransition(
                 position: _slideAnim,
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 30),
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colorScheme.primary.withValues(alpha: 0.12),
-                            blurRadius: 30,
-                            spreadRadius: 4,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
-                      child: const AuthLogo(width: 200, height: 130),
-                    ),
                     const SizedBox(height: 24),
+                    const AuthLogo(width: 160, height: 100),
+                    const SizedBox(height: 20),
                     Text(
-                      'Welcome Back!',
+                      'Welcome Back',
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 26,
                         fontWeight: FontWeight.bold,
                         color: colorScheme.onSurface,
                         letterSpacing: -0.3,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Text(
-                      'Sign in to continue shopping',
+                      'Sign in to keep shopping',
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 14,
                         color: colorScheme.onSurface.withValues(alpha: 0.45),
-                        letterSpacing: 0.2,
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
                     if (errorMessage != null) ...[
                       AuthErrorBanner(message: errorMessage),
                       const SizedBox(height: 20),
@@ -262,8 +222,8 @@ class _SignInPageState extends State<SignInPage>
                       controller: _emailCtrl,
                       focusNode: _emailNode,
                       label: 'Email',
-                      hint: 'name@email.com',
-                      icon: Icons.email_outlined,
+                      hint: 'you@email.com',
+                      icon: Uicons.envelope,
                       keyboardType: TextInputType.emailAddress,
                       validator: _validateEmail,
                       onChanged: (_) => _clearError(context),
@@ -274,15 +234,15 @@ class _SignInPageState extends State<SignInPage>
                       focusNode: _passNode,
                       label: 'Password',
                       hint: 'Enter your password',
-                      icon: Icons.lock_outlined,
+                      icon: Uicons.lock,
                       obscureText: _obscurePass,
                       validator: _validatePassword,
                       onChanged: (_) => _clearError(context),
                       suffix: IconButton(
                         icon: Icon(
                           _obscurePass
-                              ? Icons.visibility_off_rounded
-                              : Icons.visibility_rounded,
+                              ? Uicons.eyeCrossed
+                              : Uicons.eye,
                           color: colorScheme.onSurface.withValues(alpha: 0.4),
                           size: 20,
                         ),
@@ -343,60 +303,15 @@ class _SignInPageState extends State<SignInPage>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 28),
                     AuthPrimaryButton(
                       label: 'Sign In',
-                      icon: Icons.login_rounded,
+                      icon: Uicons.arrowRightToBracket,
                       onPressed: isLoading ? null : _onSignIn,
                       isLoading: isLoading,
                     ),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: OutlinedButton.icon(
-                        onPressed: isLoading ? null : () => context.read<AuthCubit>().continueAsGuest(),
-                        icon: Icon(Icons.person_outline_rounded, color: colorScheme.primary, size: 18),
-                        label: const Text('Continue as Guest', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: colorScheme.primary,
-                          side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.3), width: 1.5),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          elevation: 0,
-                        ),
-                      ),
-                    ),
                     const SizedBox(height: 20),
                     Row(
-                      children: [
-                        Expanded(
-                          child: Divider(
-                            color: colorScheme.onSurface.withValues(alpha: 0.08),
-                            thickness: 1,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            'or',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: colorScheme.onSurface.withValues(alpha: 0.35),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Divider(
-                            color: colorScheme.onSurface.withValues(alpha: 0.08),
-                            thickness: 1,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           "Don't have an account? ",
@@ -425,7 +340,7 @@ class _SignInPageState extends State<SignInPage>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -433,12 +348,9 @@ class _SignInPageState extends State<SignInPage>
           ),
         ),
       ),
-        ],
-      ),
       ),
     );
       },
     );
   }
-
 }

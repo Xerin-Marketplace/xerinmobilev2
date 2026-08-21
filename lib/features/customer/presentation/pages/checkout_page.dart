@@ -10,6 +10,7 @@ import '../cubit/customer_cubit.dart';
 import '../cubit/customer_state.dart';
 import '../../data/models/address_model.dart';
 import '../../data/models/cart_model.dart';
+import '../../../../core/theme/uicons.dart';
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
@@ -35,9 +36,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
   ];
 
   static const _paymentTypes = [
-    {'value': 'mobile_money', 'label': 'Mobile Money', 'icon': Icons.phone_android_rounded, 'color': Color(0xFF22C55E)},
-    {'value': 'card', 'label': 'Card', 'icon': Icons.credit_card_rounded, 'color': Color(0xFFF59E0B)},
-    {'value': 'cash_on_delivery', 'label': 'Cash on Delivery', 'icon': Icons.local_shipping_rounded, 'color': Color(0xFF3B82F6)},
+    {'value': 'mobile_money', 'label': 'Mobile Money', 'icon': Uicons.mobile, 'color': Color(0xFF22C55E)},
+    {'value': 'card', 'label': 'Card', 'icon': Uicons.creditCard, 'color': Color(0xFFF59E0B)},
+    {'value': 'cash_on_delivery', 'label': 'Cash on Delivery', 'icon': Uicons.shippingFast, 'color': Color(0xFF3B82F6)},
   ];
 
   @override
@@ -168,7 +169,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               Center(
                                 child: Column(
                                   children: [
-                                    Icon(Icons.shopping_cart_outlined, size: 72, color: colorScheme.onSurface.withValues(alpha: 0.2)),
+                                    Icon(Uicons.shoppingCart, size: 72, color: colorScheme.onSurface.withValues(alpha: 0.2)),
                                     const SizedBox(height: 16),
                                     Text('Your cart is empty',
                                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.5)),
@@ -181,18 +182,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 ),
                               ),
                             ] else ...[
-                              _buildSectionHeader('Order Items', Icons.shopping_bag_rounded, colorScheme),
+                              _buildSectionHeader('Order Items', Uicons.shoppingBag, colorScheme),
                               const SizedBox(height: 12),
                               ...cartItems.map((item) => _buildCartItemCard(item, colorScheme, isDark)),
                               const SizedBox(height: 24),
-                              _buildSectionHeader('Delivery Address', Icons.location_on_rounded, colorScheme),
+                              _buildSectionHeader('Delivery Address', Uicons.mapPin, colorScheme),
                               const SizedBox(height: 12),
                               if (addresses.isEmpty)
-                                _buildEmptyState('No addresses', 'Add an address to continue', Icons.location_off_rounded, colorScheme)
+                                _buildEmptyState('No addresses', 'Add an address to continue', Uicons.mapMarker, colorScheme)
                               else
                                 ...addresses.map((addr) => _buildAddressSelector(addr, colorScheme, isDark)),
                               const SizedBox(height: 24),
-                              _buildSectionHeader('Payment Method', Icons.payment_rounded, colorScheme),
+                              _buildSectionHeader('Payment Method', Uicons.creditCard, colorScheme),
                               const SizedBox(height: 12),
                               _buildPaymentTypeSelector(colorScheme, isDark),
                               if (_selectedPaymentMethod == 'mobile_money') ...[
@@ -210,7 +211,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 _buildCodInfoBanner(colorScheme),
                               ],
                               const SizedBox(height: 24),
-                              _buildSectionHeader('Order Notes (Optional)', Icons.note_outlined, colorScheme),
+                              _buildSectionHeader('Order Notes (Optional)', Uicons.note, colorScheme),
                               const SizedBox(height: 12),
                               TextField(
                                 controller: _notesController,
@@ -230,7 +231,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 ),
                               ),
                               const SizedBox(height: 24),
-                              _buildSectionHeader('Order Summary', Icons.receipt_long_rounded, colorScheme),
+                              _buildSectionHeader('Order Summary', Uicons.receipt, colorScheme),
                               const SizedBox(height: 12),
                               _buildSummaryCard(cartTotal, colorScheme, isDark),
                               const SizedBox(height: 24),
@@ -287,7 +288,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           : Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.lock_rounded, size: 18),
+                const Icon(Uicons.lock, size: 18),
                 const SizedBox(width: 8),
                 Text('Pay ${_formatCurrency(cartTotal)}',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
@@ -434,7 +435,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         labelStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
         hintText: 'e.g. 0712345678',
         hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.3)),
-        prefixIcon: const Icon(Icons.phone_rounded, size: 20),
+        prefixIcon: const Icon(Uicons.phone, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
@@ -462,7 +463,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_rounded, color: Color(0xFFF59E0B), size: 20),
+          const Icon(Uicons.circleInfo, color: Color(0xFFF59E0B), size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text('You will be redirected to AzamPay\'s secure checkout page to enter your card details.',
@@ -484,7 +485,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.local_shipping_rounded, color: Color(0xFF3B82F6), size: 20),
+          const Icon(Uicons.shippingFast, color: Color(0xFF3B82F6), size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text('Pay with cash when your order is delivered. Please have the exact amount ready.',
@@ -540,9 +541,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(imageUrl, fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(Icons.inventory_2_outlined, color: cs.primary.withValues(alpha: 0.4), size: 22)),
+                      errorBuilder: (_, __, ___) => Icon(Uicons.box, color: cs.primary.withValues(alpha: 0.4), size: 22)),
                   )
-                : Icon(Icons.inventory_2_outlined, color: cs.primary.withValues(alpha: 0.4), size: 22),
+                : Icon(Uicons.box, color: cs.primary.withValues(alpha: 0.4), size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -591,7 +592,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.location_on_rounded, color: Colors.white, size: 20),
+              child: const Icon(Uicons.mapPin, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -605,7 +606,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ],
               ),
             ),
-            Icon(isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded,
+            Icon(isSelected ? Uicons.circle : Uicons.circle,
               color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.3), size: 22),
           ],
         ),
@@ -671,7 +672,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.shield_rounded, color: cs.primary, size: 18),
+                Icon(Uicons.shield, color: cs.primary, size: 18),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(

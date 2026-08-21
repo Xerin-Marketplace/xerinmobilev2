@@ -10,6 +10,7 @@ import 'tabs/customer_explore_page.dart';
 import 'tabs/customer_home_page.dart';
 import 'tabs/customer_profile_page.dart';
 import 'tabs/customer_wishlist_page.dart';
+import '../../../../core/theme/uicons.dart';
 
 class CustomerDashboard extends StatefulWidget {
   const CustomerDashboard({super.key});
@@ -40,30 +41,30 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
         final navItems = [
           const NavItem(
-              icon: Icons.home_outlined,
-              activeIcon: Icons.home_rounded,
+              icon: Uicons.home,
+              activeIcon: Uicons.home,
               label: 'Home'),
           const NavItem(
-              icon: Icons.explore_outlined,
-              activeIcon: Icons.explore_rounded,
+              icon: Uicons.compass,
+              activeIcon: Uicons.compass,
               label: 'Explore'),
           NavItem(
-            icon: Icons.shopping_cart_outlined,
-            activeIcon: Icons.shopping_cart_rounded,
+            icon: Uicons.shoppingCart,
+            activeIcon: Uicons.shoppingCart,
             label: 'Cart',
             badgeCount: cartCount,
           ),
           const NavItem(
-              icon: Icons.favorite_outline_rounded,
-              activeIcon: Icons.favorite_rounded,
+              icon: Uicons.heart,
+              activeIcon: Uicons.heart,
               label: 'Wishlist'),
           const NavItem(
-              icon: Icons.bar_chart_outlined,
-              activeIcon: Icons.bar_chart_rounded,
+              icon: Uicons.barChart,
+              activeIcon: Uicons.barChart,
               label: 'Stats'),
           const NavItem(
-              icon: Icons.person_outline_rounded,
-              activeIcon: Icons.person_rounded,
+              icon: Uicons.user,
+              activeIcon: Uicons.user,
               label: 'Profile'),
         ];
 

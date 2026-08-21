@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../shared/widgets/app_icon.dart';
+import '../../../../core/theme/uicons.dart';
 
 class HelpSupportPage extends StatefulWidget {
   const HelpSupportPage({super.key});
@@ -115,7 +116,7 @@ class _HelpSupportPageState extends State<HelpSupportPage>
                               color: Colors.white.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.headset_mic_rounded, color: Colors.white, size: 28),
+                            child: const Icon(Uicons.headset, color: Colors.white, size: 28),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -140,13 +141,13 @@ class _HelpSupportPageState extends State<HelpSupportPage>
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
                     ),
                     const SizedBox(height: 16),
-                    _buildContactOption(Icons.phone_rounded, 'Call Support', '+255 22 200 0000', const Color(0xFF22C55E), colorScheme),
+                    _buildContactOption(Uicons.phone, 'Call Support', '+255 22 200 0000', const Color(0xFF22C55E), colorScheme),
                     const SizedBox(height: 10),
-                    _buildContactOption(Icons.email_rounded, 'Email Us', 'support@xerin.co.tz', const Color(0xFF3B82F6), colorScheme),
+                    _buildContactOption(Uicons.envelope, 'Email Us', 'support@xerin.co.tz', const Color(0xFF3B82F6), colorScheme),
                     const SizedBox(height: 10),
-                    _buildContactOption(Icons.chat_rounded, 'Live Chat', 'Available now', const Color(0xFFF59E0B), colorScheme),
+                    _buildContactOption(Uicons.comment, 'Live Chat', 'Available now', const Color(0xFFF59E0B), colorScheme),
                     const SizedBox(height: 10),
-                    _buildContactOption(Icons.chat_bubble_rounded, 'WhatsApp', '+255 22 200 0000', const Color(0xFF22C55E), colorScheme),
+                    _buildContactOption(Uicons.comment, 'WhatsApp', '+255 22 200 0000', const Color(0xFF22C55E), colorScheme),
                     const SizedBox(height: 24),
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -158,7 +159,7 @@ class _HelpSupportPageState extends State<HelpSupportPage>
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.confirmation_number_rounded, size: 22, color: colorScheme.primary),
+                          Icon(Uicons.ticket, size: 22, color: colorScheme.primary),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -370,7 +371,7 @@ class _FaqItemState extends State<_FaqItem>
                   ),
                   RotationTransition(
                     turns: _rotation,
-                    child: Icon(Icons.add_rounded, color: widget.colorScheme.primary, size: 22),
+                    child: Icon(Uicons.add, color: widget.colorScheme.primary, size: 22),
                   ),
                 ],
               ),

@@ -6,6 +6,7 @@ import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/customer_cubit.dart';
 import '../cubit/customer_state.dart';
 import '../../data/models/address_model.dart';
+import '../../../../core/theme/uicons.dart';
 
 class AddressesPage extends StatefulWidget {
   const AddressesPage({super.key});
@@ -181,7 +182,7 @@ class _AddressesPageState extends State<AddressesPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.location_off_rounded, size: 72, color: colorScheme.onSurface.withValues(alpha: 0.2)),
+                          Icon(Uicons.mapMarker, size: 72, color: colorScheme.onSurface.withValues(alpha: 0.2)),
                           const SizedBox(height: 16),
                           Text('No addresses yet',
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.5)),
@@ -193,7 +194,7 @@ class _AddressesPageState extends State<AddressesPage> {
                           const SizedBox(height: 24),
                           ElevatedButton.icon(
                             onPressed: () => _showAddEditSheet(),
-                            icon: const Icon(Icons.add_rounded),
+                            icon: const Icon(Uicons.add),
                             label: const Text('Add Address'),
                           ),
                         ],
@@ -219,7 +220,7 @@ class _AddressesPageState extends State<AddressesPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEditSheet(),
         backgroundColor: colorScheme.primary,
-        child: const Icon(Icons.add_rounded, color: Colors.white),
+        child: const Icon(Uicons.add, color: Colors.white),
       ),
     );
   }
@@ -259,7 +260,7 @@ class _AddressesPageState extends State<AddressesPage> {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.location_on_rounded, color: Colors.white, size: 22),
+                child: const Icon(Uicons.mapPin, color: Colors.white, size: 22),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -309,14 +310,14 @@ class _AddressesPageState extends State<AddressesPage> {
             children: [
               TextButton.icon(
                 onPressed: () => _showAddEditSheet(address: address),
-                icon: Icon(Icons.edit_outlined, size: 16, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                icon: Icon(Uicons.edit, size: 16, color: colorScheme.onSurface.withValues(alpha: 0.5)),
                 label: Text('Edit', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.5))),
               ),
               TextButton.icon(
                 onPressed: () {
                   context.read<CustomerCubit>().deleteAddress(address.id);
                 },
-                icon: Icon(Icons.delete_outline_rounded, size: 16, color: const Color(0xFFE53935)),
+                icon: Icon(Uicons.trash, size: 16, color: const Color(0xFFE53935)),
                 label: Text('Delete', style: TextStyle(fontSize: 12, color: const Color(0xFFE53935))),
               ),
             ],

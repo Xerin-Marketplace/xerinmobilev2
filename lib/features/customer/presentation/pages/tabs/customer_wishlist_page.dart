@@ -8,6 +8,7 @@ import '../../../../../core/storage/token_storage.dart';
 import '../../../data/models/wishlist_item_model.dart';
 import '../../cubit/wishlist_cubit.dart';
 import '../../cubit/wishlist_state.dart';
+import '../../../../../core/theme/uicons.dart';
 
 class CustomerWishlistPage extends StatefulWidget {
   const CustomerWishlistPage({super.key});
@@ -43,7 +44,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.favorite_outline_rounded, size: 72, color: colorScheme.primary.withValues(alpha: 0.25)),
+                Icon(Uicons.heart, size: 72, color: colorScheme.primary.withValues(alpha: 0.25)),
                 const SizedBox(height: 20),
                 Text('Save your favorites',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
@@ -145,7 +146,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
             children: [
               _buildActionChip(
                 colorScheme,
-                icon: Icons.checklist_rounded,
+                icon: Uicons.listCheck,
                 label: selected.isEmpty ? 'Select all' : 'Clear selection',
                 onTap: () {
                   if (selected.isEmpty) {
@@ -159,7 +160,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
               if (selected.isNotEmpty)
                 _buildActionChip(
                   colorScheme,
-                  icon: Icons.delete_outline_rounded,
+                  icon: Uicons.trash,
                   label: 'Delete (${selected.length})',
                   isDestructive: true,
                   onTap: () => context.read<WishlistCubit>().removeSelected(),
@@ -225,7 +226,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline_rounded,
+              Icon(Uicons.circleExclamation,
                   size: 48, color: colorScheme.onSurface.withValues(alpha: 0.3)),
               const SizedBox(height: 12),
               Text(
@@ -276,7 +277,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.favorite_outline_rounded,
+              Icon(Uicons.heart,
                   size: 64, color: colorScheme.onSurface.withValues(alpha: 0.2)),
               const SizedBox(height: 16),
               Text(
@@ -393,7 +394,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                           ),
                         ),
                         child: Icon(
-                          isSelected ? Icons.check_rounded : null,
+                          isSelected ? Uicons.check : null,
                           size: 16,
                           color: Colors.white,
                         ),
@@ -413,7 +414,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.close_rounded,
+                          Uicons.crossSmall,
                           size: 16,
                           color: colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
@@ -460,7 +461,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(Icons.star_rounded,
+                      Icon(Uicons.star,
                           size: 14, color: Colors.amber.shade600),
                       const SizedBox(width: 2),
                       Text(
@@ -516,7 +517,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
   Widget _buildPlaceholder(ColorScheme colorScheme) {
     return Center(
       child: Icon(
-        Icons.favorite_rounded,
+        Uicons.heart,
         size: 40,
         color: colorScheme.primary.withValues(alpha: 0.3),
       ),

@@ -9,6 +9,7 @@ import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
 import '../widgets/auth_text_field.dart';
+import '../../../../core/theme/uicons.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -92,7 +93,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 8),
                           BackIconButton(
                             onTap: () {
                               if (context.canPop()) {
@@ -103,36 +104,34 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
                             },
                             color: colorScheme.primary,
                           ),
-                          const SizedBox(height: 32),
-                          const Center(
-                            child: AuthLogo(width: 180, height: 110),
-                          ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 20),
+                          const AuthLogo(width: 140, height: 80),
+                          const SizedBox(height: 16),
                           Text(
-                            'Forgot Password?',
+                            'Forgot password?',
                             style: TextStyle(
-                              fontSize: 28,
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onSurface,
                               letterSpacing: -0.3,
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
                           Text(
-                            'Enter your email address and we will send you an OTP to reset your password.',
+                            "No worries. Enter your email and we'll send you a code to reset it.",
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 14,
                               color: colorScheme.onSurface.withValues(alpha: 0.45),
                               height: 1.5,
                             ),
                           ),
-                          const SizedBox(height: 40),
+                          const SizedBox(height: 24),
                           AuthTextField(
                             controller: _emailCtrl,
                             focusNode: _emailNode,
-                            label: 'Email Address',
-                            hint: 'example@email.com',
-                            icon: Icons.email_outlined,
+                            label: 'Email',
+                            hint: 'you@email.com',
+                            icon: Uicons.envelope,
                             keyboardType: TextInputType.emailAddress,
                             validator: (v) {
                               if (v == null || v.isEmpty) {
@@ -144,13 +143,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
                               return null;
                             },
                           ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 24),
                           AuthPrimaryButton(
-                            label: 'Send Reset OTP',
+                            label: 'Send Reset Code',
                             onPressed: isLoading ? null : _onSubmit,
                             isLoading: isLoading,
                           ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 16),
                         ],
                       );
                     },

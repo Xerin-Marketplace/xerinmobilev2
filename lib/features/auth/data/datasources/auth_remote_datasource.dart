@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import '../../../../config/constants/api_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/api_client.dart';
-import '../models/seller_model.dart';
 import '../models/token_model.dart';
 import '../models/user_model.dart';
 
@@ -31,39 +30,6 @@ class AuthRemoteDataSource {
         },
       );
       return UserModel.fromJson(response.data as Map<String, dynamic>);
-    } on DioException catch (e) {
-      throw ServerException(_client.getErrorMessage(e));
-    }
-  }
-
-  Future<SellerModel> registerSeller({
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String phone,
-    required String password,
-    required String businessName,
-    required List<String> businessCategoryIds,
-    String? contactEmail,
-    String? contactPhone,
-  }) async {
-    try {
-      final response = await _client.post(
-        ApiConstants.registerSeller,
-        data: {
-          'first_name': firstName,
-          'last_name': lastName,
-          'email': email,
-          'phone': phone,
-          'password': password,
-          'business_name': businessName,
-          'business_category_ids': businessCategoryIds,
-          'contact_email': ?contactEmail,
-          'contact_phone': ?contactPhone,
-          'agreement_accepted': true,
-        },
-      );
-      return SellerModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw ServerException(_client.getErrorMessage(e));
     }

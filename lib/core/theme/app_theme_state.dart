@@ -12,11 +12,11 @@ class AppThemeState extends Equatable {
   IconData get icon {
     switch (themeMode) {
       case ThemeMode.light:
-        return Icons.light_mode;
+        return Uicons.sun;
       case ThemeMode.dark:
-        return Icons.dark_mode;
+        return Uicons.darkMode;
       case ThemeMode.system:
-        return Icons.brightness_auto;
+        return Uicons.brightness;
     }
   }
 

@@ -8,6 +8,7 @@ import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/utils/helpers.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/customer_cubit.dart';
+import '../../../../core/theme/uicons.dart';
 
 class PaymentProcessingPage extends StatefulWidget {
   final String? paymentId;
@@ -273,7 +274,7 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
               ],
             ),
             child: const Icon(
-              Icons.check_rounded,
+              Uicons.check,
               color: Colors.white,
               size: 64,
             ),
@@ -355,7 +356,7 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
               ],
             ),
             child: const Icon(
-              Icons.close_rounded,
+              Uicons.crossSmall,
               color: Colors.white,
               size: 64,
             ),

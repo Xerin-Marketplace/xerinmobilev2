@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
-import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
 import '../widgets/auth_text_field.dart';
+import '../../../../core/theme/uicons.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -50,7 +50,6 @@ class _RegisterPageState extends State<RegisterPage>
   bool _obscurePass = true;
   bool _obscureConfirm = true;
   bool _agree = false;
-  bool _isSeller = false;
 
   static const List<_Country> _countries = [
     _Country(
@@ -120,24 +119,13 @@ class _RegisterPageState extends State<RegisterPage>
     final password = _passCtrl.text;
     final phone = _fullPhone;
 
-    if (_isSeller) {
-      context.read<AuthCubit>().storeRegistrationData(
-            firstName: firstName,
-            lastName: lastName,
-            email: email,
-            password: password,
-            phone: phone,
-          );
-      context.go(AppConstants.sellerDetailsRoute);
-    } else {
-      context.read<AuthCubit>().register(
-            firstName: firstName,
-            lastName: lastName,
-            email: email,
-            password: password,
-            phone: phone,
-          );
-    }
+    context.read<AuthCubit>().register(
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          password: password,
+          phone: phone,
+        );
   }
 
   void _onStateChange(BuildContext context, AuthState state) {
@@ -176,49 +164,28 @@ class _RegisterPageState extends State<RegisterPage>
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              BackIconButton(
-                                onTap: () {
-                                  if (context.canPop()) {
-                                    context.pop();
-                                  } else {
-                                    context.go(AppConstants.signInRoute);
-                                  }
-                                },
-                                color: colorScheme.primary,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(child: _buildSellerToggle(colorScheme)),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          const AuthLogo(width: 180, height: 110),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 4),
+                          const AuthLogo(width: 140, height: 80),
+                          const SizedBox(height: 12),
                           Text(
-                            'Create Account',
+                            'Create your account',
                             style: TextStyle(
-                              fontSize: 28,
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onSurface,
                               letterSpacing: -0.3,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           Text(
-                            _isSeller
-                                ? 'Register your shop and start selling'
-                                : 'Join us and start shopping today',
+                            'Join XerinMarket and start shopping',
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 14,
                               color:
                                   colorScheme.onSurface.withValues(alpha: 0.45),
                             ),
                           ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 20),
                           Row(
                             children: [
                               Expanded(
@@ -226,8 +193,8 @@ class _RegisterPageState extends State<RegisterPage>
                                   controller: _firstNameCtrl,
                                   focusNode: _firstNameNode,
                                   label: 'First Name',
-                                  hint: 'John',
-                                  icon: Icons.person_outlined,
+                                  hint: 'Your first name',
+                                  icon: Uicons.user,
                                   textCapitalization: TextCapitalization.words,
                                   validator: (v) => v == null || v.isEmpty
                                       ? 'Required'
@@ -240,8 +207,8 @@ class _RegisterPageState extends State<RegisterPage>
                                   controller: _lastNameCtrl,
                                   focusNode: _lastNameNode,
                                   label: 'Last Name',
-                                  hint: 'Doe',
-                                  icon: Icons.person_outlined,
+                                  hint: 'Your last name',
+                                  icon: Uicons.user,
                                   textCapitalization: TextCapitalization.words,
                                   validator: (v) => v == null || v.isEmpty
                                       ? 'Required'
@@ -250,13 +217,13 @@ class _RegisterPageState extends State<RegisterPage>
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
                           AuthTextField(
                             controller: _emailCtrl,
                             focusNode: _emailNode,
                             label: 'Email',
-                            hint: 'example@email.com',
-                            icon: Icons.email_outlined,
+                            hint: 'you@email.com',
+                            icon: Uicons.envelope,
                             keyboardType: TextInputType.emailAddress,
                             validator: (v) {
                               if (v == null || v.isEmpty) {
@@ -269,12 +236,12 @@ class _RegisterPageState extends State<RegisterPage>
                               return null;
                             },
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
                           AuthTextField(
                             controller: _phoneCtrl,
                             focusNode: _phoneNode,
                             label: 'Phone Number',
-                            hint: '7XXXXXXXX',
+                            hint: 'e.g. 712345678',
                             keyboardType: TextInputType.phone,
                             maxLength: 9,
                             prefix: Container(
@@ -339,7 +306,7 @@ class _RegisterPageState extends State<RegisterPage>
                                     ),
                                     const SizedBox(width: 2),
                                     Icon(
-                                      Icons.keyboard_arrow_down_rounded,
+                                      Uicons.angleDown,
                                       size: 16,
                                       color: colorScheme.primary,
                                     ),
@@ -354,9 +321,9 @@ class _RegisterPageState extends State<RegisterPage>
                             ),
                             contentPadding: const EdgeInsets.only(
                               left: 130,
-                              right: 16,
-                              top: 16,
-                              bottom: 16,
+                              right: 14,
+                              top: 12,
+                              bottom: 12,
                             ),
                             validator: (v) {
                               if (v == null || v.isEmpty) {
@@ -371,13 +338,13 @@ class _RegisterPageState extends State<RegisterPage>
                               return null;
                             },
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
                           AuthTextField(
                             controller: _passCtrl,
                             focusNode: _passNode,
                             label: 'Password',
-                            hint: 'Enter your password',
-                            icon: Icons.lock_outlined,
+                            hint: 'Create a password',
+                            icon: Uicons.lock,
                             obscureText: _obscurePass,
                             validator: (v) => v == null || v.length < 6
                                 ? 'Min 6 characters'
@@ -385,8 +352,8 @@ class _RegisterPageState extends State<RegisterPage>
                             suffix: IconButton(
                               icon: Icon(
                                 _obscurePass
-                                    ? Icons.visibility_off_rounded
-                                    : Icons.visibility_rounded,
+                                    ? Uicons.eyeCrossed
+                                    : Uicons.eye,
                                 color: colorScheme.onSurface
                                     .withValues(alpha: 0.4),
                                 size: 20,
@@ -395,13 +362,13 @@ class _RegisterPageState extends State<RegisterPage>
                                   setState(() => _obscurePass = !_obscurePass),
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
                           AuthTextField(
                             controller: _confirmPassCtrl,
                             focusNode: _confirmNode,
                             label: 'Confirm Password',
-                            hint: 'Re-enter your password',
-                            icon: Icons.lock_outlined,
+                            hint: 'Confirm your password',
+                            icon: Uicons.lock,
                             obscureText: _obscureConfirm,
                             validator: (v) => v != _passCtrl.text
                                 ? 'Passwords do not match'
@@ -409,8 +376,8 @@ class _RegisterPageState extends State<RegisterPage>
                             suffix: IconButton(
                               icon: Icon(
                                 _obscureConfirm
-                                    ? Icons.visibility_off_rounded
-                                    : Icons.visibility_rounded,
+                                    ? Uicons.eyeCrossed
+                                    : Uicons.eye,
                                 color: colorScheme.onSurface
                                     .withValues(alpha: 0.4),
                                 size: 20,
@@ -419,7 +386,7 @@ class _RegisterPageState extends State<RegisterPage>
                                   () => _obscureConfirm = !_obscureConfirm),
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -475,13 +442,13 @@ class _RegisterPageState extends State<RegisterPage>
                               ),
                             ],
                           ),
-                          const SizedBox(height: 28),
+                          const SizedBox(height: 20),
                           AuthPrimaryButton(
-                            label: _isSeller ? 'Next' : 'Create Account',
+                            label: 'Sign Up',
                             onPressed: isLoading ? null : _onRegister,
                             isLoading: isLoading,
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                           Center(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -509,7 +476,7 @@ class _RegisterPageState extends State<RegisterPage>
                               ],
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 12),
                         ],
                       );
                     },
@@ -523,41 +490,4 @@ class _RegisterPageState extends State<RegisterPage>
     );
   }
 
-  Widget _buildSellerToggle(ColorScheme colorScheme) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Become a Seller',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: _isSeller ? colorScheme.primary : colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Start selling your products',
-              style: TextStyle(
-                fontSize: 12,
-                color: colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-            ),
-          ],
-        ),
-        Switch.adaptive(
-          value: _isSeller,
-          onChanged: (v) => setState(() => _isSeller = v),
-          activeTrackColor: colorScheme.primary,
-          activeThumbColor: colorScheme.onPrimary,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-      ],
-    );
-  }
 }

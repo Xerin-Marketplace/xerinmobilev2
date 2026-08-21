@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/recommendation_cubit.dart';
 import '../cubit/recommendation_state.dart';
 import '../../data/models/recommendation_model.dart';
+import '../../../../core/theme/uicons.dart';
 
 class CouponsPage extends StatefulWidget {
   const CouponsPage({super.key});
@@ -58,7 +59,7 @@ class _CouponsPageState extends State<CouponsPage> {
                       titlePadding: const EdgeInsets.only(left: 20, bottom: 14),
                     ),
                     leading: IconButton(
-                      icon: Icon(Icons.arrow_back_rounded,
+                      icon: Icon(Uicons.arrowBack,
                           color: colorScheme.onSurface),
                       onPressed: () => Navigator.pop(context),
                     ),
@@ -95,7 +96,7 @@ class _CouponsPageState extends State<CouponsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.local_offer_outlined,
+            Icon(Uicons.hashtag,
                 size: 72, color: cs.onSurface.withValues(alpha: 0.15)),
             const SizedBox(height: 16),
             Text('No coupons available',
@@ -147,7 +148,7 @@ class _CouponsPageState extends State<CouponsPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.local_offer_rounded,
+                  Icon(Uicons.hashtag,
                       color: isExpired ? cs.onSurface.withValues(alpha: 0.3) : Colors.white,
                       size: 28),
                 ],

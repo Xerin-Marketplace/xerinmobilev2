@@ -8,6 +8,8 @@ import '../../../data/models/category_model.dart';
 import '../../../data/models/product_model.dart';
 import '../../cubit/products_cubit.dart';
 import '../../cubit/products_state.dart';
+import '../../../../../core/theme/uicons.dart';
+import '../../../../../shared/widgets/voice_search_button.dart';
 
 class CustomerExplorePage extends StatefulWidget {
   const CustomerExplorePage({super.key});
@@ -62,9 +64,9 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
                       ),
                       Row(
                         children: [
-                          _iconBtn(Icons.notifications_outlined, colorScheme, () => context.push(AppConstants.notificationsRoute)),
+                          _iconBtn(Uicons.bell, colorScheme, () => context.push(AppConstants.notificationsRoute)),
                           const SizedBox(width: 8),
-                          _iconBtn(Icons.favorite_outline_rounded, colorScheme, () {}),
+                          _iconBtn(Uicons.heart, colorScheme, () {}),
                         ],
                       ),
                     ],
@@ -107,20 +109,30 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
   }
 
   Widget _buildSearchBar(ColorScheme colorScheme, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      height: 50,
+      height: 48,
       decoration: BoxDecoration(
-        color: colorScheme.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10),
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: colorScheme.onSurface.withValues(alpha: 0.08),
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
-          const SizedBox(width: 16),
-          Icon(Icons.search_rounded, color: colorScheme.onSurface.withValues(alpha: 0.35)),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
+          Icon(Uicons.search, color: colorScheme.onSurface.withValues(alpha: 0.35), size: 18),
+          const SizedBox(width: 10),
           Expanded(
             child: TextField(
               controller: _searchCtrl,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: colorScheme.onSurface,
+              ),
               onSubmitted: (v) {
                 if (v.trim().isNotEmpty) {
                   context.read<ProductsCubit>().loadProducts(search: v.trim());
@@ -128,16 +140,39 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
               },
               decoration: InputDecoration(
                 hintText: 'Search products, brands...',
-                hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.3), fontSize: 15),
+                hintStyle: TextStyle(
+                  color: colorScheme.onSurface.withValues(alpha: 0.3),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                ),
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
           ),
           if (_searchCtrl.text.isNotEmpty)
             GestureDetector(
-              onTap: () => _searchCtrl.clear(),
-              child: Icon(Icons.close_rounded, color: colorScheme.onSurface.withValues(alpha: 0.4), size: 20),
+              onTap: () {
+                _searchCtrl.clear();
+                context.read<ProductsCubit>().loadAll();
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Icon(Uicons.crossSmall, color: colorScheme.onSurface.withValues(alpha: 0.4), size: 16),
+              ),
             ),
+          if (_searchCtrl.text.isNotEmpty)
+            const SizedBox(width: 4),
+          VoiceSearchButton(
+            colorScheme: colorScheme,
+            onResult: (text) {
+              _searchCtrl.text = text;
+              context.read<ProductsCubit>().loadProducts(search: text);
+            },
+          ),
           const SizedBox(width: 8),
         ],
       ),
@@ -173,7 +208,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
         ),
         child: Column(
           children: [
-            Icon(Icons.flash_off_rounded, size: 48, color: colorScheme.onSurface.withValues(alpha: 0.2)),
+            Icon(Uicons.boltSlash, size: 48, color: colorScheme.onSurface.withValues(alpha: 0.2)),
             const SizedBox(height: 12),
             Text('Flash Sale not available',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colorScheme.onSurface),
@@ -195,7 +230,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
           children: [
             Row(
               children: [
-                Icon(Icons.local_fire_department_rounded, color: const Color(0xFFF59E0B), size: 22),
+                Icon(Uicons.flame, color: const Color(0xFFF59E0B), size: 22),
                 const SizedBox(width: 8),
                 Text('Flash Sale', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
               ],
@@ -364,11 +399,11 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
                       maxLines: 1, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
                     Row(children: [
-                      Icon(Icons.star_rounded, size: 14, color: Colors.amber),
+                      Icon(Uicons.star, size: 14, color: Colors.amber),
                       const SizedBox(width: 4),
                       Text(product.rating.toStringAsFixed(1), style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.5))),
                       const SizedBox(width: 12),
-                      Icon(Icons.local_fire_department_rounded, size: 14, color: const Color(0xFFF59E0B)),
+                      Icon(Uicons.flame, size: 14, color: const Color(0xFFF59E0B)),
                       const SizedBox(width: 4),
                       Text('Hot', style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.5))),
                     ]),
@@ -398,7 +433,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
     return Container(
       width: 52, height: 52,
       decoration: BoxDecoration(color: colorScheme.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(12)),
-      child: Icon(Icons.inventory_2_outlined, color: colorScheme.primary.withValues(alpha: 0.4), size: 24),
+      child: Icon(Uicons.box, color: colorScheme.primary.withValues(alpha: 0.4), size: 24),
     );
   }
 
@@ -408,7 +443,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
       return Container(padding: const EdgeInsets.all(20),
         child: Center(
           child: Column(children: [
-            Icon(Icons.inventory_2_outlined, size: 48, color: colorScheme.onSurface.withValues(alpha: 0.2)),
+            Icon(Uicons.box, size: 48, color: colorScheme.onSurface.withValues(alpha: 0.2)),
             const SizedBox(height: 12),
             Text('No products available', style: TextStyle(fontSize: 14, color: colorScheme.onSurface.withValues(alpha: 0.4))),
           ]),
@@ -444,7 +479,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.9), shape: BoxShape.circle),
-                        child: Icon(Icons.favorite_outline_rounded, size: 16, color: colorScheme.primary),
+                        child: Icon(Uicons.heart, size: 16, color: colorScheme.primary),
                       ),
                     ),
                     if (product.salePrice != null)
@@ -471,11 +506,11 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
                   ],
                   const SizedBox(height: 6),
                   Row(children: [
-                    Icon(Icons.local_shipping_rounded, size: 12, color: colorScheme.primary.withValues(alpha: 0.6)),
+                    Icon(Uicons.shippingFast, size: 12, color: colorScheme.primary.withValues(alpha: 0.6)),
                     const SizedBox(width: 3),
                     Text('Xerin Express', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: colorScheme.primary.withValues(alpha: 0.6))),
                     const Spacer(),
-                    Icon(Icons.star_rounded, size: 12, color: Colors.amber),
+                    Icon(Uicons.star, size: 12, color: Colors.amber),
                     const SizedBox(width: 3),
                     Text(product.rating.toStringAsFixed(1), style: TextStyle(fontSize: 10, color: colorScheme.onSurface.withValues(alpha: 0.5))),
                   ]),
@@ -492,7 +527,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
   Widget _productGridPlaceholder(ColorScheme colorScheme) {
     return Container(
       color: colorScheme.primary.withValues(alpha: 0.06),
-      child: Icon(Icons.image_outlined, color: colorScheme.primary.withValues(alpha: 0.2), size: 40),
+      child: Icon(Uicons.image, color: colorScheme.primary.withValues(alpha: 0.2), size: 40),
     );
   }
 }

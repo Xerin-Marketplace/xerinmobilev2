@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../cubit/recommendation_cubit.dart';
 import '../cubit/recommendation_state.dart';
 import '../../data/models/recommendation_model.dart';
+import '../../../../core/theme/uicons.dart';
 
 class StoresPage extends StatefulWidget {
   const StoresPage({super.key});
@@ -67,7 +68,7 @@ class _StoresPageState extends State<StoresPage> {
                       titlePadding: const EdgeInsets.only(left: 20, bottom: 14),
                     ),
                     leading: IconButton(
-                      icon: Icon(Icons.arrow_back_rounded,
+                      icon: Icon(Uicons.arrowBack,
                           color: colorScheme.onSurface),
                       onPressed: () => context.pop(),
                     ),
@@ -106,7 +107,7 @@ class _StoresPageState extends State<StoresPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.storefront_outlined,
+            Icon(Uicons.storeAlt,
                 size: 72, color: cs.onSurface.withValues(alpha: 0.15)),
             const SizedBox(height: 16),
             Text('No stores available',
@@ -151,7 +152,7 @@ class _StoresPageState extends State<StoresPage> {
                   ),
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                 ),
-                child: Icon(Icons.storefront_rounded, size: 40, color: cs.primary.withValues(alpha: 0.3)),
+                child: Icon(Uicons.storeAlt, size: 40, color: cs.primary.withValues(alpha: 0.3)),
               ),
             Padding(
               padding: const EdgeInsets.all(14),
@@ -167,9 +168,9 @@ class _StoresPageState extends State<StoresPage> {
                         ? ClipOval(
                             child: Image.network(store.logoUrl!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Icon(Icons.store_rounded, color: cs.primary)),
+                                errorBuilder: (_, __, ___) => Icon(Uicons.shop, color: cs.primary)),
                           )
-                        : Icon(Icons.store_rounded, color: cs.primary),
+                        : Icon(Uicons.shop, color: cs.primary),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -185,14 +186,14 @@ class _StoresPageState extends State<StoresPage> {
                                   maxLines: 1, overflow: TextOverflow.ellipsis),
                             ),
                             if (store.isVerified)
-                              Icon(Icons.verified_rounded, size: 16, color: cs.primary),
+                              Icon(Uicons.badgeCheck, size: 16, color: cs.primary),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
                             if (store.rating > 0) ...[
-                              Icon(Icons.star_rounded, size: 14, color: Colors.amber[600]),
+                              Icon(Uicons.star, size: 14, color: Colors.amber[600]),
                               const SizedBox(width: 2),
                               Text(store.rating.toStringAsFixed(1),
                                   style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),

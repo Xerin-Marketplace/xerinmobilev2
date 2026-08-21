@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/notifications/notification_service.dart';
-import '../../features/admin/presentation/pages/admin_dashboard.dart';
-import '../../features/admin/presentation/pages/admin_dashboard_detail_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/legal_page.dart';
 import '../../features/auth/presentation/pages/lock_screen_page.dart';
@@ -42,19 +40,6 @@ import '../../features/customer/presentation/pages/settings_page.dart';
 import '../../features/customer/presentation/pages/stores_page.dart';
 import '../../features/customer/presentation/pages/trending_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
-import '../../features/seller/presentation/pages/kyc_page.dart';
-import '../../features/seller/presentation/pages/payouts_page.dart';
-import '../../features/seller/presentation/pages/reports_page.dart';
-import '../../features/seller/presentation/pages/seller_dashboard.dart';
-import '../../features/seller/presentation/pages/seller_details_page.dart';
-import '../../features/seller/presentation/pages/seller_inventory_page.dart';
-import '../../features/seller/presentation/pages/seller_fulfilment_page.dart';
-import '../../features/seller/presentation/pages/seller_onboarding_page.dart';
-import '../../features/seller/presentation/pages/seller_orders_management_page.dart';
-import '../../features/seller/presentation/pages/seller_support_page.dart';
-import '../../features/seller/presentation/pages/seller_wallet_page.dart';
-import '../../features/seller/presentation/pages/shipping_options_page.dart';
-import '../../features/seller/presentation/pages/shop_details_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../constants/app_constants.dart';
 
@@ -87,7 +72,6 @@ class AppRouter {
           return VerifyOtpPage(
             phone: extra?['phone'] as String? ?? '',
             fromLogin: extra?['fromLogin'] as bool? ?? false,
-            fromSeller: extra?['fromSeller'] as bool? ?? false,
           );
         },
       ),
@@ -154,58 +138,8 @@ class AppRouter {
         builder: (context, state) => const ExploreProductsPage(),
       ),
       GoRoute(
-        path: AppConstants.sellerDashboardRoute,
-        builder: (context, state) => const SellerDashboard(),
-      ),
-      GoRoute(
-        path: AppConstants.sellerOnboardingRoute,
-        builder: (context, state) => const SellerOnboardingPage(),
-      ),
-      GoRoute(
-        path: AppConstants.sellerDetailsRoute,
-        builder: (context, state) => const SellerDetailsPage(),
-      ),
-      GoRoute(
-        path: AppConstants.sellerShopDetailsRoute,
-        builder: (context, state) => const ShopDetailsPage(),
-      ),
-      GoRoute(
-        path: AppConstants.sellerShippingOptionsRoute,
-        builder: (context, state) => const ShippingOptionsPage(),
-      ),
-      GoRoute(
-        path: AppConstants.sellerPayoutsRoute,
-        builder: (context, state) => const PayoutsPage(),
-      ),
-      GoRoute(
-        path: AppConstants.sellerWalletRoute,
-        builder: (context, state) => const SellerWalletPage(),
-      ),
-      GoRoute(
-        path: AppConstants.sellerReportsRoute,
-        builder: (context, state) => const ReportsPage(),
-      ),
-      GoRoute(
-        path: AppConstants.sellerSupportRoute,
-        builder: (context, state) => const SellerSupportPage(),
-      ),
-      GoRoute(
-        path: AppConstants.sellerKycRoute,
-        builder: (context, state) => const KycPage(),
-      ),
-      GoRoute(
-        path: AppConstants.sellerFulfilmentRoute,
-        builder: (context, state) => const SellerFulfilmentPage(),
-      ),
-      GoRoute(
         path: AppConstants.registrationSuccessRoute,
-        builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>?;
-          return RegistrationSuccessPage(
-            isSeller: extra?['isSeller'] as bool? ?? true,
-            shopName: extra?['shopName'] as String? ?? 'XerinMart Store',
-          );
-        },
+        builder: (context, state) => const RegistrationSuccessPage(),
       ),
       GoRoute(
         path: AppConstants.termsRoute,
@@ -324,14 +258,6 @@ class AppRouter {
         path: AppConstants.couponsRoute,
         builder: (context, state) => const CouponsPage(),
       ),
-      GoRoute(
-        path: AppConstants.adminDashboardRoute,
-        builder: (context, state) => const AdminDashboard(),
-      ),
-      GoRoute(
-        path: AppConstants.adminDashboardDetailRoute,
-        builder: (context, state) => const AdminDashboardDetailPage(),
-      ),
       // New feature routes
       GoRoute(
         path: AppConstants.productReviewsRoute,
@@ -364,14 +290,6 @@ class AppRouter {
       GoRoute(
         path: AppConstants.notificationPreferencesRoute,
         builder: (context, state) => const NotificationPreferencesPage(),
-      ),
-      GoRoute(
-        path: AppConstants.sellerOrdersManagementRoute,
-        builder: (context, state) => const SellerOrdersManagementPage(),
-      ),
-      GoRoute(
-        path: AppConstants.sellerInventoryRoute,
-        builder: (context, state) => const SellerInventoryPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

@@ -7,6 +7,7 @@ import '../cubit/recommendation_cubit.dart';
 import '../cubit/recommendation_state.dart';
 import '../../data/models/product_model.dart';
 import '../../data/models/recommendation_model.dart';
+import '../../../../core/theme/uicons.dart';
 
 class ForYouPage extends StatefulWidget {
   const ForYouPage({super.key});
@@ -66,7 +67,7 @@ class _ForYouPageState extends State<ForYouPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline_rounded,
+            Icon(Uicons.circleExclamation,
                 size: 64, color: cs.error.withValues(alpha: 0.4)),
             const SizedBox(height: 16),
             Text(message,
@@ -101,14 +102,14 @@ class _ForYouPageState extends State<ForYouPage> {
             titlePadding: const EdgeInsets.only(left: 20, bottom: 14),
           ),
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_rounded, color: cs.onSurface),
+            icon: Icon(Uicons.arrowBack, color: cs.onSurface),
             onPressed: () => context.pop(),
           ),
         ),
         if (state.recommended.isNotEmpty)
           SliverToBoxAdapter(
             child: _buildSectionHeader(
-                'Recommended for You', Icons.auto_awesome_rounded, cs),
+                'Recommended for You', Uicons.autoAwesome, cs),
           ),
         if (state.recommended.isNotEmpty)
           SliverPadding(
@@ -126,7 +127,7 @@ class _ForYouPageState extends State<ForYouPage> {
         if (state.newArrivals.isNotEmpty) ...[
           SliverToBoxAdapter(
             child: _buildSectionHeader(
-                'New Arrivals', Icons.new_releases_rounded, cs),
+                'New Arrivals', Uicons.bolt, cs),
           ),
           SliverToBoxAdapter(
             child: _buildHorizontalList(state.newArrivals, cs),
@@ -134,7 +135,7 @@ class _ForYouPageState extends State<ForYouPage> {
         ],
         if (state.topRated.isNotEmpty) ...[
           SliverToBoxAdapter(
-            child: _buildSectionHeader('Top Rated', Icons.star_rounded, cs),
+            child: _buildSectionHeader('Top Rated', Uicons.star, cs),
           ),
           SliverToBoxAdapter(
             child: _buildHorizontalList(state.topRated, cs),
@@ -143,7 +144,7 @@ class _ForYouPageState extends State<ForYouPage> {
         if (state.bestSellers.isNotEmpty) ...[
           SliverToBoxAdapter(
             child: _buildSectionHeader(
-                'Best Sellers', Icons.trending_up_rounded, cs),
+                'Best Sellers', Uicons.arrowTrendUp, cs),
           ),
           SliverToBoxAdapter(
             child: _buildHorizontalList(state.bestSellers, cs),
@@ -204,12 +205,12 @@ class _ForYouPageState extends State<ForYouPage> {
                       errorBuilder: (_, __, ___) => Container(
                           width: 72, height: 72,
                           color: cs.primary.withValues(alpha: 0.08),
-                          child: Icon(Icons.inventory_2_outlined,
+                          child: Icon(Uicons.box,
                               color: cs.primary, size: 28)))
                   : Container(
                       width: 72, height: 72,
                       color: cs.primary.withValues(alpha: 0.08),
-                      child: Icon(Icons.inventory_2_outlined,
+                      child: Icon(Uicons.box,
                           color: cs.primary, size: 28)),
             ),
             const SizedBox(width: 14),
@@ -225,7 +226,7 @@ class _ForYouPageState extends State<ForYouPage> {
                   if (item.reason.isNotEmpty)
                     Row(
                       children: [
-                        Icon(Icons.auto_awesome_rounded,
+                        Icon(Uicons.autoAwesome,
                             size: 12, color: cs.primary),
                         const SizedBox(width: 4),
                         Expanded(
@@ -240,7 +241,7 @@ class _ForYouPageState extends State<ForYouPage> {
                   Row(
                     children: [
                       if (product.rating > 0) ...[
-                        Icon(Icons.star_rounded, size: 14, color: Colors.amber[600]),
+                        Icon(Uicons.star, size: 14, color: Colors.amber[600]),
                         const SizedBox(width: 2),
                         Text(product.rating.toStringAsFixed(1),
                             style: TextStyle(
@@ -292,12 +293,12 @@ class _ForYouPageState extends State<ForYouPage> {
                             errorBuilder: (_, __, ___) => Container(
                                 width: 140, height: 110,
                                 color: cs.primary.withValues(alpha: 0.08),
-                                child: Icon(Icons.inventory_2_outlined,
+                                child: Icon(Uicons.box,
                                     color: cs.primary, size: 32)))
                         : Container(
                             width: 140, height: 110,
                             color: cs.primary.withValues(alpha: 0.08),
-                            child: Icon(Icons.inventory_2_outlined,
+                            child: Icon(Uicons.box,
                                 color: cs.primary, size: 32)),
                   ),
                   Padding(

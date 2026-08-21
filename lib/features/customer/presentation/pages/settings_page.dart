@@ -10,6 +10,7 @@ import '../../../../core/security/security_service.dart';
 import '../../../../core/theme/app_theme_cubit.dart';
 import '../cubit/home_cubit.dart';
 import '../cubit/home_state.dart';
+import '../../../../core/theme/uicons.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -55,7 +56,7 @@ class SettingsPage extends StatelessWidget {
                             (themeState.themeMode == ThemeMode.system &&
                                 MediaQuery.platformBrightnessOf(context) == Brightness.dark);
                         return _buildTile(
-                          icon: Icons.dark_mode_rounded,
+                          icon: Uicons.darkMode,
                           iconColor: const Color(0xFF8B5CF6),
                           title: 'Dark Mode',
                           subtitle: isDark ? 'Enabled' : 'Disabled',
@@ -79,7 +80,7 @@ class SettingsPage extends StatelessWidget {
                     child: Column(
                       children: [
                         _buildTile(
-                          icon: Icons.shopping_bag_rounded,
+                          icon: Uicons.shoppingBag,
                           iconColor: const Color(0xFF3B82F6),
                           title: 'Order Updates',
                           subtitle: 'Get notified about order status',
@@ -88,7 +89,7 @@ class SettingsPage extends StatelessWidget {
                         ),
                         _buildDivider(colorScheme),
                         _buildTile(
-                          icon: Icons.local_offer_rounded,
+                          icon: Uicons.hashtag,
                           iconColor: const Color(0xFFF59E0B),
                           title: 'Promotions & Deals',
                           subtitle: 'Receive offers and discounts',
@@ -97,7 +98,7 @@ class SettingsPage extends StatelessWidget {
                         ),
                         _buildDivider(colorScheme),
                         _buildTile(
-                          icon: Icons.payment_rounded,
+                          icon: Uicons.creditCard,
                           iconColor: const Color(0xFF22C55E),
                           title: 'Payment Notifications',
                           subtitle: 'Transaction alerts',
@@ -116,7 +117,7 @@ class SettingsPage extends StatelessWidget {
                     child: Column(
                       children: [
                         _buildTile(
-                          icon: Icons.person_outline_rounded,
+                          icon: Uicons.user,
                           iconColor: const Color(0xFF3B82F6),
                           title: 'Personal Information',
                           subtitle: 'View and edit your profile',
@@ -126,7 +127,7 @@ class SettingsPage extends StatelessWidget {
                         ),
                         _buildDivider(colorScheme),
                         _buildTile(
-                          icon: Icons.language_rounded,
+                          icon: Uicons.language,
                           iconColor: const Color(0xFF06B6D4),
                           title: 'Language',
                           subtitle: 'English',
@@ -135,7 +136,7 @@ class SettingsPage extends StatelessWidget {
                         ),
                         _buildDivider(colorScheme),
                         _buildTile(
-                          icon: Icons.monetization_on_rounded,
+                          icon: Uicons.sackDollar,
                           iconColor: const Color(0xFFF59E0B),
                           title: 'Currency',
                           subtitle: 'TZS - Tanzanian Shilling',
@@ -162,7 +163,7 @@ class SettingsPage extends StatelessWidget {
                     child: Column(
                       children: [
                         _buildTile(
-                          icon: Icons.info_outline_rounded,
+                          icon: Uicons.circleInfo,
                           iconColor: colorScheme.primary,
                           title: 'App Version',
                           subtitle: '1.0.0',
@@ -170,7 +171,7 @@ class SettingsPage extends StatelessWidget {
                         ),
                         _buildDivider(colorScheme),
                         _buildTile(
-                          icon: Icons.description_outlined,
+                          icon: Uicons.description,
                           iconColor: colorScheme.primary,
                           title: 'Terms of Service',
                           trailing: TrailingChevron(color: colorScheme.onSurface.withValues(alpha: 0.3)),
@@ -178,7 +179,7 @@ class SettingsPage extends StatelessWidget {
                         ),
                         _buildDivider(colorScheme),
                         _buildTile(
-                          icon: Icons.shield_outlined,
+                          icon: Uicons.shield,
                           iconColor: colorScheme.primary,
                           title: 'Privacy Policy',
                           trailing: TrailingChevron(color: colorScheme.onSurface.withValues(alpha: 0.3)),
@@ -275,7 +276,7 @@ class SettingsPage extends StatelessWidget {
               ),
             ],
           ),
-          child: Icon(Icons.tune_rounded, color: Colors.white, size: 16),
+          child: Icon(Uicons.settingsSliders, color: Colors.white, size: 16),
         ),
         const SizedBox(width: 10),
         Text(title,
@@ -397,7 +398,7 @@ class _SecuritySectionState extends State<_SecuritySection> {
             child: Row(
               children: [
                 IconContainer(
-                  icon: Icons.lock_rounded,
+                  icon: Uicons.lock,
                   color: const Color(0xFFEF4444),
                   size: 40,
                   iconSize: AppIconSize.md,

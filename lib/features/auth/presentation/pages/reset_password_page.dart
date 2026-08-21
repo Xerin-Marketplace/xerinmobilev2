@@ -9,6 +9,7 @@ import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
 import '../widgets/auth_text_field.dart';
+import '../../../../core/theme/uicons.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   final String email;
@@ -102,7 +103,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 8),
                           BackIconButton(
                             onTap: () {
                               if (context.canPop()) {
@@ -113,37 +114,35 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                             },
                             color: colorScheme.primary,
                           ),
-                          const SizedBox(height: 32),
-                          const Center(
-                            child: AuthLogo(width: 180, height: 110),
-                          ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 20),
+                          const AuthLogo(width: 140, height: 80),
+                          const SizedBox(height: 16),
                           Text(
-                            'Reset Password',
+                            'Reset password',
                             style: TextStyle(
-                              fontSize: 28,
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
                               color: colorScheme.onSurface,
                               letterSpacing: -0.3,
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 8),
                           Text(
-                            'Enter the OTP sent to ${widget.email} and your new password.',
+                            'Enter the code sent to ${widget.email} and your new password.',
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 14,
                               color:
                                   colorScheme.onSurface.withValues(alpha: 0.45),
                               height: 1.5,
                             ),
                           ),
-                          const SizedBox(height: 40),
+                          const SizedBox(height: 24),
                           AuthTextField(
                             controller: _otpCtrl,
                             focusNode: _otpNode,
-                            label: 'OTP Code',
+                            label: 'Reset Code',
                             hint: '6-digit code',
-                            icon: Icons.password_outlined,
+                            icon: Uicons.key,
                             keyboardType: TextInputType.number,
                             maxLength: 6,
                             validator: (v) {
@@ -156,13 +155,13 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                               return null;
                             },
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
                           AuthTextField(
                             controller: _passCtrl,
                             focusNode: _passNode,
                             label: 'New Password',
-                            hint: 'Enter new password',
-                            icon: Icons.lock_outlined,
+                            hint: 'Create a new password',
+                            icon: Uicons.lock,
                             obscureText: _obscurePass,
                             validator: (v) => v == null || v.length < 6
                                 ? 'Min 6 characters'
@@ -170,8 +169,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                             suffix: IconButton(
                               icon: Icon(
                                 _obscurePass
-                                    ? Icons.visibility_off_rounded
-                                    : Icons.visibility_rounded,
+                                    ? Uicons.eyeCrossed
+                                    : Uicons.eye,
                                 color: colorScheme.onSurface
                                     .withValues(alpha: 0.4),
                                 size: 20,
@@ -180,13 +179,13 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                                   setState(() => _obscurePass = !_obscurePass),
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
                           AuthTextField(
                             controller: _confirmPassCtrl,
                             focusNode: _confirmNode,
                             label: 'Confirm Password',
-                            hint: 'Re-enter new password',
-                            icon: Icons.lock_outlined,
+                            hint: 'Confirm your new password',
+                            icon: Uicons.lock,
                             obscureText: _obscureConfirm,
                             validator: (v) => v != _passCtrl.text
                                 ? 'Passwords do not match'
@@ -194,8 +193,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                             suffix: IconButton(
                               icon: Icon(
                                 _obscureConfirm
-                                    ? Icons.visibility_off_rounded
-                                    : Icons.visibility_rounded,
+                                    ? Uicons.eyeCrossed
+                                    : Uicons.eye,
                                 color: colorScheme.onSurface
                                     .withValues(alpha: 0.4),
                                 size: 20,
@@ -204,13 +203,13 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                                   () => _obscureConfirm = !_obscureConfirm),
                             ),
                           ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 24),
                           AuthPrimaryButton(
                             label: 'Reset Password',
                             onPressed: isLoading ? null : _onSubmit,
                             isLoading: isLoading,
                           ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 16),
                         ],
                       );
                     },

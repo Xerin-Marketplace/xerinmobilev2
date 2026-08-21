@@ -6,6 +6,7 @@ import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/security/security_service.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../widgets/auth_logo.dart';
+import '../../../../core/theme/uicons.dart';
 
 class PinSetupPage extends StatefulWidget {
   const PinSetupPage({super.key});
@@ -217,7 +218,7 @@ class _PinSetupPageState extends State<PinSetupPage>
               child: Center(
                 child: isBackspace
                     ? Icon(
-                        Icons.backspace_outlined,
+                        Uicons.backspace,
                         color: colorScheme.onSurface.withValues(alpha: 0.5),
                         size: 24,
                       )

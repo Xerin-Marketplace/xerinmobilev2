@@ -7,6 +7,7 @@ import '../../../../config/di/service_locator.dart';
 import '../cubit/products_cubit.dart';
 import '../cubit/products_state.dart';
 import '../../data/models/category_model.dart';
+import '../../../../core/theme/uicons.dart';
 
 class CategoriesPage extends StatefulWidget {
   const CategoriesPage({super.key});
@@ -62,7 +63,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(
-                        Icons.arrow_back_rounded,
+                        Uicons.arrowBack,
                         color: colorScheme.primary,
                         size: 22,
                       ),

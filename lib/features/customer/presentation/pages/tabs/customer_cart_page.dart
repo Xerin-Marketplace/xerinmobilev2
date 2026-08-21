@@ -6,6 +6,7 @@ import '../../../../../config/constants/app_constants.dart';
 import '../../cubit/cart_cubit.dart';
 import '../../cubit/cart_state.dart';
 import '../../../data/models/cart_model.dart';
+import '../../../../../core/theme/uicons.dart';
 
 class CustomerCartPage extends StatefulWidget {
   const CustomerCartPage({super.key});
@@ -59,7 +60,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.shopping_cart_outlined,
+              Uicons.shoppingCart,
               size: 72,
               color: colorScheme.onSurface.withValues(alpha: 0.15),
             ),
@@ -95,7 +96,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.error_outline_rounded,
+                Uicons.circleExclamation,
                 size: 64,
                 color: colorScheme.error.withValues(alpha: 0.4),
               ),
@@ -186,7 +187,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.local_offer_rounded,
+                          Icon(Uicons.hashtag,
                               color: colorScheme.primary, size: 18),
                           const SizedBox(width: 8),
                           Expanded(
@@ -202,7 +203,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                           GestureDetector(
                             onTap: () =>
                                 context.read<CartCubit>().removeCoupon(),
-                            child: Icon(Icons.close_rounded,
+                            child: Icon(Uicons.crossSmall,
                                 color: colorScheme.primary, size: 18),
                           ),
                         ],
@@ -245,7 +246,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                       width: 56,
                       height: 56,
                       color: colorScheme.primary.withValues(alpha: 0.08),
-                      child: Icon(Icons.image_not_supported_rounded,
+                      child: Icon(Uicons.imageSlash,
                           color: colorScheme.primary, size: 24),
                     ),
                   )
@@ -253,7 +254,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                     width: 56,
                     height: 56,
                     color: colorScheme.primary.withValues(alpha: 0.08),
-                    child: Icon(Icons.inventory_2_outlined,
+                    child: Icon(Uicons.box,
                         color: colorScheme.primary, size: 24),
                   ),
           ),
@@ -287,7 +288,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
           Row(
             children: [
               _quantityButton(
-                Icons.remove_rounded,
+                Uicons.minus,
                 () => context
                     .read<CartCubit>()
                     .updateQuantity(itemId: item.id, quantity: item.quantity - 1),
@@ -304,7 +305,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
               ),
               const SizedBox(width: 10),
               _quantityButton(
-                Icons.add_rounded,
+                Uicons.add,
                 () => context
                     .read<CartCubit>()
                     .updateQuantity(itemId: item.id, quantity: item.quantity + 1),
@@ -316,7 +317,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
                 child: Padding(
                   padding: const EdgeInsets.all(4),
                   child: Icon(
-                    Icons.delete_outline_rounded,
+                    Uicons.trash,
                     size: 20,
                     color: colorScheme.error.withValues(alpha: 0.6),
                   ),
@@ -345,7 +346,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.local_shipping_rounded, color: Color(0xFF22C55E), size: 20),
+            const Icon(Uicons.shippingFast, color: Color(0xFF22C55E), size: 20),
             const SizedBox(width: 10),
             Expanded(
               child: Text('You\'ve unlocked FREE shipping!',
@@ -369,7 +370,7 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.local_shipping_rounded, color: colorScheme.primary, size: 18),
+              Icon(Uicons.shippingFast, color: colorScheme.primary, size: 18),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(

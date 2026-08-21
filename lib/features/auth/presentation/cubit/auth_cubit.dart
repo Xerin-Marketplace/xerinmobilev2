@@ -3,7 +3,6 @@ import 'package:logger/logger.dart';
 
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/storage/token_storage.dart';
-import '../../../seller/data/datasources/seller_remote_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/models/user_model.dart';
 import 'auth_state.dart';
@@ -12,7 +11,6 @@ class AuthCubit extends Cubit<AuthState> {
   final AuthRemoteDataSource _dataSource;
   final TokenStorage _tokenStorage;
   final Logger _logger;
-  final SellerRemoteDataSource? _sellerDataSource;
 
   String? _pendingPhone;
   String? _pendingFirstName;
@@ -24,11 +22,9 @@ class AuthCubit extends Cubit<AuthState> {
     required AuthRemoteDataSource dataSource,
     required TokenStorage tokenStorage,
     required Logger logger,
-    SellerRemoteDataSource? sellerDataSource,
   })  : _dataSource = dataSource,
         _tokenStorage = tokenStorage,
         _logger = logger,
-        _sellerDataSource = sellerDataSource,
         super(const AuthInitial());
 
   String? get pendingPhone => _pendingPhone;
@@ -85,42 +81,6 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> registerSeller({
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String phone,
-    required String password,
-    required String businessName,
-    required List<String> businessCategoryIds,
-    String? contactEmail,
-    String? contactPhone,
-  }) async {
-    emit(const AuthLoading());
-    try {
-      final seller = await _dataSource.registerSeller(
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        phone: phone,
-        password: password,
-        businessName: businessName,
-        businessCategoryIds: businessCategoryIds,
-        contactEmail: contactEmail,
-        contactPhone: contactPhone,
-      );
-      _logger.i(
-          '✅ Seller register success: ${seller.businessName} (id: ${seller.id})');
-      emit(AuthSellerRegisterSuccess(seller: seller));
-    } on ServerException catch (e) {
-      _logger.e('❌ Seller register error: ${e.message}');
-      emit(AuthError(message: e.message));
-    } catch (e) {
-      _logger.e('❌ Seller register unexpected error: $e');
-      emit(AuthError(message: 'An unexpected error occurred'));
-    }
-  }
-
   Future<void> login({
     required String email,
     required String password,
@@ -147,18 +107,8 @@ class AuthCubit extends Cubit<AuthState> {
         _logger.i('✅ User from token: ${user.fullName}, account_type: ${user.accountType}');
       }
 
-      final isSeller = user?.isSeller ?? false;
-      final isAdmin = user?.isAdmin ?? false;
-
-      await _tokenStorage.saveUserRole(
-        accountType: user?.accountType ?? 'customer',
-        isSeller: isSeller,
-      );
-
       emit(AuthLoginSuccess(
         token: token,
-        isSeller: isSeller,
-        isAdmin: isAdmin,
         user: user,
       ));
     } on ServerException catch (e) {

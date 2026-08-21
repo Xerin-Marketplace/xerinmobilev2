@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../cubit/notification_cubit.dart';
-import '../../../admin/data/models/admin_dashboard_model.dart';
+import '../../data/models/notification_model.dart';
 
 class NotificationPreferencesPage extends StatefulWidget {
   const NotificationPreferencesPage({super.key});

@@ -6,6 +6,7 @@ import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/customer_cubit.dart';
 import '../cubit/customer_state.dart';
 import '../../data/models/notification_model.dart';
+import '../../../../core/theme/uicons.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -25,11 +26,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   IconData _typeIcon(String type) {
     switch (type) {
-      case 'order': return Icons.shopping_bag_rounded;
-      case 'promo': return Icons.local_offer_rounded;
-      case 'payment': return Icons.payment_rounded;
-      case 'system': return Icons.info_outline_rounded;
-      default: return Icons.notifications_outlined;
+      case 'order': return Uicons.shoppingBag;
+      case 'promo': return Uicons.hashtag;
+      case 'payment': return Uicons.creditCard;
+      case 'system': return Uicons.circleInfo;
+      default: return Uicons.bell;
     }
   }
 
@@ -99,7 +100,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.notifications_off_rounded, size: 72, color: colorScheme.onSurface.withValues(alpha: 0.2)),
+                          Icon(Uicons.bellSlash, size: 72, color: colorScheme.onSurface.withValues(alpha: 0.2)),
                           const SizedBox(height: 16),
                           Text('No notifications',
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.5)),

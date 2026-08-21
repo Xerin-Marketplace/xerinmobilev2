@@ -9,6 +9,7 @@ import '../../../auth/data/datasources/auth_remote_datasource.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../../presentation/cubit/home_cubit.dart';
 import '../../presentation/cubit/home_state.dart';
+import '../../../../core/theme/uicons.dart';
 
 class ProfileInfoPage extends StatefulWidget {
   const ProfileInfoPage({super.key});
@@ -136,7 +137,7 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                                 shape: BoxShape.circle,
                                 border: Border.all(color: colorScheme.primary, width: 2),
                               ),
-                              child: Icon(Icons.camera_alt_rounded, color: colorScheme.primary, size: 16),
+                              child: Icon(Uicons.camera, color: colorScheme.primary, size: 16),
                             ),
                           ),
                         ],
@@ -165,7 +166,7 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              user?.isVerified == true ? Icons.verified_rounded : Icons.pending_outlined,
+                              user?.isVerified == true ? Uicons.badgeCheck : Uicons.clock,
                               size: 14,
                               color: user?.isVerified == true ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
                             ),
@@ -190,13 +191,13 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                 _buildInfoCard(colorScheme,
                   child: Column(
                     children: [
-                      _buildField('First Name', _firstNameCtrl, colorScheme, icon: Icons.person_outline_rounded),
+                      _buildField('First Name', _firstNameCtrl, colorScheme, icon: Uicons.user),
                       const SizedBox(height: 16),
-                      _buildField('Last Name', _lastNameCtrl, colorScheme, icon: Icons.person_outline_rounded),
+                      _buildField('Last Name', _lastNameCtrl, colorScheme, icon: Uicons.user),
                       const SizedBox(height: 16),
-                      _buildField('Email', _emailCtrl, colorScheme, enabled: false, icon: Icons.email_outlined),
+                      _buildField('Email', _emailCtrl, colorScheme, enabled: false, icon: Uicons.envelope),
                       const SizedBox(height: 16),
-                      _buildField('Phone Number', _phoneCtrl, colorScheme, keyboardType: TextInputType.phone, icon: Icons.phone_outlined),
+                      _buildField('Phone Number', _phoneCtrl, colorScheme, keyboardType: TextInputType.phone, icon: Uicons.phone),
                     ],
                   ),
                 ),
@@ -206,9 +207,9 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
                 _buildInfoCard(colorScheme,
                   child: Column(
                     children: [
-                      _buildStatusRow(Icons.badge_outlined, 'Account ID', user?.id ?? '—', colorScheme),
-                      _buildStatusRow(Icons.shield_outlined, 'Status', _capitalize(user?.status ?? '—'), colorScheme),
-                      _buildStatusRow(Icons.verified_user_outlined, 'Verification', user?.isVerified == true ? 'Verified' : 'Pending', colorScheme),
+                      _buildStatusRow(Uicons.badge, 'Account ID', user?.id ?? '—', colorScheme),
+                      _buildStatusRow(Uicons.shield, 'Status', _capitalize(user?.status ?? '—'), colorScheme),
+                      _buildStatusRow(Uicons.shieldCheck, 'Verification', user?.isVerified == true ? 'Verified' : 'Pending', colorScheme),
                     ],
                   ),
                 ),
@@ -257,7 +258,7 @@ class _ProfileInfoPageState extends State<ProfileInfoPage> {
               ),
             ],
           ),
-          child: Icon(Icons.edit_note_rounded, color: Colors.white, size: 16),
+          child: Icon(Uicons.note, color: Colors.white, size: 16),
         ),
         const SizedBox(width: 10),
         Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: colorScheme.onSurface)),

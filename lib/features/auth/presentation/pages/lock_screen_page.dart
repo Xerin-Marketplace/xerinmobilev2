@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../config/constants/app_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/security/security_service.dart';
+import '../../../../core/theme/uicons.dart';
 
 class LockScreenPage extends StatefulWidget {
   const LockScreenPage({super.key});
@@ -121,7 +122,7 @@ class _LockScreenPageState extends State<LockScreenPage>
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.lock_rounded,
+                Uicons.lock,
                 color: colorScheme.primary,
                 size: 40,
               ),
@@ -232,7 +233,7 @@ class _LockScreenPageState extends State<LockScreenPage>
               child: Center(
                 child: isBackspace
                     ? Icon(
-                        Icons.backspace_outlined,
+                        Uicons.backspace,
                         color: colorScheme.onSurface.withValues(alpha: 0.5),
                         size: 24,
                       )

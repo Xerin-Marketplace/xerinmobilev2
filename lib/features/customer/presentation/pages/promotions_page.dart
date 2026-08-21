@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../cubit/promotion_cubit.dart';
 import '../../data/models/promotion_model.dart';
+import '../../../../core/theme/uicons.dart';
 
 class PromotionsPage extends StatefulWidget {
   const PromotionsPage({super.key});
@@ -75,7 +76,7 @@ class _PromotionCard extends StatelessWidget {
                 color: Theme.of(context).colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.local_offer, size: 28),
+              child: const Icon(Uicons.hashtag, size: 28),
             ),
             const SizedBox(width: 16),
             Expanded(

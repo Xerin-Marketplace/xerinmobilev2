@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/uicons.dart';
 
 class AuthTextField extends StatefulWidget {
   final TextEditingController? controller;
@@ -24,7 +25,7 @@ class AuthTextField extends StatefulWidget {
     this.focusNode,
     required this.label,
     required this.hint,
-    this.icon = Icons.text_fields,
+    this.icon = Uicons.text,
     this.keyboardType,
     this.textCapitalization = TextCapitalization.none,
     this.obscureText = false,
@@ -86,7 +87,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
             letterSpacing: 0.3,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         TextFormField(
           controller: widget.controller,
           focusNode: _effectiveFocusNode,
@@ -111,7 +112,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
                 ? colorScheme.primary.withValues(alpha: 0.03)
                 : (isDark ? const Color(0xFF1A1A1A) : const Color(0xFFFAFAFA)),
             contentPadding: widget.contentPadding ??
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             prefixIcon: widget.prefix ??
                 Icon(
                   widget.icon,
@@ -211,29 +212,10 @@ class AuthPrimaryButton extends StatelessWidget {
           width: double.infinity,
           height: 52,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: isDisabled
-                  ? [
-                      colorScheme.primary.withValues(alpha: 0.4),
-                      colorScheme.primary.withValues(alpha: 0.3),
-                    ]
-                  : [
-                      colorScheme.primary,
-                      colorScheme.primary.withValues(alpha: 0.8),
-                    ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: isDisabled
+                ? colorScheme.primary.withValues(alpha: 0.35)
+                : colorScheme.primary,
             borderRadius: BorderRadius.circular(10),
-            boxShadow: !isDisabled
-                ? [
-                    BoxShadow(
-                      color: colorScheme.primary.withValues(alpha: 0.25),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : [],
           ),
           child: Center(
             child: isLoading
@@ -292,7 +274,7 @@ class AuthErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline_rounded,
+          const Icon(Uicons.circleInfo,
               color: Color(0xFFDC2626), size: 16),
           const SizedBox(width: 10),
           Expanded(

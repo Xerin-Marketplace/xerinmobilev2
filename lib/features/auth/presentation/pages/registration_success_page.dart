@@ -8,14 +8,7 @@ import '../../../../core/notifications/notification_service.dart';
 import '../widgets/auth_text_field.dart' show AuthPrimaryButton;
 
 class RegistrationSuccessPage extends StatefulWidget {
-  final bool isSeller;
-  final String? shopName;
-
-  const RegistrationSuccessPage({
-    super.key,
-    this.isSeller = false,
-    this.shopName,
-  });
+  const RegistrationSuccessPage({super.key});
 
   @override
   State<RegistrationSuccessPage> createState() => _RegistrationSuccessPageState();
@@ -152,7 +145,7 @@ class _RegistrationSuccessPageState extends State<RegistrationSuccessPage>
 
   Widget _buildCheckCircle(ColorScheme colorScheme) {
     return GestureDetector(
-      onTap: () => context.go(AppConstants.sellerDashboardRoute),
+      onTap: () => context.go(AppConstants.homeRoute),
       child: AnimatedBuilder(
         animation: _checkAnim,
         builder: (context, child) {
@@ -226,13 +219,12 @@ class _RegistrationSuccessPageState extends State<RegistrationSuccessPage>
   }
 
   Widget _buildContent(ColorScheme colorScheme) {
-    final isSeller = widget.isSeller;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 40),
       child: Column(
         children: [
           Text(
-            isSeller ? 'Shop Registered!' : 'Account Created!',
+            "You're all set!",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 28,
@@ -243,11 +235,7 @@ class _RegistrationSuccessPageState extends State<RegistrationSuccessPage>
           ),
           const SizedBox(height: 12),
           Text(
-            isSeller
-                ? '${widget.shopName ?? "Your shop"} is now live on XerinMarket.\n'
-                    'Start adding products and making sales!'
-                : 'Your account has been created successfully.\n'
-                    'Welcome to the XerinMarket community!',
+            "Your account is ready. Let's start shopping!\nWelcome to XerinMarket.",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 15,
@@ -257,23 +245,16 @@ class _RegistrationSuccessPageState extends State<RegistrationSuccessPage>
           ),
           const SizedBox(height: 36),
           AuthPrimaryButton(
-            label: isSeller ? 'Go to Dashboard' : 'Start Shopping',
+            label: 'Start Shopping',
             onPressed: () {
-              context.go(
-                isSeller
-                    ? AppConstants.sellerDashboardRoute
-                    : AppConstants.homeRoute,
-              );
+              context.go(AppConstants.homeRoute);
             },
-            icon: isSeller ? Icons.dashboard_rounded : Icons.shopping_bag_rounded,
           ),
           const SizedBox(height: 16),
           TextButton(
             onPressed: () {
               NotificationService().info(
-                isSeller
-                    ? 'A welcome email has been sent to your inbox!'
-                    : 'Welcome to XerinMarket! Happy shopping!',
+                'Welcome to XerinMarket! Happy shopping.',
               );
             },
             child: Text(

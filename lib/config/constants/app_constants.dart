@@ -18,17 +18,6 @@ abstract class AppConstants {
   static const String categoryProductsRoute = '/category-products';
   static const String exploreProductsRoute = '/explore-products';
   static const String productDetailRoute = '/product-detail';
-  static const String sellerDashboardRoute = '/seller-dashboard';
-  static const String sellerOnboardingRoute = '/seller-onboarding';
-  static const String sellerDetailsRoute = '/seller-details';
-  static const String sellerShopDetailsRoute = '/seller/shop-details';
-  static const String sellerShippingOptionsRoute = '/seller/shipping-options';
-  static const String sellerPayoutsRoute = '/seller/payouts';
-  static const String sellerWalletRoute = '/seller/wallet';
-  static const String sellerReportsRoute = '/seller/reports';
-  static const String sellerSupportRoute = '/seller/support';
-  static const String sellerKycRoute = '/seller/kyc';
-  static const String sellerFulfilmentRoute = '/seller/fulfilment';
   static const String registrationSuccessRoute = '/registration-success';
   static const String termsRoute = '/terms';
   static const String privacyRoute = '/privacy';
@@ -57,10 +46,6 @@ abstract class AppConstants {
   static const String orderTrackingRoute = '/order-tracking';
   static const String couponsRoute = '/coupons';
 
-  // Admin routes
-  static const String adminDashboardRoute = '/admin-dashboard';
-  static const String adminDashboardDetailRoute = '/admin-dashboard/detail';
-
   // Review & Q&A routes
   static const String productReviewsRoute = '/product-reviews';
   static const String productQaRoute = '/product-qa';
@@ -71,10 +56,6 @@ abstract class AppConstants {
 
   // Notification preferences route
   static const String notificationPreferencesRoute = '/notification-preferences';
-
-  // Seller orders & inventory routes
-  static const String sellerOrdersManagementRoute = '/seller/orders-management';
-  static const String sellerInventoryRoute = '/seller/inventory';
 
   // Timeouts
   static const int connectionTimeoutSeconds = 30;

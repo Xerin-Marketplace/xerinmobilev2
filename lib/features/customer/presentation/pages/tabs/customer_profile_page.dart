@@ -10,6 +10,7 @@ import '../../cubit/customer_cubit.dart';
 import '../../cubit/customer_state.dart';
 import '../../cubit/home_cubit.dart';
 import '../../cubit/home_state.dart';
+import '../../../../../core/theme/uicons.dart';
 
 class CustomerProfilePage extends StatelessWidget {
   const CustomerProfilePage({super.key});
@@ -20,17 +21,17 @@ class CustomerProfilePage extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final menuItems = [
-      {'icon': Icons.person_outline_rounded, 'label': 'Personal info'},
-      {'icon': Icons.location_on_outlined, 'label': 'Addresses'},
-      {'icon': Icons.payment_rounded, 'label': 'Payment Methods'},
-      {'icon': Icons.shopping_bag_outlined, 'label': 'Order History'},
-      {'icon': Icons.local_offer_outlined, 'label': 'Promotions & Deals'},
-      {'icon': Icons.notifications_outlined, 'label': 'Notifications'},
-      {'icon': Icons.tune_outlined, 'label': 'Notification Preferences'},
-      {'icon': Icons.search_rounded, 'label': 'Search Products'},
-      {'icon': Icons.settings_outlined, 'label': 'Settings'},
-      {'icon': Icons.help_outline_rounded, 'label': 'Help & Support'},
-      {'icon': Icons.logout_rounded, 'label': 'Logout', 'color': const Color(0xFFE53935)},
+      {'icon': Uicons.user, 'label': 'Personal info'},
+      {'icon': Uicons.mapPin, 'label': 'Addresses'},
+      {'icon': Uicons.creditCard, 'label': 'Payment Methods'},
+      {'icon': Uicons.shoppingBag, 'label': 'Order History'},
+      {'icon': Uicons.hashtag, 'label': 'Promotions & Deals'},
+      {'icon': Uicons.bell, 'label': 'Notifications'},
+      {'icon': Uicons.settingsSliders, 'label': 'Notification Preferences'},
+      {'icon': Uicons.search, 'label': 'Search Products'},
+      {'icon': Uicons.settings, 'label': 'Settings'},
+      {'icon': Uicons.circleQuestion, 'label': 'Help & Support'},
+      {'icon': Uicons.rightFromBracket, 'label': 'Logout', 'color': const Color(0xFFE53935)},
     ];
 
     return BlocBuilder<HomeCubit, HomeState>(
@@ -50,60 +51,25 @@ class CustomerProfilePage extends StatelessWidget {
             const SizedBox(height: 8),
             // Powa avatar with two gradient rings
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    colorScheme.primary,
-                    colorScheme.primary.withValues(alpha: 0.5),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.primary.withValues(alpha: 0.25),
-                    blurRadius: 20,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
+                color: colorScheme.primary.withValues(alpha: 0.1),
               ),
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        colorScheme.primary.withValues(alpha: 0.8),
-                        colorScheme.primary.withValues(alpha: 0.3),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: CircleAvatar(
-                    radius: 46,
-                    backgroundColor: isDark
-                        ? const Color(0xFF2A2A2A)
-                        : colorScheme.primary.withValues(alpha: 0.08),
-                    backgroundImage: const AssetImage('assets/images/avatar.png'),
-                    child: initials.isNotEmpty
-                        ? Text(initials,
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w900,
-                              color: isDark ? Colors.white : colorScheme.primary,
-                            ))
-                        : null,
-                  ),
-                ),
+              child: CircleAvatar(
+                radius: 48,
+                backgroundColor: isDark
+                    ? const Color(0xFF2A2A2A)
+                    : colorScheme.primary.withValues(alpha: 0.08),
+                backgroundImage: const AssetImage('assets/images/avatar.png'),
+                child: initials.isNotEmpty
+                    ? Text(initials,
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          color: isDark ? Colors.white : colorScheme.primary,
+                        ))
+                    : null,
               ),
             ),
             const SizedBox(height: 16),
@@ -136,13 +102,13 @@ class CustomerProfilePage extends StatelessWidget {
 
                 return Row(
                   children: [
-                    Expanded(child: _buildStatCard('Orders', '$totalOrders', Icons.shopping_bag_rounded, const Color(0xFFF47524), colorScheme)),
+                    Expanded(child: _buildStatCard('Orders', '$totalOrders', Uicons.shoppingBag, const Color(0xFFF47524), colorScheme)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildStatCard('Spent', _formatCompact(totalSpent), Icons.account_balance_wallet_rounded, const Color(0xFF22C55E), colorScheme)),
+                    Expanded(child: _buildStatCard('Spent', _formatCompact(totalSpent), Uicons.accountBalanceWallet, const Color(0xFF22C55E), colorScheme)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildStatCard('Alerts', '$unreadNotifs', Icons.notifications_active_rounded, const Color(0xFF3B82F6), colorScheme)),
+                    Expanded(child: _buildStatCard('Alerts', '$unreadNotifs', Uicons.bellRing, const Color(0xFF3B82F6), colorScheme)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildStatCard('Addresses', '$addresses', Icons.location_on_rounded, const Color(0xFF8B5CF6), colorScheme)),
+                    Expanded(child: _buildStatCard('Addresses', '$addresses', Uicons.mapPin, const Color(0xFF8B5CF6), colorScheme)),
                   ],
                 );
               },
@@ -223,18 +189,14 @@ class CustomerProfilePage extends StatelessWidget {
                             Container(
                               width: 38, height: 38,
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: isLogout
-                                      ? [const Color(0xFFE53935), const Color(0xFFE53935).withValues(alpha: 0.7)]
-                                      : [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.7)],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
+                                color: isLogout
+                                    ? const Color(0xFFE53935).withValues(alpha: 0.1)
+                                    : colorScheme.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
                                 item['icon'] as IconData,
-                                color: Colors.white,
+                                color: isLogout ? const Color(0xFFE53935) : colorScheme.primary,
                                 size: 18,
                               ),
                             ),
@@ -250,7 +212,7 @@ class CustomerProfilePage extends StatelessWidget {
                               ),
                             ),
                             Icon(
-                              Icons.arrow_forward_ios_rounded,
+                              Uicons.arrowForwardIos,
                               size: 14,
                               color: colorScheme.onSurface.withValues(alpha: 0.3),
                             ),
@@ -291,14 +253,10 @@ class CustomerProfilePage extends StatelessWidget {
           Container(
             width: 28, height: 28,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [color, color.withValues(alpha: 0.7)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: Colors.white, size: 14),
+            child: Icon(icon, color: color, size: 14),
           ),
           const SizedBox(height: 6),
           FittedBox(
@@ -335,7 +293,7 @@ class CustomerProfilePage extends StatelessWidget {
               color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.person_outline_rounded, color: Color(0xFFF59E0B), size: 22),
+            child: const Icon(Uicons.user, color: Color(0xFFF59E0B), size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -386,7 +344,7 @@ class CustomerProfilePage extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: const Icon(
-                Icons.logout_rounded,
+                Uicons.rightFromBracket,
                 color: Color(0xFFE53935),
                 size: 32,
               ),

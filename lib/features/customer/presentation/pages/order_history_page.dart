@@ -7,7 +7,8 @@ import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/customer_cubit.dart';
 import '../cubit/customer_state.dart';
 import '../../data/models/order_model.dart';
-import '../../../seller/presentation/widgets/seller_kpi_widgets.dart';
+import '../../../common/presentation/widgets/kpi_widgets.dart';
+import '../../../../core/theme/uicons.dart';
 
 class OrderHistoryPage extends StatefulWidget {
   const OrderHistoryPage({super.key});
@@ -74,7 +75,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline, size: 48, color: colorScheme.error),
+                    Icon(Uicons.circleExclamation, size: 48, color: colorScheme.error),
                     const SizedBox(height: 12),
                     Text(state.message, textAlign: TextAlign.center),
                     const SizedBox(height: 16),
@@ -155,7 +156,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                             label: 'Total Orders',
                             value: '${state.totalOrders}',
                             subValue: '${state.pendingOrders} pending',
-                            icon: Icons.shopping_bag_rounded,
+                            icon: Uicons.shoppingBag,
                             color: const Color(0xFFF47524),
                             subColor: const Color(0xFFF47524),
                           ),
@@ -163,7 +164,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                             label: 'Total Spent',
                             value: _formatCompact(state.totalSpent),
                             subValue: 'Delivered orders',
-                            icon: Icons.account_balance_wallet_rounded,
+                            icon: Uicons.accountBalanceWallet,
                             color: const Color(0xFF22C55E),
                             subColor: const Color(0xFF22C55E),
                           ),
@@ -178,7 +179,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.receipt_long_outlined, size: 72, color: colorScheme.onSurface.withValues(alpha: 0.2)),
+                            Icon(Uicons.receipt, size: 72, color: colorScheme.onSurface.withValues(alpha: 0.2)),
                             const SizedBox(height: 16),
                             Text('No orders yet',
                               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.5)),
@@ -267,9 +268,9 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(10),
                           child: Image.network(item.productImage!, fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Icon(Icons.inventory_2_outlined, color: colorScheme.primary.withValues(alpha: 0.4), size: 22)),
+                            errorBuilder: (_, _, _) => Icon(Uicons.box, color: colorScheme.primary.withValues(alpha: 0.4), size: 22)),
                         )
-                      : Icon(Icons.inventory_2_outlined, color: colorScheme.primary.withValues(alpha: 0.4), size: 22),
+                      : Icon(Uicons.box, color: colorScheme.primary.withValues(alpha: 0.4), size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

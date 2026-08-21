@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/theme/uicons.dart';
 
 class LegalPage extends StatelessWidget {
   final String title;
@@ -18,46 +19,46 @@ class LegalPage extends StatelessWidget {
   factory LegalPage.termsOfService() {
     return const LegalPage(
       title: 'Terms of Service',
-      icon: Icons.description_rounded,
+      icon: Uicons.description,
       lastUpdated: 'July 2026',
       sections: [
         _LegalSection(
-          icon: Icons.handshake_rounded,
+          icon: Uicons.handshake,
           title: '1. Acceptance of Terms',
           body: 'By creating an account and using XerinMarket, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you should not use our platform. Your continued use of the app constitutes acceptance of any updates.',
         ),
         _LegalSection(
-          icon: Icons.person_rounded,
+          icon: Uicons.user,
           title: '2. User Accounts',
           body: 'You must provide accurate and complete information when registering. You are responsible for maintaining the security of your account and password. XerinMarket cannot be liable for any losses caused by unauthorized access to your account.',
         ),
         _LegalSection(
-          icon: Icons.store_rounded,
+          icon: Uicons.shop,
           title: '3. Seller Responsibilities',
           body: 'Sellers must provide accurate product descriptions, fair pricing, and timely delivery. Sellers are responsible for the quality and legality of their products. XerinMarket reserves the right to suspend sellers who violate these terms.',
         ),
         _LegalSection(
-          icon: Icons.shopping_bag_rounded,
+          icon: Uicons.shoppingBag,
           title: '4. Purchases & Payments',
           body: 'All purchases made through XerinMarket are subject to product availability. Prices are listed in TZS and may change without notice. Payments are processed securely through our approved payment partners.',
         ),
         _LegalSection(
-          icon: Icons.undo_rounded,
+          icon: Uicons.rotateLeft,
           title: '5. Returns & Refunds',
           body: 'Customers may request returns within 7 days of delivery for defective or incorrect items. Refunds are processed to the original payment method within 5-10 business days. Certain items may be non-refundable.',
         ),
         _LegalSection(
-          icon: Icons.gavel_rounded,
+          icon: Uicons.gavel,
           title: '6. Prohibited Conduct',
           body: 'Users must not use the platform for illegal activities, fraud, harassment, or selling prohibited items. Violations may result in account termination and legal action.',
         ),
         _LegalSection(
-          icon: Icons.shield_rounded,
+          icon: Uicons.shield,
           title: '7. Limitation of Liability',
           body: 'XerinMarket provides a marketplace platform and is not directly responsible for transactions between buyers and sellers. We are not liable for indirect, incidental, or consequential damages arising from platform use.',
         ),
         _LegalSection(
-          icon: Icons.update_rounded,
+          icon: Uicons.refresh,
           title: '8. Changes to Terms',
           body: 'We may update these Terms of Service at any time. Continued use after changes constitutes acceptance of the new terms. We will notify users of significant changes through the app.',
         ),
@@ -68,46 +69,46 @@ class LegalPage extends StatelessWidget {
   factory LegalPage.privacyPolicy() {
     return const LegalPage(
       title: 'Privacy Policy',
-      icon: Icons.privacy_tip_rounded,
+      icon: Uicons.shield,
       lastUpdated: 'July 2026',
       sections: [
         _LegalSection(
-          icon: Icons.info_rounded,
+          icon: Uicons.circleInfo,
           title: '1. Information We Collect',
           body: 'We collect your name, email, phone number, delivery addresses, and payment information when you register and use XerinMarket. We also collect usage data such as search history and app interactions to improve your experience.',
         ),
         _LegalSection(
-          icon: Icons.lock_rounded,
+          icon: Uicons.lock,
           title: '2. How We Use Your Data',
           body: 'Your information is used to process orders, deliver products, communicate updates, verify identity, and improve our services. We do not sell your personal data to third parties.',
         ),
         _LegalSection(
-          icon: Icons.share_rounded,
+          icon: Uicons.share,
           title: '3. Information Sharing',
           body: 'We share necessary information with sellers (for order fulfillment), payment processors (for transactions), and delivery partners (for shipping). All sharing is done securely and only with authorized parties.',
         ),
         _LegalSection(
-          icon: Icons.security_rounded,
+          icon: Uicons.shield,
           title: '4. Data Security',
           body: 'We use industry-standard encryption and security measures to protect your data. Access to personal information is restricted to authorized personnel only. However, no method of transmission over the internet is 100% secure.',
         ),
         _LegalSection(
-          icon: Icons.cookie_rounded,
+          icon: Uicons.cookie,
           title: '5. Cookies & Tracking',
           body: 'XerinMarket uses local storage and cookies to remember your preferences, keep you logged in, and analyze app usage. You can disable cookies in your device settings, but some features may not work properly.',
         ),
         _LegalSection(
-          icon: Icons.edit_rounded,
+          icon: Uicons.edit,
           title: '6. Your Rights',
           body: 'You have the right to access, update, or delete your personal information. You can also opt out of marketing communications. To exercise these rights, contact us through the app settings.',
         ),
         _LegalSection(
-          icon: Icons.child_care_rounded,
+          icon: Uicons.child,
           title: '7. Children\'s Privacy',
           body: 'XerinMarket is not intended for users under 18 years old. We do not knowingly collect data from minors. If you believe a child has registered, please contact us for immediate account removal.',
         ),
         _LegalSection(
-          icon: Icons.update_rounded,
+          icon: Uicons.refresh,
           title: '8. Policy Updates',
           body: 'This Privacy Policy may be updated periodically. We will notify you of significant changes through the app. Your continued use after updates means you accept the revised policy.',
         ),
@@ -183,7 +184,7 @@ class LegalPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
-                    Icons.arrow_back_rounded,
+                    Uicons.arrowBack,
                     color: Colors.white,
                     size: 20,
                   ),
@@ -316,7 +317,7 @@ class LegalPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(
-              Icons.support_agent_rounded,
+              Uicons.headset,
               color: Colors.white,
               size: 20,
             ),

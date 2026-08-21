@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../config/constants/app_constants.dart';
 import '../../../../shared/widgets/app_icon.dart';
 import '../../data/models/order_model.dart';
+import '../../../../core/theme/uicons.dart';
 
 class OrderDetailPage extends StatelessWidget {
   final OrderModel order;
@@ -34,19 +35,19 @@ class OrderDetailPage extends StatelessWidget {
     switch (status.toLowerCase()) {
       case 'completed':
       case 'delivered':
-        return Icons.check_circle_rounded;
+        return Uicons.checkCircle;
       case 'processing':
       case 'received_at_hub':
       case 'paid':
-        return Icons.pending_actions_rounded;
+        return Uicons.clock;
       case 'shipped':
-        return Icons.local_shipping_rounded;
+        return Uicons.shippingFast;
       case 'cancelled':
       case 'failed':
-        return Icons.cancel_rounded;
+        return Uicons.circleXmark;
       case 'pending':
       default:
-        return Icons.access_time_rounded;
+        return Uicons.accessTime;
     }
   }
 
@@ -182,7 +183,7 @@ class OrderDetailPage extends StatelessWidget {
                           ),
                           elevation: 0,
                         ),
-                        icon: const Icon(Icons.local_shipping_rounded, size: 20),
+                        icon: const Icon(Uicons.shippingFast, size: 20),
                         label: const Text('Track Order',
                             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                       ),
@@ -234,13 +235,13 @@ class OrderDetailPage extends StatelessWidget {
                       item.productImage!,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Icon(
-                        Icons.inventory_2_outlined,
+                        Uicons.box,
                         color: cs.primary.withValues(alpha: 0.4),
                         size: 22,
                       ),
                     ),
                   )
-                : Icon(Icons.inventory_2_outlined, color: cs.primary.withValues(alpha: 0.4), size: 22),
+                : Icon(Uicons.box, color: cs.primary.withValues(alpha: 0.4), size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(

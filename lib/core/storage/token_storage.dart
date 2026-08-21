@@ -5,8 +5,6 @@ class TokenStorage {
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _guestModeKey = 'guest_mode';
-  static const String _accountTypeKey = 'account_type';
-  static const String _isSellerKey = 'is_seller';
 
   final SharedPreferences _prefs;
   final FlutterSecureStorage _secureStorage;
@@ -50,9 +48,6 @@ class TokenStorage {
   String? get refreshToken => _refreshToken;
   bool get hasTokens => accessToken != null;
   bool get isGuestMode => _prefs.getBool(_guestModeKey) ?? false;
-  String get accountType => _prefs.getString(_accountTypeKey) ?? 'customer';
-  bool get isSeller => _prefs.getBool(_isSellerKey) ?? false;
-  bool get isAdmin => accountType == 'admin' || accountType == 'super_admin';
 
   Future<void> saveTokens({
     required String accessToken,
@@ -64,11 +59,6 @@ class TokenStorage {
     await _secureStorage.write(key: _accessTokenKey, value: accessToken);
     await _secureStorage.write(key: _refreshTokenKey, value: refreshToken);
     await _prefs.setBool(_guestModeKey, false);
-  }
-
-  Future<void> saveUserRole({required String accountType, required bool isSeller}) async {
-    await _prefs.setString(_accountTypeKey, accountType);
-    await _prefs.setBool(_isSellerKey, isSeller);
   }
 
   Future<void> setGuestMode(bool value) async {
@@ -86,7 +76,5 @@ class TokenStorage {
     await _prefs.remove(_accessTokenKey);
     await _prefs.remove(_refreshTokenKey);
     await _prefs.remove(_guestModeKey);
-    await _prefs.remove(_accountTypeKey);
-    await _prefs.remove(_isSellerKey);
   }
 }

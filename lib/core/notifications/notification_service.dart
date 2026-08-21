@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/uicons.dart';
 
 enum NotificationType {
   success,
@@ -123,13 +124,13 @@ class NotificationService {
   Map<String, dynamic> _getSnackBarColors(NotificationType type) {
     switch (type) {
       case NotificationType.success:
-        return {'icon': Icons.check_circle_rounded, 'bg': const Color(0xFF16A34A)};
+        return {'icon': Uicons.checkCircle, 'bg': const Color(0xFF16A34A)};
       case NotificationType.error:
-        return {'icon': Icons.error_rounded, 'bg': const Color(0xFFDC2626)};
+        return {'icon': Uicons.circleExclamation, 'bg': const Color(0xFFDC2626)};
       case NotificationType.warning:
-        return {'icon': Icons.warning_rounded, 'bg': const Color(0xFFF59E0B)};
+        return {'icon': Uicons.triangleWarning, 'bg': const Color(0xFFF59E0B)};
       case NotificationType.info:
-        return {'icon': Icons.info_rounded, 'bg': const Color(0xFF2563EB)};
+        return {'icon': Uicons.circleInfo, 'bg': const Color(0xFF2563EB)};
     }
   }
 }
@@ -295,7 +296,7 @@ class _NotificationWidgetState extends State<_NotificationWidget>
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.close_rounded,
+                          Uicons.crossSmall,
                           size: 16,
                           color: isDark
                               ? Colors.white.withValues(alpha: 0.4)
@@ -349,13 +350,13 @@ class _NotificationWidgetState extends State<_NotificationWidget>
   IconData _getIcon(NotificationType type) {
     switch (type) {
       case NotificationType.success:
-        return Icons.check_circle_rounded;
+        return Uicons.checkCircle;
       case NotificationType.error:
-        return Icons.error_rounded;
+        return Uicons.circleExclamation;
       case NotificationType.warning:
-        return Icons.warning_rounded;
+        return Uicons.triangleWarning;
       case NotificationType.info:
-        return Icons.info_rounded;
+        return Uicons.circleInfo;
     }
   }
 }

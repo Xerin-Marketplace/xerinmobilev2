@@ -8,6 +8,7 @@ import '../../data/models/product_model.dart';
 import '../cubit/cart_cubit.dart';
 import '../cubit/recommendation_cubit.dart';
 import '../cubit/recommendation_state.dart';
+import '../../../../core/theme/uicons.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final ProductModel product;
@@ -62,7 +63,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 width: double.infinity,
                                 color: colorScheme.surfaceContainerHighest,
                                 child: Icon(
-                                  Icons.image_not_supported_rounded,
+                                  Uicons.imageSlash,
                                   size: 64,
                                   color: colorScheme.onSurface.withValues(alpha: 0.3),
                                 ),
@@ -85,7 +86,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
-                                Icons.arrow_back_rounded,
+                                Uicons.arrowBack,
                                 color: colorScheme.onSurface,
                                 size: 22,
                               ),
@@ -104,7 +105,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
-                                Icons.favorite_outline_rounded,
+                                Uicons.heart,
                                 color: colorScheme.primary,
                                 size: 22,
                               ),
@@ -147,7 +148,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 child: Row(
                                   children: [
                                     Icon(
-                                      Icons.star_rounded,
+                                      Uicons.star,
                                       size: 14,
                                       color: Colors.amber.shade700,
                                     ),
@@ -189,17 +190,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           // Xerin Logistics badges
                           Row(
                             children: [
-                              Expanded(child: _buildXerinBadge(Icons.verified_user_rounded, 'Verified Seller', 'Quality-checked', colorScheme)),
+                              Expanded(child: _buildXerinBadge(Uicons.shieldCheck, 'Verified Seller', 'Quality-checked', colorScheme)),
                               const SizedBox(width: 8),
-                              Expanded(child: _buildXerinBadge(Icons.inventory_2_rounded, 'Fulfilled by Xerin', 'Quality dispatch', colorScheme)),
+                              Expanded(child: _buildXerinBadge(Uicons.box, 'Fulfilled by Xerin', 'Quality dispatch', colorScheme)),
                             ],
                           ),
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Expanded(child: _buildXerinBadge(Icons.shield_rounded, 'Buyer Protection', 'Secure payment hold', colorScheme)),
+                              Expanded(child: _buildXerinBadge(Uicons.shield, 'Buyer Protection', 'Secure payment hold', colorScheme)),
                               const SizedBox(width: 8),
-                              Expanded(child: _buildXerinBadge(Icons.local_shipping_rounded, 'Xerin Express', 'Fast delivery', colorScheme)),
+                              Expanded(child: _buildXerinBadge(Uicons.shippingFast, 'Xerin Express', 'Fast delivery', colorScheme)),
                             ],
                           ),
                           const SizedBox(height: 20),
@@ -320,8 +321,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               ),
                               icon: Icon(
                                 _added
-                                    ? Icons.check_rounded
-                                    : Icons.shopping_cart_outlined,
+                                    ? Uicons.check
+                                    : Uicons.shoppingCart,
                                 size: 20,
                               ),
                               label: Text(
@@ -445,12 +446,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                       errorBuilder: (_, __, ___) => Container(
                                           width: 130, height: 100,
                                           color: colorScheme.primary.withValues(alpha: 0.08),
-                                          child: Icon(Icons.inventory_2_outlined,
+                                          child: Icon(Uicons.box,
                                               color: colorScheme.primary, size: 28)))
                                   : Container(
                                       width: 130, height: 100,
                                       color: colorScheme.primary.withValues(alpha: 0.08),
-                                      child: Icon(Icons.inventory_2_outlined,
+                                      child: Icon(Uicons.box,
                                           color: colorScheme.primary, size: 28)),
                             ),
                             Padding(
@@ -509,8 +510,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ...List.generate(5, (index) {
               return Icon(
                 index < widget.product.rating.round()
-                    ? Icons.star_rounded
-                    : Icons.star_border_rounded,
+                    ? Uicons.star
+                    : Uicons.star,
                 size: 18,
                 color: Colors.amber.shade700,
               );
@@ -536,7 +537,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       child: Row(
         children: [
           Icon(
-            Icons.check_circle_rounded,
+            Uicons.checkCircle,
             size: 18,
             color: colorScheme.primary,
           ),

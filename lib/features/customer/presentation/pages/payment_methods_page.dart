@@ -6,6 +6,7 @@ import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/customer_cubit.dart';
 import '../cubit/customer_state.dart';
 import '../../data/models/payment_method_model.dart';
+import '../../../../core/theme/uicons.dart';
 
 class PaymentMethodsPage extends StatefulWidget {
   const PaymentMethodsPage({super.key});
@@ -205,7 +206,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.credit_card_off_rounded, size: 72, color: colorScheme.onSurface.withValues(alpha: 0.2)),
+                          Icon(Uicons.creditCardXmark, size: 72, color: colorScheme.onSurface.withValues(alpha: 0.2)),
                           const SizedBox(height: 16),
                           Text('No payment methods',
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.5)),
@@ -237,7 +238,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddSheet,
         backgroundColor: colorScheme.primary,
-        child: const Icon(Icons.add_rounded, color: Colors.white),
+        child: const Icon(Uicons.add, color: Colors.white),
       ),
     );
   }
@@ -247,19 +248,19 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
     Color color;
     switch (method.type) {
       case 'mobile_money':
-        icon = Icons.phone_android_rounded;
+        icon = Uicons.mobile;
         color = const Color(0xFF22C55E);
         break;
       case 'bank':
-        icon = Icons.account_balance_rounded;
+        icon = Uicons.accountBalance;
         color = const Color(0xFF3B82F6);
         break;
       case 'card':
-        icon = Icons.credit_card_rounded;
+        icon = Uicons.creditCard;
         color = const Color(0xFFF59E0B);
         break;
       default:
-        icon = Icons.payment_rounded;
+        icon = Uicons.creditCard;
         color = colorScheme.primary;
     }
 
@@ -328,7 +329,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                   ],
                 ),
               ),
-              Icon(Icons.check_circle_rounded,
+              Icon(Uicons.checkCircle,
                 color: method.isDefault ? colorScheme.primary : Colors.transparent,
                 size: 22,
               ),
@@ -352,7 +353,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
             children: [
               TextButton.icon(
                 onPressed: () => _deleteMethod(method),
-                icon: Icon(Icons.delete_outline_rounded, size: 16, color: const Color(0xFFE53935)),
+                icon: Icon(Uicons.trash, size: 16, color: const Color(0xFFE53935)),
                 label: Text('Remove', style: TextStyle(fontSize: 12, color: const Color(0xFFE53935))),
               ),
             ],

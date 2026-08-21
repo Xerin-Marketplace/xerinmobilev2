@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-import '../../data/models/seller_model.dart';
 import '../../data/models/token_model.dart';
 import '../../data/models/user_model.dart';
 
@@ -29,30 +28,17 @@ class AuthRegisterSuccess extends AuthState {
   List<Object?> get props => [user, phone];
 }
 
-class AuthSellerRegisterSuccess extends AuthState {
-  final SellerModel seller;
-
-  const AuthSellerRegisterSuccess({required this.seller});
-
-  @override
-  List<Object?> get props => [seller];
-}
-
 class AuthLoginSuccess extends AuthState {
   final TokenModel token;
-  final bool isSeller;
-  final bool isAdmin;
   final UserModel? user;
 
   const AuthLoginSuccess({
     required this.token,
-    this.isSeller = false,
-    this.isAdmin = false,
     this.user,
   });
 
   @override
-  List<Object?> get props => [token, isSeller, isAdmin, user];
+  List<Object?> get props => [token, user];
 }
 
 class AuthOtpSent extends AuthState {

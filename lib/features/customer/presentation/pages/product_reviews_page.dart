@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../cubit/review_cubit.dart';
 import '../../data/models/review_model.dart';
+import '../../../../core/theme/uicons.dart';
 
 class ProductReviewsPage extends StatefulWidget {
   final String productId;
@@ -33,7 +34,7 @@ class _ProductReviewsPageState extends State<ProductReviewsPage> {
         title: Text('Reviews - ${widget.productName}'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(Uicons.add),
             onPressed: () => _showAddReviewDialog(context),
           ),
         ],
@@ -69,8 +70,8 @@ class _ProductReviewsPageState extends State<ProductReviewsPage> {
                               children: List.generate(5, (i) {
                                 return Icon(
                                   i < state.averageRating.round()
-                                      ? Icons.star
-                                      : Icons.star_border,
+                                      ? Uicons.star
+                                      : Uicons.star,
                                   color: Colors.amber,
                                   size: 20,
                                 );
@@ -119,7 +120,7 @@ class _ProductReviewsPageState extends State<ProductReviewsPage> {
                 children: List.generate(5, (i) {
                   return IconButton(
                     icon: Icon(
-                      i < rating ? Icons.star : Icons.star_border,
+                      i < rating ? Uicons.star : Uicons.star,
                       color: Colors.amber,
                     ),
                     onPressed: () => setState(() => rating = i + 1),
@@ -197,7 +198,7 @@ class _ReviewCard extends StatelessWidget {
                       Row(
                         children: List.generate(5, (i) {
                           return Icon(
-                            i < review.rating ? Icons.star : Icons.star_border,
+                            i < review.rating ? Uicons.star : Uicons.star,
                             color: Colors.amber,
                             size: 16,
                           );

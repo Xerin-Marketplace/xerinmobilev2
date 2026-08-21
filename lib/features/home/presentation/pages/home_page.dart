@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../config/constants/app_constants.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../bloc/counter_cubit.dart';
+import '../../../../core/theme/uicons.dart';
 
 /// Sample home page with BLoC counter.
 class HomePage extends StatelessWidget {
@@ -63,7 +64,7 @@ class HomeView extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.countertops,
+                    Uicons.kitchenSet,
                     size: 80,
                     color: Theme.of(context).colorScheme.primary,
                   ),

@@ -11,10 +11,6 @@ import '../../core/notifications/notification_service.dart';
 import '../../core/security/security_service.dart';
 import '../../core/storage/token_storage.dart';
 import '../../core/theme/app_theme_cubit.dart';
-import '../../features/admin/data/datasources/admin_remote_datasource.dart';
-import '../../features/admin/data/datasources/admin_dashboard_datasource.dart';
-import '../../features/admin/presentation/cubit/admin_cubit.dart';
-import '../../features/admin/presentation/cubit/admin_dashboard_cubit.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/customer/data/datasources/cart_remote_datasource.dart';
@@ -39,10 +35,6 @@ import '../../features/customer/presentation/cubit/recommendation_cubit.dart';
 import '../../features/customer/presentation/cubit/review_cubit.dart';
 import '../../features/customer/presentation/cubit/search_cubit.dart';
 import '../../features/customer/presentation/cubit/wishlist_cubit.dart';
-import '../../features/seller/data/datasources/seller_remote_datasource.dart';
-import '../../features/seller/data/datasources/seller_orders_inventory_datasource.dart';
-import '../../features/seller/presentation/cubit/seller_cubit.dart';
-import '../../features/seller/presentation/cubit/seller_orders_inventory_cubit.dart';
 import '../constants/api_constants.dart';
 
 final GetIt sl = GetIt.instance;
@@ -122,7 +114,6 @@ Future<void> initServiceLocator({bool reset = false}) async {
       dataSource: sl(),
       tokenStorage: sl(),
       logger: sl(),
-      sellerDataSource: sl<SellerRemoteDataSource>(),
     ),
   );
 
@@ -231,39 +222,4 @@ Future<void> initServiceLocator({bool reset = false}) async {
     ),
   );
 
-  // Seller
-  sl.registerLazySingleton<SellerRemoteDataSource>(
-      () => SellerRemoteDataSource(sl()));
-  sl.registerFactory<SellerCubit>(
-    () => SellerCubit(
-      dataSource: sl(),
-      logger: sl(),
-    ),
-  );
-  sl.registerLazySingleton<SellerOrdersInventoryDataSource>(
-      () => SellerOrdersInventoryDataSource(sl()));
-  sl.registerFactory<SellerOrdersInventoryCubit>(
-    () => SellerOrdersInventoryCubit(
-      dataSource: sl(),
-      logger: sl(),
-    ),
-  );
-
-  // Admin
-  sl.registerLazySingleton<AdminRemoteDataSource>(
-      () => AdminRemoteDataSource(sl()));
-  sl.registerFactory<AdminCubit>(
-    () => AdminCubit(
-      dataSource: sl(),
-      logger: sl(),
-    ),
-  );
-  sl.registerLazySingleton<AdminDashboardDataSource>(
-      () => AdminDashboardDataSource(sl()));
-  sl.registerFactory<AdminDashboardCubit>(
-    () => AdminDashboardCubit(
-      dataSource: sl(),
-      logger: sl(),
-    ),
-  );
 }

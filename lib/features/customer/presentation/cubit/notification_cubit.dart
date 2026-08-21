@@ -3,7 +3,6 @@ import 'package:logger/logger.dart';
 
 import '../../data/datasources/notification_remote_datasource.dart';
 import '../../data/models/notification_model.dart';
-import '../../../admin/data/models/admin_dashboard_model.dart';
 
 abstract class NotificationState {
   const NotificationState();

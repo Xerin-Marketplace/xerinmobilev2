@@ -7,6 +7,7 @@ import '../cubit/recommendation_cubit.dart';
 import '../cubit/recommendation_state.dart';
 import '../../data/models/product_model.dart';
 import '../../data/models/recommendation_model.dart';
+import '../../../../core/theme/uicons.dart';
 
 class TrendingPage extends StatefulWidget {
   const TrendingPage({super.key});
@@ -60,7 +61,7 @@ class _TrendingPageState extends State<TrendingPage> {
                       titlePadding: const EdgeInsets.only(left: 20, bottom: 14),
                     ),
                     leading: IconButton(
-                      icon: Icon(Icons.arrow_back_rounded,
+                      icon: Icon(Uicons.arrowBack,
                           color: colorScheme.onSurface),
                       onPressed: () => context.pop(),
                     ),
@@ -83,7 +84,7 @@ class _TrendingPageState extends State<TrendingPage> {
                   if (state.trending.isNotEmpty) ...[
                     SliverToBoxAdapter(
                       child: _buildSectionHeader(
-                          'Trending Now', Icons.local_fire_department_rounded, colorScheme),
+                          'Trending Now', Uicons.flame, colorScheme),
                     ),
                     SliverPadding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -128,7 +129,7 @@ class _TrendingPageState extends State<TrendingPage> {
       ),
       child: Row(
         children: [
-          Icon(Icons.flash_on_rounded, color: Colors.white, size: 32),
+          Icon(Uicons.bolt, color: Colors.white, size: 32),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -174,12 +175,12 @@ class _TrendingPageState extends State<TrendingPage> {
                             errorBuilder: (_, __, ___) => Container(
                                 width: 80, height: 80,
                                 color: cs.primary.withValues(alpha: 0.08),
-                                child: Icon(Icons.inventory_2_outlined,
+                                child: Icon(Uicons.box,
                                     color: cs.primary, size: 28)))
                         : Container(
                             width: 80, height: 80,
                             color: cs.primary.withValues(alpha: 0.08),
-                            child: Icon(Icons.inventory_2_outlined,
+                            child: Icon(Uicons.box,
                                 color: cs.primary, size: 28)),
                   ),
                   Positioned(
@@ -246,7 +247,7 @@ class _TrendingPageState extends State<TrendingPage> {
     final seconds = remaining.inSeconds.remainder(60);
     return Row(
       children: [
-        Icon(Icons.timer_outlined, size: 14, color: cs.onSurface.withValues(alpha: 0.5)),
+        Icon(Uicons.stopwatch, size: 14, color: cs.onSurface.withValues(alpha: 0.5)),
         const SizedBox(width: 4),
         Text(
           '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
@@ -302,11 +303,11 @@ class _TrendingPageState extends State<TrendingPage> {
                         width: double.infinity, fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
                             color: cs.primary.withValues(alpha: 0.08),
-                            child: Icon(Icons.inventory_2_outlined,
+                            child: Icon(Uicons.box,
                                 color: cs.primary, size: 36)))
                     : Container(
                         color: cs.primary.withValues(alpha: 0.08),
-                        child: Icon(Icons.inventory_2_outlined,
+                        child: Icon(Uicons.box,
                             color: cs.primary, size: 36)),
               ),
             ),
@@ -323,7 +324,7 @@ class _TrendingPageState extends State<TrendingPage> {
                   Row(
                     children: [
                       if (product.rating > 0) ...[
-                        Icon(Icons.star_rounded, size: 12, color: Colors.amber[600]),
+                        Icon(Uicons.star, size: 12, color: Colors.amber[600]),
                         const SizedBox(width: 2),
                         Text(product.rating.toStringAsFixed(1),
                             style: TextStyle(

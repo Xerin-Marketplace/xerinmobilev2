@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../cubit/product_qa_cubit.dart';
 import '../../data/models/product_qa_model.dart';
+import '../../../../core/theme/uicons.dart';
 
 class ProductQaPage extends StatefulWidget {
   final String productId;
@@ -32,7 +33,7 @@ class _ProductQaPageState extends State<ProductQaPage> {
         title: Text('Q&A - ${widget.productName}'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.help_outline),
+            icon: const Icon(Uicons.circleQuestion),
             onPressed: () => _showAskQuestionDialog(context),
           ),
         ],
@@ -51,13 +52,13 @@ class _ProductQaPageState extends State<ProductQaPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.question_answer, size: 64, color: Colors.grey),
+                    const Icon(Uicons.comment, size: 64, color: Colors.grey),
                     const SizedBox(height: 16),
                     const Text('No questions yet'),
                     const SizedBox(height: 8),
                     FilledButton.icon(
                       onPressed: () => _showAskQuestionDialog(context),
-                      icon: const Icon(Icons.add),
+                      icon: const Icon(Uicons.add),
                       label: const Text('Ask a Question'),
                     ),
                   ],
@@ -148,7 +149,7 @@ class _QuestionCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: () => _showAnswerDialog(context, question.id),
-                icon: const Icon(Icons.reply),
+                icon: const Icon(Uicons.reply),
                 label: const Text('Answer this question'),
               ),
             ),
@@ -232,7 +233,7 @@ class _AnswerTile extends StatelessWidget {
       subtitle: Text(answer.answer),
       trailing: TextButton.icon(
         onPressed: () => context.read<ProductQaCubit>().voteHelpful(answer.id),
-        icon: const Icon(Icons.thumb_up_outlined, size: 16),
+        icon: const Icon(Uicons.thumbsUpTrust, size: 16),
         label: Text('${answer.helpfulCount}'),
       ),
     );

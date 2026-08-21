@@ -6,6 +6,7 @@ import '../../../../../config/constants/app_constants.dart';
 import '../cubit/recommendation_cubit.dart';
 import '../cubit/recommendation_state.dart';
 import '../../data/models/product_model.dart';
+import '../../../../core/theme/uicons.dart';
 
 class RecentlyViewedPage extends StatefulWidget {
   const RecentlyViewedPage({super.key});
@@ -63,7 +64,7 @@ class _RecentlyViewedPageState extends State<RecentlyViewedPage> {
                       titlePadding: const EdgeInsets.only(left: 20, bottom: 14),
                     ),
                     leading: IconButton(
-                      icon: Icon(Icons.arrow_back_rounded,
+                      icon: Icon(Uicons.arrowBack,
                           color: colorScheme.onSurface),
                       onPressed: () => context.pop(),
                     ),
@@ -101,7 +102,7 @@ class _RecentlyViewedPageState extends State<RecentlyViewedPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history_rounded,
+          Icon(Uicons.orderHistory,
               size: 72, color: cs.onSurface.withValues(alpha: 0.15)),
           const SizedBox(height: 16),
           Text('No recently viewed products',
@@ -138,11 +139,11 @@ class _RecentlyViewedPageState extends State<RecentlyViewedPage> {
                         width: double.infinity, fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
                             color: cs.primary.withValues(alpha: 0.08),
-                            child: Icon(Icons.inventory_2_outlined,
+                            child: Icon(Uicons.box,
                                 color: cs.primary, size: 36)))
                     : Container(
                         color: cs.primary.withValues(alpha: 0.08),
-                        child: Icon(Icons.inventory_2_outlined,
+                        child: Icon(Uicons.box,
                             color: cs.primary, size: 36)),
               ),
             ),

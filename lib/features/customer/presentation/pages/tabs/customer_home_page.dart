@@ -1,16 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../config/constants/app_constants.dart';
+import '../../../../../config/di/service_locator.dart';
+import '../../../../../core/theme/app_theme_cubit.dart';
 import '../../../data/models/category_model.dart';
-import '../../../data/models/order_model.dart';
 import '../../../data/models/product_model.dart';
 import '../../../data/models/recommendation_model.dart';
 import '../../cubit/home_cubit.dart';
 import '../../cubit/home_state.dart';
 import '../../cubit/recommendation_cubit.dart';
 import '../../cubit/recommendation_state.dart';
+import '../../../../../core/theme/uicons.dart';
+import '../../../../../shared/widgets/voice_search_button.dart';
 
 class CustomerHomePage extends StatefulWidget {
   const CustomerHomePage({super.key});
@@ -27,6 +32,23 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   String? _selectedRegion;
   String? _selectedPriceRange;
 
+  final _heroController = PageController();
+  int _currentHeroPage = 0;
+  Timer? _heroTimer;
+
+  static const _heroSlides = [
+    {
+      'image': 'assets/images/ecommerce-phone-happy-black-woman-with-credit-card-online-shopping-digital-payment-app-home-smile-banking-excited-african-girl-checks-cash-budget-money-growth-savings-online_590464-111903.jpg',
+      'title': 'Shop Smart, Pay Easy',
+      'subtitle': 'Secure payments and great deals at your fingertips',
+    },
+    {
+      'image': 'assets/images/elegant-attractive-muslim-woman-using-mobile-laptop-searching-online-shopping-information-living-room-home-portrait-happy-woman-purchasing-product-via-online-shopping-pay-using-credit-card_657921-979.jpg',
+      'title': 'Your Store, Delivered',
+      'subtitle': 'Browse thousands of products from the comfort of home',
+    },
+  ];
+
   static String _greeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good morning 👋';
@@ -41,12 +63,23 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<RecommendationCubit>().loadAll();
     });
+    _heroTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!_heroController.hasClients) return;
+      final next = (_currentHeroPage + 1) % _heroSlides.length;
+      _heroController.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.easeInOutCubic,
+      );
+    });
   }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
     _searchNode.dispose();
+    _heroTimer?.cancel();
+    _heroController.dispose();
     super.dispose();
   }
 
@@ -63,9 +96,6 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         final featured = homeState is HomeLoaded
             ? homeState.featuredProducts
             : <ProductModel>[];
-        final orders = homeState is HomeLoaded
-            ? homeState.orders
-            : <OrderModel>[];
         final searchResults = homeState is HomeLoaded
             ? homeState.searchResults
             : <ProductModel>[];
@@ -92,7 +122,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                     'Categories',
                     'See all',
                     colorScheme,
-                    icon: Icons.category_rounded,
+                    icon: Uicons.category,
                     onActionTap: () => context.push(AppConstants.categoriesRoute),
                   ),
                   const SizedBox(height: 14),
@@ -102,17 +132,13 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                     'Featured',
                     'See all',
                     colorScheme,
-                    icon: Icons.star_rounded,
+                    icon: Uicons.star,
                     onActionTap: () => context.push(AppConstants.exploreProductsRoute),
                   ),
                   const SizedBox(height: 14),
                   _buildFeaturedProducts(colorScheme, featured, isLoadingData),
                   const SizedBox(height: 24),
                   _buildRecommendationSections(colorScheme),
-                  const SizedBox(height: 24),
-                  _buildSectionTitle('Recent Orders', '', colorScheme, icon: Icons.shopping_bag_rounded),
-                  const SizedBox(height: 14),
-                  _buildRecentOrders(colorScheme, orders),
                   const SizedBox(height: 24),
                 ],
               ],
@@ -124,45 +150,16 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   }
 
   Widget _buildHeader(ColorScheme colorScheme, {required String userName}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
-            Container(
-              width: 50,
-              height: 50,
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    colorScheme.primary,
-                    colorScheme.primary.withValues(alpha: 0.7),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.primary.withValues(alpha: 0.25),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(2),
-                child: CircleAvatar(
-                  radius: 22,
-                  backgroundColor: colorScheme.primary.withValues(alpha: 0.08),
-                  backgroundImage: const AssetImage('assets/images/avatar.png'),
-                ),
-              ),
+            CircleAvatar(
+              radius: 24,
+              backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
+              backgroundImage: const AssetImage('assets/images/avatar.png'),
             ),
             const SizedBox(width: 14),
             Column(
@@ -192,17 +189,19 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         Row(
           children: [
             _iconBadge(
-              Icons.notifications_outlined,
+              Uicons.bell,
               badge: '',
               colorScheme: colorScheme,
               onTap: () => _showNotificationsPopup(context, colorScheme),
             ),
             const SizedBox(width: 8),
-            _iconBadge(
-              Icons.favorite_outline_rounded,
-              badge: '',
-              colorScheme: colorScheme,
-              onTap: () => _showWishlistPopup(context, colorScheme),
+            GestureDetector(
+              onTap: () => sl<AppThemeCubit>().toggleTheme(),
+              child: Icon(
+                isDark ? Uicons.sun : Uicons.darkMode,
+                color: colorScheme.onSurface.withValues(alpha: 0.75),
+                size: 24,
+              ),
             ),
           ],
         ),
@@ -274,7 +273,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
       context: context,
       colorScheme: colorScheme,
       title: 'Notifications',
-      icon: Icons.notifications_outlined,
+      icon: Uicons.bell,
       items: notifications,
       itemBuilder: (notification) => ListTile(
         contentPadding: EdgeInsets.zero,
@@ -285,7 +284,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
             color: colorScheme.primary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(Icons.notifications_rounded, color: colorScheme.primary, size: 18),
+          child: Icon(Uicons.bell, color: colorScheme.primary, size: 18),
         ),
         title: Text(
           notification['title']!,
@@ -319,7 +318,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
       context: context,
       colorScheme: colorScheme,
       title: 'Wishlist',
-      icon: Icons.favorite_rounded,
+      icon: Uicons.heart,
       items: items,
       itemBuilder: (item) => ListTile(
         contentPadding: EdgeInsets.zero,
@@ -330,7 +329,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
             color: const Color(0xFFE53935).withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Icon(Icons.favorite_rounded, color: Color(0xFFE53935), size: 18),
+          child: const Icon(Uicons.heart, color: Color(0xFFE53935), size: 18),
         ),
         title: Text(
           item['name']!,
@@ -431,7 +430,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              Icons.close_rounded,
+                              Uicons.crossSmall,
                               size: 20,
                               color: colorScheme.onSurface.withValues(alpha: 0.5),
                             ),
@@ -498,68 +497,110 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   }
 
   Widget _buildPromoBanner(ColorScheme colorScheme) {
-    return GestureDetector(
-      onTap: () => context.push(AppConstants.promotionsRoute),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              colorScheme.primary,
-              colorScheme.primary.withValues(alpha: 0.7),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Column(
+      children: [
+        SizedBox(
+          height: 180,
+          child: PageView.builder(
+            controller: _heroController,
+            itemCount: _heroSlides.length,
+            onPageChanged: (i) => setState(() => _currentHeroPage = i),
+            itemBuilder: (context, index) {
+              final slide = _heroSlides[index];
+              return _buildHeroCard(
+                colorScheme,
+                image: slide['image']!,
+                title: slide['title']!,
+                subtitle: slide['subtitle']!,
+              );
+            },
           ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.primary.withValues(alpha: 0.25),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(_heroSlides.length, (i) {
+            final active = i == _currentHeroPage;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: active ? 22 : 6,
+              height: 6,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
+                color: active
+                    ? colorScheme.primary
+                    : colorScheme.onSurface.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(3),
               ),
-              child: const Icon(Icons.local_offer_rounded, color: Colors.white, size: 22),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeroCard(
+    ColorScheme colorScheme, {
+    required String image,
+    required String title,
+    required String subtitle,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 2),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              image,
+              fit: BoxFit.cover,
             ),
-            const SizedBox(width: 14),
-            Expanded(
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withValues(alpha: 0.55),
+                    Colors.black.withValues(alpha: 0.2),
+                    Colors.transparent,
+                  ],
+                  begin: Alignment.bottomLeft,
+                  end: Alignment.topRight,
+                  stops: const [0.0, 0.5, 1.0],
+                ),
+              ),
+            ),
+            Positioned(
+              left: 16,
+              bottom: 16,
+              right: 16,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Deals & Promotions',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
                       color: Colors.white,
+                      height: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
-                    'Check out the latest offers',
+                    subtitle,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.white.withValues(alpha: 0.85),
+                      height: 1.3,
                     ),
                   ),
                 ],
               ),
-            ),
-            Icon(
-              Icons.arrow_forward_rounded,
-              color: Colors.white.withValues(alpha: 0.8),
-              size: 20,
             ),
           ],
         ),
@@ -570,9 +611,9 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   Widget _buildSearchBar(ColorScheme colorScheme) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      height: 46,
+      height: 48,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.white,
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: _searchNode.hasFocus
@@ -580,31 +621,24 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
               : colorScheme.onSurface.withValues(alpha: 0.08),
           width: _searchNode.hasFocus ? 1.5 : 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
       ),
       child: Row(
         children: [
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Icon(
-            Icons.search_rounded,
+            Uicons.search,
             color: _searchNode.hasFocus
                 ? colorScheme.primary
                 : colorScheme.onSurface.withValues(alpha: 0.35),
             size: 18,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
             child: TextField(
               controller: _searchCtrl,
               focusNode: _searchNode,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: colorScheme.onSurface,
               ),
@@ -614,17 +648,17 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 context.read<HomeCubit>().searchProducts(q);
               },
               decoration: InputDecoration(
-                hintText: 'Search products...',
+                hintText: 'What are you looking for?',
                 hintStyle: TextStyle(
                   color: colorScheme.onSurface.withValues(alpha: 0.3),
-                  fontSize: 13,
+                  fontSize: 14,
                   fontWeight: FontWeight.w400,
                 ),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
           ),
@@ -637,53 +671,23 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
               child: Padding(
                 padding: const EdgeInsets.all(4),
                 child: Icon(
-                  Icons.close_rounded,
+                  Uicons.crossSmall,
                   color: colorScheme.onSurface.withValues(alpha: 0.4),
                   size: 16,
                 ),
               ),
             ),
-          const SizedBox(width: 4),
-          GestureDetector(
-            onTap: () => _showFilterSheet(context, colorScheme),
-            child: Container(
-              margin: const EdgeInsets.all(4),
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    colorScheme.primary,
-                    colorScheme.primary.withValues(alpha: 0.8),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.primary.withValues(alpha: 0.25),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.tune_rounded, color: Colors.white, size: 16),
-            ),
+          if (_searchQuery.isNotEmpty)
+            const SizedBox(width: 4),
+          VoiceSearchButton(
+            colorScheme: colorScheme,
+            onResult: (text) {
+              _searchCtrl.text = text;
+              setState(() => _searchQuery = text.toLowerCase());
+              context.read<HomeCubit>().searchProducts(text);
+            },
           ),
-          const SizedBox(width: 4),
-          GestureDetector(
-            onTap: () => context.push(AppConstants.searchRoute),
-            child: Container(
-              margin: const EdgeInsets.all(4),
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: colorScheme.onSurface.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(Icons.search_rounded, color: colorScheme.onSurface.withValues(alpha: 0.5), size: 16),
-            ),
-          ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 8),
         ],
       ),
     );
@@ -717,7 +721,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
           child: Column(
             children: [
               Icon(
-                Icons.search_off_rounded,
+                Uicons.searchAlt,
                 size: 48,
                 color: colorScheme.onSurface.withValues(alpha: 0.2),
               ),
@@ -927,7 +931,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                                 ),
                               ],
                             ),
-                            child: Icon(Icons.tune_rounded,
+                            child: Icon(Uicons.settingsSliders,
                                 color: Colors.white, size: 18),
                           ),
                           const SizedBox(width: 12),
@@ -1085,9 +1089,9 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
-                title.contains('Category') ? Icons.category_rounded
-                  : title.contains('Region') ? Icons.location_on_rounded
-                  : Icons.attach_money_rounded,
+                title.contains('Category') ? Uicons.category
+                  : title.contains('Region') ? Uicons.mapPin
+                  : Uicons.attachMoney,
                 color: Colors.white, size: 14,
               ),
             ),
@@ -1149,7 +1153,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     String action,
     ColorScheme colorScheme, {
     VoidCallback? onActionTap,
-    IconData icon = Icons.dashboard_rounded,
+    IconData icon = Uicons.grid,
   }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1412,7 +1416,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            Icons.favorite_outline_rounded,
+                            Uicons.heart,
                             size: 16,
                             color: colorScheme.primary,
                           ),
@@ -1459,7 +1463,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(Icons.star_rounded,
+                                    Icon(Uicons.star,
                                         size: 11,
                                         color: Colors.amber.shade700),
                                     const SizedBox(width: 2),
@@ -1521,7 +1525,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'Flash Deals',
                 'See all',
                 colorScheme,
-                icon: Icons.flash_on_rounded,
+                icon: Uicons.bolt,
                 onActionTap: () => context.push(AppConstants.flashDealsRoute),
               ),
               const SizedBox(height: 14),
@@ -1533,7 +1537,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'For You',
                 'See all',
                 colorScheme,
-                icon: Icons.auto_awesome_rounded,
+                icon: Uicons.autoAwesome,
                 onActionTap: () => context.push(AppConstants.forYouRoute),
               ),
               const SizedBox(height: 14),
@@ -1545,7 +1549,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'Trending Now',
                 'See all',
                 colorScheme,
-                icon: Icons.local_fire_department_rounded,
+                icon: Uicons.flame,
                 onActionTap: () => context.push(AppConstants.trendingRoute),
               ),
               const SizedBox(height: 14),
@@ -1557,7 +1561,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'New Arrivals',
                 'See all',
                 colorScheme,
-                icon: Icons.new_releases_rounded,
+                icon: Uicons.bolt,
                 onActionTap: () => context.push(AppConstants.newArrivalsRoute),
               ),
               const SizedBox(height: 14),
@@ -1569,7 +1573,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'Top Stores',
                 'See all',
                 colorScheme,
-                icon: Icons.storefront_rounded,
+                icon: Uicons.storeAlt,
                 onActionTap: () => context.push(AppConstants.storesRoute),
               ),
               const SizedBox(height: 14),
@@ -1581,7 +1585,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'Available Coupons',
                 'See all',
                 colorScheme,
-                icon: Icons.local_offer_rounded,
+                icon: Uicons.hashtag,
                 onActionTap: () => context.push(AppConstants.couponsRoute),
               ),
               const SizedBox(height: 14),
@@ -1593,7 +1597,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'Recently Viewed',
                 'See all',
                 colorScheme,
-                icon: Icons.history_rounded,
+                icon: Uicons.orderHistory,
                 onActionTap: () => context.push(AppConstants.recentlyViewedRoute),
               ),
               const SizedBox(height: 14),
@@ -1640,12 +1644,12 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                                 errorBuilder: (_, __, ___) => Container(
                                     width: 140, height: 100,
                                     color: cs.primary.withValues(alpha: 0.08),
-                                    child: Icon(Icons.inventory_2_outlined,
+                                    child: Icon(Uicons.box,
                                         color: cs.primary, size: 28)))
                             : Container(
                                 width: 140, height: 100,
                                 color: cs.primary.withValues(alpha: 0.08),
-                                child: Icon(Icons.inventory_2_outlined,
+                                child: Icon(Uicons.box,
                                     color: cs.primary, size: 28)),
                       ),
                       Positioned(
@@ -1725,12 +1729,12 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                             errorBuilder: (_, __, ___) => Container(
                                 width: 140, height: 110,
                                 color: cs.primary.withValues(alpha: 0.08),
-                                child: Icon(Icons.inventory_2_outlined,
+                                child: Icon(Uicons.box,
                                     color: cs.primary, size: 32)))
                         : Container(
                             width: 140, height: 110,
                             color: cs.primary.withValues(alpha: 0.08),
-                            child: Icon(Icons.inventory_2_outlined,
+                            child: Icon(Uicons.box,
                                 color: cs.primary, size: 32)),
                   ),
                   Padding(
@@ -1745,7 +1749,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Icon(Icons.auto_awesome_rounded, size: 10, color: cs.primary),
+                            Icon(Uicons.autoAwesome, size: 10, color: cs.primary),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(item.reason,
@@ -1800,12 +1804,12 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                             errorBuilder: (_, __, ___) => Container(
                                 width: 130, height: 100,
                                 color: cs.primary.withValues(alpha: 0.08),
-                                child: Icon(Icons.inventory_2_outlined,
+                                child: Icon(Uicons.box,
                                     color: cs.primary, size: 28)))
                         : Container(
                             width: 130, height: 100,
                             color: cs.primary.withValues(alpha: 0.08),
-                            child: Icon(Icons.inventory_2_outlined,
+                            child: Icon(Uicons.box,
                                 color: cs.primary, size: 28)),
                   ),
                   Padding(
@@ -1821,7 +1825,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                         if (product.rating > 0)
                           Row(
                             children: [
-                              Icon(Icons.star_rounded, size: 12, color: Colors.amber[600]),
+                              Icon(Uicons.star, size: 12, color: Colors.amber[600]),
                               const SizedBox(width: 2),
                               Text(product.rating.toStringAsFixed(1),
                                   style: TextStyle(
@@ -1875,9 +1879,9 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                         ? ClipOval(
                             child: Image.network(store.logoUrl!, fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) =>
-                                    Icon(Icons.store_rounded, color: cs.primary)),
+                                    Icon(Uicons.shop, color: cs.primary)),
                           )
-                        : Icon(Icons.store_rounded, color: cs.primary),
+                        : Icon(Uicons.shop, color: cs.primary),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -1894,14 +1898,14 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                                   maxLines: 1, overflow: TextOverflow.ellipsis),
                             ),
                             if (store.isVerified)
-                              Icon(Icons.verified_rounded, size: 14, color: cs.primary),
+                              Icon(Uicons.badgeCheck, size: 14, color: cs.primary),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
                             if (store.rating > 0) ...[
-                              Icon(Icons.star_rounded, size: 12, color: Colors.amber[600]),
+                              Icon(Uicons.star, size: 12, color: Colors.amber[600]),
                               const SizedBox(width: 2),
                               Text(store.rating.toStringAsFixed(1),
                                   style: TextStyle(
@@ -1948,7 +1952,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
             ),
             child: Row(
               children: [
-                Icon(Icons.local_offer_rounded, color: cs.primary, size: 24),
+                Icon(Uicons.hashtag, color: cs.primary, size: 24),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -1971,152 +1975,6 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         },
       ),
     );
-  }
-
-  Widget _buildRecentOrders(ColorScheme colorScheme, List<OrderModel> orders) {
-    if (orders.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: colorScheme.onSurface.withValues(alpha: 0.06),
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              Icons.inventory_2_outlined,
-              size: 48,
-              color: colorScheme.onSurface.withValues(alpha: 0.3),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'No orders found',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Your recent orders will appear here',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      children: orders.take(3).map((order) {
-        final statusColor = _orderStatusColor(order.status);
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: colorScheme.onSurface.withValues(alpha: 0.06),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.inventory_2_rounded,
-                  color: colorScheme.primary,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      order.orderRef,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      order.createdAt ?? 'Recent',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colorScheme.onSurface.withValues(alpha: 0.4),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    order.formattedTotal,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      order.displayStatus,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: statusColor,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Color _orderStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-      case 'delivered':
-        return const Color(0xFF22C55E);
-      case 'processing':
-      case 'pending':
-        return const Color(0xFFF59E0B);
-      case 'cancelled':
-      case 'failed':
-        return const Color(0xFFE53935);
-      default:
-        return const Color(0xFF3B82F6);
-    }
   }
 }
 

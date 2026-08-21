@@ -13,17 +13,16 @@ import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
 import '../widgets/auth_text_field.dart' show AuthPrimaryButton;
+import '../../../../core/theme/uicons.dart';
 
 class VerifyOtpPage extends StatefulWidget {
   final String phone;
   final bool fromLogin;
-  final bool fromSeller;
 
   const VerifyOtpPage({
     super.key,
     required this.phone,
     this.fromLogin = false,
-    this.fromSeller = false,
   });
 
   @override
@@ -163,9 +162,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
   void _onStateChange(BuildContext context, AuthState state) {
     if (state is AuthOtpVerified) {
       NotificationService().success('Phone verified successfully!');
-      if (widget.fromSeller) {
-        context.go(AppConstants.sellerDashboardRoute);
-      } else if (widget.fromLogin) {
+      if (widget.fromLogin) {
         NotificationService().info('Account verified! Please sign in again.');
         context.go(AppConstants.signInRoute);
       } else {
@@ -215,7 +212,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                   const AuthLogo(width: 180, height: 110),
                   const SizedBox(height: 28),
                   Text(
-                    'Verify OTP',
+                    'Verify your number',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -225,7 +222,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Enter the 6-digit code sent to ${widget.phone}',
+                    'We sent a 6-digit code to ${widget.phone}',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15,
@@ -308,7 +305,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.auto_awesome_rounded, size: 14, color: colorScheme.primary.withValues(alpha: 0.6)),
+                          Icon(Uicons.autoAwesome, size: 14, color: colorScheme.primary.withValues(alpha: 0.6)),
                           const SizedBox(width: 6),
                           Text(
                             'Code detected from SMS',
@@ -337,7 +334,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.paste_rounded, size: 14, color: colorScheme.primary.withValues(alpha: 0.7)),
+                          Icon(Uicons.paste, size: 14, color: colorScheme.primary.withValues(alpha: 0.7)),
                           const SizedBox(width: 6),
                           Text(
                             'Paste code',

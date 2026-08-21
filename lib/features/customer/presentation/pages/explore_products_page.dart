@@ -8,6 +8,7 @@ import '../../data/models/category_model.dart';
 import '../../data/models/product_model.dart';
 import '../cubit/products_cubit.dart';
 import '../cubit/products_state.dart';
+import '../../../../core/theme/uicons.dart';
 
 class ExploreProductsPage extends StatefulWidget {
   const ExploreProductsPage({super.key});
@@ -73,7 +74,7 @@ class _ExploreProductsPageState extends State<ExploreProductsPage> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Icon(
-                            Icons.arrow_back_rounded,
+                            Uicons.arrowBack,
                             color: colorScheme.primary,
                             size: 22,
                           ),
@@ -119,9 +120,9 @@ class _ExploreProductsPageState extends State<ExploreProductsPage> {
                     onSubmitted: (value) => _cubit.loadProducts(search: value.trim()),
                     decoration: InputDecoration(
                       hintText: 'Search products...',
-                      prefixIcon: const Icon(Icons.search_rounded),
+                      prefixIcon: const Icon(Uicons.search),
                       suffixIcon: IconButton(
-                        icon: const Icon(Icons.clear_rounded),
+                        icon: const Icon(Uicons.circleXmark),
                         onPressed: () {
                           _searchController.clear();
                           _cubit.loadAll();
@@ -244,7 +245,7 @@ class _ExploreProductsPageState extends State<ExploreProductsPage> {
                             width: double.infinity,
                             color: colorScheme.surfaceContainerHighest,
                             child: Icon(
-                              Icons.image_not_supported_rounded,
+                              Uicons.imageSlash,
                               color: colorScheme.onSurface.withValues(alpha: 0.3),
                             ),
                           ),
@@ -259,7 +260,7 @@ class _ExploreProductsPageState extends State<ExploreProductsPage> {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      Icons.favorite_outline_rounded,
+                      Uicons.heart,
                       size: 16,
                       color: colorScheme.primary,
                     ),
@@ -307,7 +308,7 @@ class _ExploreProductsPageState extends State<ExploreProductsPage> {
                       Row(
                         children: [
                           Icon(
-                            Icons.star_rounded,
+                            Uicons.star,
                             size: 12,
                             color: Colors.amber.shade700,
                           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/uicons.dart';
 
 /// Standard icon sizes used across the app.
 abstract class AppIconSize {
@@ -59,7 +60,7 @@ class BackIconButton extends StatelessWidget {
       onTap: onTap ?? () => Navigator.maybePop(context),
       behavior: HitTestBehavior.opaque,
       child: IconContainer(
-        icon: Icons.arrow_back_rounded,
+        icon: Uicons.arrowBack,
         color: c,
         iconSize: AppIconSize.lg,
         borderRadius: 12,
@@ -77,7 +78,7 @@ class TrailingChevron extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Icon(
-      Icons.arrow_forward_ios_rounded,
+      Uicons.arrowForwardIos,
       size: AppIconSize.xs,
       color: color ?? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
     );

@@ -6,8 +6,6 @@ import 'config/routes/app_router.dart';
 import 'config/theme/app_theme.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/theme/app_theme_cubit.dart';
-import 'features/admin/presentation/cubit/admin_cubit.dart';
-import 'features/admin/presentation/cubit/admin_dashboard_cubit.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/customer/presentation/cubit/cart_cubit.dart';
 import 'features/customer/presentation/cubit/customer_cubit.dart';
@@ -17,8 +15,6 @@ import 'features/customer/presentation/cubit/promotion_cubit.dart';
 import 'features/customer/presentation/cubit/recommendation_cubit.dart';
 import 'features/customer/presentation/cubit/search_cubit.dart';
 import 'features/customer/presentation/cubit/wishlist_cubit.dart';
-import 'features/seller/presentation/cubit/seller_cubit.dart';
-import 'features/seller/presentation/cubit/seller_orders_inventory_cubit.dart';
 
 /// Root app widget.
 class XerinApp extends StatelessWidget {
@@ -35,13 +31,9 @@ class XerinApp extends StatelessWidget {
         BlocProvider.value(value: sl<CartCubit>()),
         BlocProvider.value(value: sl<RecommendationCubit>()),
         BlocProvider(create: (_) => sl<WishlistCubit>()),
-        BlocProvider(create: (_) => sl<SellerCubit>()..loadDashboard()),
-        BlocProvider(create: (_) => sl<AdminCubit>()),
-        BlocProvider(create: (_) => sl<AdminDashboardCubit>()),
         BlocProvider(create: (_) => sl<NotificationCubit>()),
         BlocProvider(create: (_) => sl<PromotionCubit>()),
         BlocProvider(create: (_) => sl<SearchCubit>()),
-        BlocProvider(create: (_) => sl<SellerOrdersInventoryCubit>()),
       ],
       child: BlocBuilder<AppThemeCubit, AppThemeState>(
         builder: (context, state) {

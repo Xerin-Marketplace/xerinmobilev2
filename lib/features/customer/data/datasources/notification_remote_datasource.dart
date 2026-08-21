@@ -4,7 +4,6 @@ import '../../../../config/constants/api_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/notification_model.dart';
-import '../../../admin/data/models/admin_dashboard_model.dart';
 
 class NotificationRemoteDataSource {
   final ApiClient _client;
