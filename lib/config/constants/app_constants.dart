@@ -8,6 +8,8 @@ abstract class AppConstants {
   static const String onboardingRoute = '/onboarding';
   static const String signInRoute = '/sign-in';
   static const String registerRoute = '/register';
+  static const String sellerRegisterRoute = '/seller-register';
+  static const String brokerRegisterRoute = '/broker-register';
   static const String verifyOtpRoute = '/verify-otp';
   static const String forgotPasswordRoute = '/forgot-password';
   static const String resetPasswordRoute = '/reset-password';
@@ -77,6 +79,14 @@ abstract class AppConstants {
   static const String sellerReviewsRoute = '/seller-reviews';
   static const String sellerQuestionsRoute = '/seller-questions';
 
+  // Broker panel routes
+  static const String brokerDashboardRoute = '/broker-dashboard';
+  static const String brokerKycRoute = '/broker-kyc';
+  static const String brokerWalletRoute = '/broker-wallet';
+  static const String brokerOpportunitiesRoute = '/broker-opportunities';
+  static const String brokerProductsRoute = '/broker-products';
+  static const String brokerAnalyticsRoute = '/broker-analytics';
+
   // Admin panel routes
   static const String adminDashboardRoute = '/admin-dashboard';
   static const String adminSellersRoute = '/admin-sellers';
@@ -90,6 +100,7 @@ abstract class AppConstants {
   static const String adminAnalyticsRoute = '/admin-analytics';
   static const String adminAlertsRoute = '/admin-alerts';
   static const String adminActivityLogsRoute = '/admin-activity-logs';
+  static const String adminRolesRoute = '/admin-roles';
 
   // Timeouts
   static const int connectionTimeoutSeconds = 30;

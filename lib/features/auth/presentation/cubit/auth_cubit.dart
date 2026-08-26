@@ -81,6 +81,107 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> loadBusinessCategories() async {
+    try {
+      final categories = await _dataSource.getBusinessCategories();
+      emit(BusinessCategoriesLoaded(categories: categories));
+    } on ServerException catch (e) {
+      _logger.e('❌ Load business categories error: ${e.message}');
+      emit(AuthError(message: e.message));
+    } catch (e) {
+      _logger.e('❌ Load business categories unexpected error: $e');
+      emit(AuthError(message: 'An unexpected error occurred'));
+    }
+  }
+
+  Future<void> registerSeller({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String password,
+    required String businessName,
+    required List<String> businessCategoryIds,
+    String? businessDescription,
+    String? businessCountry,
+    String? businessRegion,
+    String? businessCity,
+    String? businessAddress,
+    String? productDescription,
+    String? yearsInBusiness,
+    String? websiteUrl,
+    String? contactEmail,
+    String? contactPhone,
+  }) async {
+    emit(const AuthLoading());
+    try {
+      final result = await _dataSource.registerSeller(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phone: phone,
+        password: password,
+        businessName: businessName,
+        businessCategoryIds: businessCategoryIds,
+        businessDescription: businessDescription,
+        businessCountry: businessCountry,
+        businessRegion: businessRegion,
+        businessCity: businessCity,
+        businessAddress: businessAddress,
+        productDescription: productDescription,
+        yearsInBusiness: yearsInBusiness,
+        websiteUrl: websiteUrl,
+        contactEmail: contactEmail,
+        contactPhone: contactPhone,
+      );
+      final message = result['message']?.toString() ??
+          'Seller registration successful. Please verify your phone.';
+      _logger.i('✅ Seller register success: $email');
+      emit(SellerRegisterSuccess(phone: phone, message: message));
+    } on ServerException catch (e) {
+      _logger.e('❌ Seller register error: ${e.message}');
+      emit(AuthError(message: e.message));
+    } catch (e) {
+      _logger.e('❌ Seller register unexpected error: $e');
+      emit(AuthError(message: 'An unexpected error occurred'));
+    }
+  }
+
+  Future<void> registerBroker({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String password,
+    required String country,
+    required String region,
+    required String city,
+  }) async {
+    emit(const AuthLoading());
+    try {
+      final result = await _dataSource.registerBroker(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phone: phone,
+        password: password,
+        country: country,
+        region: region,
+        city: city,
+      );
+      final message = result['message']?.toString() ??
+          'Broker account created. Please verify your phone.';
+      _logger.i('✅ Broker register success: $email');
+      emit(BrokerRegisterSuccess(phone: phone, message: message));
+    } on ServerException catch (e) {
+      _logger.e('❌ Broker register error: ${e.message}');
+      emit(AuthError(message: e.message));
+    } catch (e) {
+      _logger.e('❌ Broker register unexpected error: $e');
+      emit(AuthError(message: 'An unexpected error occurred'));
+    }
+  }
+
   Future<void> login({
     required String email,
     required String password,

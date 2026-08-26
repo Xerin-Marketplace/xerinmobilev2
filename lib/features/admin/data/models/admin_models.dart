@@ -631,3 +631,86 @@ class PaginatedAdminUsers {
     );
   }
 }
+
+// ─── Roles & Permissions ─────────────────────────────────────
+
+class AdminRoleModel {
+  final String id;
+  final String name;
+  final String? description;
+
+  const AdminRoleModel({
+    required this.id,
+    required this.name,
+    this.description,
+  });
+
+  factory AdminRoleModel.fromJson(Map<String, dynamic> json) => AdminRoleModel(
+        id: json['id']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+        description: json['description']?.toString(),
+      );
+}
+
+class AdminPermissionModel {
+  final String id;
+  final String code;
+  final String name;
+  final String? description;
+
+  const AdminPermissionModel({
+    required this.id,
+    required this.code,
+    required this.name,
+    this.description,
+  });
+
+  factory AdminPermissionModel.fromJson(Map<String, dynamic> json) =>
+      AdminPermissionModel(
+        id: json['id']?.toString() ?? '',
+        code: json['code']?.toString() ?? '',
+        name: json['name']?.toString() ?? '',
+        description: json['description']?.toString(),
+      );
+}
+
+class AdminRolePermissionsModel {
+  final String roleId;
+  final String roleName;
+  final List<String> permissions;
+
+  const AdminRolePermissionsModel({
+    required this.roleId,
+    required this.roleName,
+    required this.permissions,
+  });
+
+  factory AdminRolePermissionsModel.fromJson(Map<String, dynamic> json) =>
+      AdminRolePermissionsModel(
+        roleId: json['role_id']?.toString() ?? '',
+        roleName: json['role_name']?.toString() ?? '',
+        permissions: (json['permissions'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            const [],
+      );
+}
+
+class AdminUserPermissionsModel {
+  final String userId;
+  final List<String> permissions;
+
+  const AdminUserPermissionsModel({
+    required this.userId,
+    required this.permissions,
+  });
+
+  factory AdminUserPermissionsModel.fromJson(Map<String, dynamic> json) =>
+      AdminUserPermissionsModel(
+        userId: json['user_id']?.toString() ?? '',
+        permissions: (json['permissions'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            const [],
+      );
+}

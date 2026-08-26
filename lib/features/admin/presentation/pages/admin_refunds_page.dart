@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
+import '../../../../core/security/admin_access.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../../../../core/theme/uicons.dart';
 import '../cubit/admin_cubit.dart';
 import '../../data/models/admin_models.dart';
@@ -176,27 +179,38 @@ class _AdminRefundsPageState extends State<AdminRefundsPage> {
   }
 
   Widget _buildActions(BuildContext context, AdminRefundModel refund) {
+    final user = GetIt.instance<TokenStorage>().currentUser;
     final actions = <Widget>[];
     switch (refund.status) {
       case 'requested':
-        actions.add(_actionBtn(context, 'Review', Colors.blue, () =>
-            _showNoteDialog(context, 'Review Refund', (note) =>
-                context.read<AdminCubit>().reviewRefund(refund.id, note: note))));
-        actions.add(_actionBtn(context, 'Reject', Colors.red, () =>
-            _showNoteDialog(context, 'Reject Refund', (note) =>
-                context.read<AdminCubit>().rejectRefund(refund.id, note: note))));
+        if (AdminAccess.canAccessItem(user, 'refunds.review')) {
+          actions.add(_actionBtn(context, 'Review', Colors.blue, () =>
+              _showNoteDialog(context, 'Review Refund', (note) =>
+                  context.read<AdminCubit>().reviewRefund(refund.id, note: note))));
+        }
+        if (AdminAccess.canAccessItem(user, 'refunds.reject')) {
+          actions.add(_actionBtn(context, 'Reject', Colors.red, () =>
+              _showNoteDialog(context, 'Reject Refund', (note) =>
+                  context.read<AdminCubit>().rejectRefund(refund.id, note: note))));
+        }
         break;
       case 'under_review':
-        actions.add(_actionBtn(context, 'Approve', Colors.green, () =>
-            _showNoteDialog(context, 'Approve Refund', (note) =>
-                context.read<AdminCubit>().approveRefund(refund.id, note: note))));
-        actions.add(_actionBtn(context, 'Reject', Colors.red, () =>
-            _showNoteDialog(context, 'Reject Refund', (note) =>
-                context.read<AdminCubit>().rejectRefund(refund.id, note: note))));
+        if (AdminAccess.canAccessItem(user, 'refunds.approve')) {
+          actions.add(_actionBtn(context, 'Approve', Colors.green, () =>
+              _showNoteDialog(context, 'Approve Refund', (note) =>
+                  context.read<AdminCubit>().approveRefund(refund.id, note: note))));
+        }
+        if (AdminAccess.canAccessItem(user, 'refunds.reject')) {
+          actions.add(_actionBtn(context, 'Reject', Colors.red, () =>
+              _showNoteDialog(context, 'Reject Refund', (note) =>
+                  context.read<AdminCubit>().rejectRefund(refund.id, note: note))));
+        }
         break;
       case 'approved':
-        actions.add(_actionBtn(context, 'Process', Colors.blue, () =>
-            _showProcessDialog(context, refund.id)));
+        if (AdminAccess.canAccessItem(user, 'refunds.process')) {
+          actions.add(_actionBtn(context, 'Process', Colors.blue, () =>
+              _showProcessDialog(context, refund.id)));
+        }
         break;
     }
     if (actions.isEmpty) return const SizedBox.shrink();

@@ -7,7 +7,6 @@ import '../../../../config/constants/app_constants.dart';
 import '../../../../core/security/admin_access.dart';
 import '../../../../core/storage/token_storage.dart';
 import '../../../../core/theme/uicons.dart';
-import '../../../../features/auth/data/models/user_model.dart';
 import '../cubit/admin_cubit.dart';
 import '../../data/models/admin_models.dart';
 
@@ -252,6 +251,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
     if (AdminAccess.canAccessSection(user, 'ActivityLogs')) {
       actions.add(_QuickAction('Logs', Uicons.clock, Colors.grey, AppConstants.adminActivityLogsRoute));
+    }
+    if (AdminAccess.canAccessSection(user, 'Roles')) {
+      actions.add(_QuickAction('Roles', Uicons.userShield, Colors.brown, AppConstants.adminRolesRoute));
     }
 
     if (actions.isEmpty) return const SizedBox.shrink();

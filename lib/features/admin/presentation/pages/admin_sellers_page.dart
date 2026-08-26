@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
+import '../../../../core/security/admin_access.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../../../../core/theme/uicons.dart';
 import '../cubit/admin_cubit.dart';
 import '../../data/models/admin_models.dart';
@@ -209,25 +212,37 @@ class _AdminSellersPageState extends State<AdminSellersPage> {
         if (seller.status == 'pending' || seller.status == 'under_review') ...[
           Row(
             children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green, foregroundColor: Colors.white),
-                  icon: const Icon(Uicons.checkCircle, size: 18),
-                  label: const Text('Approve'),
-                  onPressed: () => _confirmApprove(context, seller.id),
+              if (AdminAccess.canAccessItem(
+                      GetIt.instance<TokenStorage>().currentUser,
+                      'sellers.approve'))
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green, foregroundColor: Colors.white),
+                    icon: const Icon(Uicons.checkCircle, size: 18),
+                    label: const Text('Approve'),
+                    onPressed: () => _confirmApprove(context, seller.id),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red, foregroundColor: Colors.white),
-                  icon: const Icon(Uicons.circleXmark, size: 18),
-                  label: const Text('Reject'),
-                  onPressed: () => _showRejectDialog(context, seller.id),
+              if (AdminAccess.canAccessItem(
+                      GetIt.instance<TokenStorage>().currentUser,
+                      'sellers.approve') &&
+                  AdminAccess.canAccessItem(
+                      GetIt.instance<TokenStorage>().currentUser,
+                      'sellers.reject'))
+                const SizedBox(width: 12),
+              if (AdminAccess.canAccessItem(
+                      GetIt.instance<TokenStorage>().currentUser,
+                      'sellers.reject'))
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red, foregroundColor: Colors.white),
+                    icon: const Icon(Uicons.circleXmark, size: 18),
+                    label: const Text('Reject'),
+                    onPressed: () => _showRejectDialog(context, seller.id),
+                  ),
                 ),
-              ),
             ],
           ),
         ],

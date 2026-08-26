@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
+import '../../../../core/security/admin_access.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../../../../core/theme/uicons.dart';
 import '../cubit/admin_cubit.dart';
 import '../../data/models/admin_models.dart';
@@ -176,7 +179,10 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
                       style: const TextStyle(fontSize: 12, color: Colors.grey)),
               ],
             ),
-            if (!alert.isResolved) ...[
+            if (!alert.isResolved &&
+                AdminAccess.canAccessItem(
+                    GetIt.instance<TokenStorage>().currentUser,
+                    'alerts.resolve')) ...[
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,

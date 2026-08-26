@@ -28,6 +28,35 @@ class AuthRegisterSuccess extends AuthState {
   List<Object?> get props => [user, phone];
 }
 
+class SellerRegisterSuccess extends AuthState {
+  final String phone;
+  final String message;
+
+  const SellerRegisterSuccess({required this.phone, required this.message});
+
+  @override
+  List<Object?> get props => [phone, message];
+}
+
+class BrokerRegisterSuccess extends AuthState {
+  final String phone;
+  final String message;
+
+  const BrokerRegisterSuccess({required this.phone, required this.message});
+
+  @override
+  List<Object?> get props => [phone, message];
+}
+
+class BusinessCategoriesLoaded extends AuthState {
+  final List<Map<String, dynamic>> categories;
+
+  const BusinessCategoriesLoaded({required this.categories});
+
+  @override
+  List<Object?> get props => [categories];
+}
+
 class AuthLoginSuccess extends AuthState {
   final TokenModel token;
   final UserModel? user;

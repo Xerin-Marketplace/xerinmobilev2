@@ -5,7 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../../core/security/security_service.dart';
+import '../../../../core/services/app_version_service.dart';
 import '../../../../core/storage/token_storage.dart';
+import '../../../../core/widgets/force_update_dialog.dart';
 import '../../../auth/data/datasources/auth_remote_datasource.dart';
 
 class SplashPage extends StatefulWidget {
@@ -56,6 +58,22 @@ class _SplashPageState extends State<SplashPage>
 
   Future<void> _navigateAfterSplash() async {
     await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+
+    // ─── Version check ───────────────────────────────────────
+    // Compare installed version against backend minimum and show
+    // a non-dismissible update / maintenance dialog if needed.
+    try {
+      final versionService = GetIt.instance<AppVersionService>();
+      final result = await versionService.checkVersion();
+      if (mounted && (result.needsUpdate || result.maintenanceMode || !result.appEnabled)) {
+        ForceUpdateDialog.show(context, result);
+        return; // do not proceed to normal navigation
+      }
+    } catch (_) {
+      // Silently ignore — never block the user on version-check failure.
+    }
+
     if (!mounted) return;
 
     final tokenStorage = GetIt.instance<TokenStorage>();

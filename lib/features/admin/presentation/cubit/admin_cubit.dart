@@ -202,6 +202,32 @@ class AdminActionSuccess extends AdminState {
   const AdminActionSuccess(this.message);
 }
 
+class AdminRolesLoaded extends AdminState {
+  final List<AdminRoleModel> roles;
+  final List<AdminPermissionModel> allPermissions;
+  const AdminRolesLoaded({required this.roles, required this.allPermissions});
+}
+
+class AdminRolePermissionsLoaded extends AdminState {
+  final AdminRolePermissionsModel rolePermissions;
+  final List<AdminPermissionModel> allPermissions;
+  const AdminRolePermissionsLoaded({
+    required this.rolePermissions,
+    required this.allPermissions,
+  });
+}
+
+class AdminUserPermissionsLoaded extends AdminState {
+  final AdminUserPermissionsModel userPermissions;
+  final List<AdminPermissionModel> allPermissions;
+  final String userName;
+  const AdminUserPermissionsLoaded({
+    required this.userPermissions,
+    required this.allPermissions,
+    required this.userName,
+  });
+}
+
 class AdminError extends AdminState {
   final String message;
   const AdminError(this.message);
@@ -676,6 +702,74 @@ class AdminCubit extends Cubit<AdminState> {
       emit(AdminActivityLogsLoaded(logs: logs));
     } catch (e) {
       _logger.e('AdminCubit.loadActivityLogs error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  // ─── Roles & Permissions ───
+  Future<void> loadRoles() async {
+    emit(const AdminLoading());
+    try {
+      final roles = await _dataSource.getRoles();
+      final allPermissions = await _dataSource.getAllPermissions();
+      emit(AdminRolesLoaded(roles: roles, allPermissions: allPermissions));
+    } catch (e) {
+      _logger.e('AdminCubit.loadRoles error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> loadRolePermissions(String roleId) async {
+    emit(const AdminLoading());
+    try {
+      final rolePermissions = await _dataSource.getRolePermissions(roleId);
+      final allPermissions = await _dataSource.getAllPermissions();
+      emit(AdminRolePermissionsLoaded(
+        rolePermissions: rolePermissions,
+        allPermissions: allPermissions,
+      ));
+    } catch (e) {
+      _logger.e('AdminCubit.loadRolePermissions error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> updateRolePermissions(
+      String roleId, List<String> permissionCodes) async {
+    try {
+      await _dataSource.updateRolePermissions(roleId, permissionCodes);
+      emit(const AdminActionSuccess('Role permissions updated'));
+      await loadRolePermissions(roleId);
+    } catch (e) {
+      _logger.e('AdminCubit.updateRolePermissions error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> loadUserPermissions(
+      String userId, String userName) async {
+    emit(const AdminLoading());
+    try {
+      final userPermissions = await _dataSource.getUserPermissions(userId);
+      final allPermissions = await _dataSource.getAllPermissions();
+      emit(AdminUserPermissionsLoaded(
+        userPermissions: userPermissions,
+        allPermissions: allPermissions,
+        userName: userName,
+      ));
+    } catch (e) {
+      _logger.e('AdminCubit.loadUserPermissions error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> assignUserPermissions(
+      String userId, List<String> permissionCodes) async {
+    try {
+      await _dataSource.assignUserPermissions(userId, permissionCodes);
+      emit(const AdminActionSuccess('User permissions updated'));
+    } catch (e) {
+      _logger.e('AdminCubit.assignUserPermissions error: $e');
       emit(AdminError(e.toString()));
     }
   }

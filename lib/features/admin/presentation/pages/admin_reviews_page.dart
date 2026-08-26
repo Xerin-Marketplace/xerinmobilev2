@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
+import '../../../../core/security/admin_access.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../../../../core/theme/uicons.dart';
 import '../cubit/admin_cubit.dart';
 import '../../data/models/admin_models.dart';
@@ -122,27 +125,30 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
               Text(review.comment!, style: const TextStyle(fontSize: 14)),
             ],
             const SizedBox(height: 12),
-            Row(
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
-                  onPressed: () => context.read<AdminCubit>().moderateReview(review.id, 'approved'),
-                  child: const Text('Approve'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-                  onPressed: () => context.read<AdminCubit>().moderateReview(review.id, 'rejected'),
-                  child: const Text('Reject'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
-                  onPressed: () => context.read<AdminCubit>().moderateReview(review.id, 'pending'),
-                  child: const Text('Pending'),
-                ),
-              ],
-            ),
+            if (AdminAccess.canAccessItem(
+                    GetIt.instance<TokenStorage>().currentUser,
+                    'reviews.moderate'))
+              Row(
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                    onPressed: () => context.read<AdminCubit>().moderateReview(review.id, 'approved'),
+                    child: const Text('Approve'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                    onPressed: () => context.read<AdminCubit>().moderateReview(review.id, 'rejected'),
+                    child: const Text('Reject'),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+                    onPressed: () => context.read<AdminCubit>().moderateReview(review.id, 'pending'),
+                    child: const Text('Pending'),
+                  ),
+                ],
+              ),
           ],
         ),
       ),

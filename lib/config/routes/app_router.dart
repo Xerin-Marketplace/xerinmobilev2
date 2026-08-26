@@ -11,6 +11,8 @@ import '../../features/auth/presentation/pages/legal_page.dart';
 import '../../features/auth/presentation/pages/lock_screen_page.dart';
 import '../../features/auth/presentation/pages/pin_setup_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/pages/seller_register_page.dart';
+import '../../features/auth/presentation/pages/broker_register_page.dart';
 import '../../features/auth/presentation/pages/registration_success_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/auth/presentation/pages/sign_in_page.dart';
@@ -60,6 +62,12 @@ import '../../features/seller/presentation/pages/seller_analytics_page.dart';
 import '../../features/seller/presentation/pages/seller_promotions_page.dart';
 import '../../features/seller/presentation/pages/seller_reviews_page.dart';
 import '../../features/seller/presentation/pages/seller_questions_page.dart';
+import '../../features/broker/presentation/pages/broker_dashboard_page.dart';
+import '../../features/broker/presentation/pages/broker_kyc_page.dart';
+import '../../features/broker/presentation/pages/broker_wallet_page.dart';
+import '../../features/broker/presentation/pages/broker_opportunities_page.dart';
+import '../../features/broker/presentation/pages/broker_products_page.dart';
+import '../../features/broker/presentation/pages/broker_analytics_page.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/admin_sellers_page.dart';
 import '../../features/admin/presentation/pages/admin_products_page.dart';
@@ -71,6 +79,7 @@ import '../../features/admin/presentation/pages/admin_reviews_page.dart';
 import '../../features/admin/presentation/pages/admin_analytics_page.dart';
 import '../../features/admin/presentation/pages/admin_alerts_page.dart';
 import '../../features/admin/presentation/pages/admin_activity_logs_page.dart';
+import '../../features/admin/presentation/pages/admin_roles_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../constants/app_constants.dart';
 
@@ -80,6 +89,8 @@ class AppRouter {
     '/onboarding',
     '/sign-in',
     '/register',
+    '/seller-register',
+    '/broker-register',
     '/verify-otp',
     '/forgot-password',
     '/reset-password',
@@ -132,6 +143,10 @@ class AppRouter {
       GoRoute(
         path: AppConstants.registerRoute,
         builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerRegisterRoute,
+        builder: (context, state) => const SellerRegisterPage(),
       ),
       GoRoute(
         path: AppConstants.verifyOtpRoute,
@@ -486,6 +501,10 @@ class AppRouter {
       GoRoute(
         path: AppConstants.adminActivityLogsRoute,
         builder: (context, state) => const AdminActivityLogsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminRolesRoute,
+        builder: (context, state) => const AdminRolesPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

@@ -67,6 +67,10 @@ class AdminAccess {
       'admin_activity_logs:read',
       'audit_logs:read',
     ],
+    'Roles': [
+      'can_assign_permissions',
+      'manage_users',
+    ],
   };
 
   // ─── Item-level / action-level permissions ───────────────────
@@ -130,6 +134,11 @@ class AdminAccess {
 
     // Activity logs
     'activity_logs.view': ['admin_activity_logs:read'],
+
+    // Roles & permissions
+    'roles.view': ['can_assign_permissions'],
+    'roles.edit_permissions': ['can_assign_permissions'],
+    'users.assign_permissions': ['can_assign_permissions'],
   };
 
   // ─── Core helpers ────────────────────────────────────────────
@@ -194,6 +203,7 @@ class AdminAccess {
     '/admin-analytics': 'Analytics',
     '/admin-alerts': 'Alerts',
     '/admin-activity-logs': 'ActivityLogs',
+    '/admin-roles': 'Roles',
   };
 
   /// Returns `true` if [routePath] is an admin route that the [user]

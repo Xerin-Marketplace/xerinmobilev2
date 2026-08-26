@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
+import '../../../../core/security/admin_access.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../../../../core/theme/uicons.dart';
 import '../cubit/admin_cubit.dart';
 import '../../data/models/admin_models.dart';
@@ -133,7 +136,11 @@ class _AdminWalletsPageState extends State<AdminWalletsPage>
             TextButton.icon(
               icon: const Icon(Uicons.pen, size: 16),
               label: const Text('Adjust Balance'),
-              onPressed: () => _showAdjustDialog(context, wallet),
+ onPressed: AdminAccess.canAccessItem(
+                      GetIt.instance<TokenStorage>().currentUser,
+                      'wallets.adjust')
+                  ? () => _showAdjustDialog(context, wallet)
+                  : null,
             ),
           ],
         ),
@@ -202,7 +209,10 @@ class _AdminWalletsPageState extends State<AdminWalletsPage>
             ),
           ],
         ),
-        trailing: payout.status == 'pending'
+        trailing: payout.status == 'pending' &&
+                AdminAccess.canAccessItem(
+                    GetIt.instance<TokenStorage>().currentUser,
+                    'payouts.approve')
             ? PopupMenuButton<String>(
                 onSelected: (action) =>
                     _showPayoutActionDialog(context, payout, action),

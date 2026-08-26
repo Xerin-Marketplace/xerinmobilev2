@@ -35,6 +35,97 @@ class AuthRemoteDataSource {
     }
   }
 
+  Future<Map<String, dynamic>> registerSeller({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String password,
+    required String businessName,
+    required List<String> businessCategoryIds,
+    String? businessDescription,
+    String? businessCountry,
+    String? businessRegion,
+    String? businessCity,
+    String? businessAddress,
+    String? productDescription,
+    String? yearsInBusiness,
+    String? websiteUrl,
+    String? contactEmail,
+    String? contactPhone,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.registerSeller,
+        data: {
+          'first_name': firstName,
+          'last_name': lastName,
+          'email': email,
+          'phone': phone,
+          'password': password,
+          'business_name': businessName,
+          'business_category_ids': businessCategoryIds,
+          if (businessDescription != null) 'business_description': businessDescription,
+          if (businessCountry != null) 'business_country': businessCountry,
+          if (businessRegion != null) 'business_region': businessRegion,
+          if (businessCity != null) 'business_city': businessCity,
+          if (businessAddress != null) 'business_address': businessAddress,
+          if (productDescription != null) 'product_description': productDescription,
+          if (yearsInBusiness != null) 'years_in_business': yearsInBusiness,
+          if (websiteUrl != null) 'website_url': websiteUrl,
+          if (contactEmail != null) 'contact_email': contactEmail,
+          if (contactPhone != null) 'contact_phone': contactPhone,
+          'agreement_accepted': true,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> registerBroker({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String password,
+    required String country,
+    required String region,
+    required String city,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.registerBroker,
+        data: {
+          'first_name': firstName,
+          'last_name': lastName,
+          'email': email,
+          'phone': phone,
+          'password': password,
+          'country': country,
+          'region': region,
+          'city': city,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getBusinessCategories() async {
+    try {
+      final response = await _client.get(ApiConstants.adminBusinessCategories);
+      final list = response.data as List<dynamic>? ?? [];
+      return list
+          .map((e) => e as Map<String, dynamic>)
+          .toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
   Future<TokenModel> login({
     required String email,
     required String password,

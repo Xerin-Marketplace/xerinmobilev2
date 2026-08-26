@@ -476,6 +476,45 @@ class _RegisterPageState extends State<RegisterPage>
                               ],
                             ),
                           ),
+                          const SizedBox(height: 20),
+                          Center(
+                            child: GestureDetector(
+                              onTap: () => context
+                                  .push(AppConstants.sellerRegisterRoute),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primary
+                                      .withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color:
+                                        colorScheme.primary.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Uicons.shop,
+                                        size: 18, color: colorScheme.primary),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Register as a Seller',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: colorScheme.primary,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Icon(Uicons.angleRight,
+                                        size: 14, color: colorScheme.primary),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
                           const SizedBox(height: 12),
                         ],
                       );

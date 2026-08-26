@@ -19,6 +19,7 @@ abstract class ApiConstants {
   // Auth endpoints
   static const String register = '/auth/register';
   static const String registerSeller = '/auth/register-seller';
+  static const String registerBroker = '/auth/register-broker';
   static const String login = '/auth/login';
   static const String logout = '/auth/logout';
   static const String refreshToken = '/auth/refresh-token';
@@ -85,6 +86,9 @@ abstract class ApiConstants {
   static const String adminPermissions = '/admin/permissions';
   static String adminUserPermissions(String userId) =>
       '/admin/users/$userId/permissions';
+  static const String adminRoles = '/admin/roles';
+  static String adminRolePermissions(String roleId) =>
+      '/admin/roles/$roleId/permissions';
   static const String adminProductsPending = '/admin/products/pending';
   static String adminApproveProduct(String id) =>
       '/admin/products/$id/approve';
@@ -331,6 +335,10 @@ abstract class ApiConstants {
   static String orderCommissions(String orderId) => '/commissions/orders/$orderId';
   static const String sellerEarningsSummary = '/commissions/seller/me/summary';
 
+  // System settings endpoints
+  static const String systemSettings = '/settings';
+  static String systemSettingByKey(String key) => '/settings/$key';
+
   // Refund endpoints
   static const String refunds = '/refunds';
   static const String adminRefunds = '/refunds/admin';
@@ -365,6 +373,33 @@ abstract class ApiConstants {
   static String auditLogById(String auditId) => '/audit-logs/$auditId';
   static const String auditLogSecurityEvents = '/audit-logs/security/events';
   static String auditLogSecurityEventResolve(String eventId) => '/audit-logs/security/events/$eventId/resolve';
+
+  // Broker endpoints
+  static const String brokerMe = '/brokers/me';
+  static const String brokerKycStatus = '/brokers/kyc-status';
+  static const String brokerKycDocuments = '/brokers/kyc-documents';
+  static String brokerKycDocumentById(String id) => '/brokers/kyc-documents/$id';
+  static const String brokerSubmitKyc = '/brokers/submit-kyc';
+  static const String brokerProducts = '/brokers/products';
+  static String brokerProductById(String id) => '/brokers/products/$id';
+  static String brokerProductImages(String id) => '/brokers/products/$id/images';
+  static String brokerProductImageById(String productId, String imageId) =>
+      '/brokers/products/$productId/images/$imageId';
+  static String brokerProductPublish(String id) => '/brokers/products/$id/publish';
+  static const String brokerOpportunities = '/brokers/opportunities';
+  static const String brokerAcceptedOpportunities = '/brokers/accepted-opportunities';
+  static String brokerAcceptOpportunity(String id) => '/brokers/opportunities/$id/accept';
+  static String brokerOpportunityReferral(String id) => '/brokers/opportunities/$id/referral';
+  static const String brokerCommissionSummary = '/brokers/commissions/summary';
+  static const String brokerCommissions = '/brokers/commissions';
+  static const String brokerWallet = '/brokers/wallet';
+  static const String brokerWalletTransactions = '/brokers/wallet/transactions';
+  static const String brokerPayoutAccounts = '/brokers/payout-accounts';
+  static String brokerPayoutAccountById(String id) => '/brokers/payout-accounts/$id';
+  static const String brokerPayouts = '/brokers/payouts';
+  static String brokerPayoutCancel(String id) => '/brokers/payouts/$id/cancel';
+  static const String brokerAnalyticsOverview = '/brokers/analytics/overview';
+  static const String brokerAnalyticsCampaigns = '/brokers/analytics/campaigns';
 
   // Common headers
   static const String contentType = 'application/json';

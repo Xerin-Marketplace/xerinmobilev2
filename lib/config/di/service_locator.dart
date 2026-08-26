@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/network/api_client.dart';
 import '../../core/notifications/notification_service.dart';
 import '../../core/security/security_service.dart';
+import '../../core/services/app_version_service.dart';
 import '../../core/services/location_service.dart';
 import '../../core/storage/token_storage.dart';
 import '../../core/theme/app_theme_cubit.dart';
@@ -62,6 +63,9 @@ Future<void> initServiceLocator({bool reset = false}) async {
   );
   sl.registerLazySingleton<NotificationService>(() => NotificationService());
   sl.registerLazySingleton<LocationService>(() => LocationService());
+  sl.registerLazySingleton<AppVersionService>(
+    () => AppVersionService(sl<ApiClient>(), sl<Logger>()),
+  );
 
   sl.registerLazySingleton<Logger>(
     () => Logger(

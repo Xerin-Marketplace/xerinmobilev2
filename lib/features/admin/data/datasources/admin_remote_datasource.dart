@@ -626,4 +626,80 @@ class AdminRemoteDataSource {
       throw ServerException(_client.getErrorMessage(e));
     }
   }
+
+  // ─── Roles & Permissions ────────────────────────────────────
+
+  Future<List<AdminRoleModel>> getRoles() async {
+    try {
+      final response = await _client.get(ApiConstants.adminRoles);
+      final list = response.data as List<dynamic>? ?? [];
+      return list
+          .map((e) => AdminRoleModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<AdminPermissionModel>> getAllPermissions() async {
+    try {
+      final response = await _client.get(ApiConstants.adminPermissions);
+      final list = response.data as List<dynamic>? ?? [];
+      return list
+          .map((e) => AdminPermissionModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<AdminRolePermissionsModel> getRolePermissions(String roleId) async {
+    try {
+      final response =
+          await _client.get(ApiConstants.adminRolePermissions(roleId));
+      return AdminRolePermissionsModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<AdminRolePermissionsModel> updateRolePermissions(
+      String roleId, List<String> permissionCodes) async {
+    try {
+      final response = await _client.put(
+        ApiConstants.adminRolePermissions(roleId),
+        data: {'permission_codes': permissionCodes},
+      );
+      return AdminRolePermissionsModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<AdminUserPermissionsModel> getUserPermissions(String userId) async {
+    try {
+      final response =
+          await _client.get(ApiConstants.adminUserPermissions(userId));
+      return AdminUserPermissionsModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<AdminUserPermissionsModel> assignUserPermissions(
+      String userId, List<String> permissionCodes) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.adminUserPermissions(userId),
+        data: {'permission_codes': permissionCodes},
+      );
+      return AdminUserPermissionsModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
 }

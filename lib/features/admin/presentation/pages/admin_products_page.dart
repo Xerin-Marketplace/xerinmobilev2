@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
+import '../../../../core/security/admin_access.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../../../../core/theme/uicons.dart';
 import '../cubit/admin_cubit.dart';
 
@@ -152,25 +155,37 @@ class _AdminProductsPageState extends State<AdminProductsPage> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green, foregroundColor: Colors.white),
-                    icon: const Icon(Uicons.checkCircle, size: 16),
-                    label: const Text('Approve'),
-                    onPressed: () => _confirmApprove(context, id, name),
+                if (AdminAccess.canAccessItem(
+                        GetIt.instance<TokenStorage>().currentUser,
+                        'products.approve'))
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green, foregroundColor: Colors.white),
+                      icon: const Icon(Uicons.checkCircle, size: 16),
+                      label: const Text('Approve'),
+                      onPressed: () => _confirmApprove(context, id, name),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red, foregroundColor: Colors.white),
-                    icon: const Icon(Uicons.circleXmark, size: 16),
-                    label: const Text('Reject'),
-                    onPressed: () => _showRejectDialog(context, id, name),
+                if (AdminAccess.canAccessItem(
+                        GetIt.instance<TokenStorage>().currentUser,
+                        'products.approve') &&
+                    AdminAccess.canAccessItem(
+                        GetIt.instance<TokenStorage>().currentUser,
+                        'products.reject'))
+                  const SizedBox(width: 12),
+                if (AdminAccess.canAccessItem(
+                        GetIt.instance<TokenStorage>().currentUser,
+                        'products.reject'))
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red, foregroundColor: Colors.white),
+                      icon: const Icon(Uicons.circleXmark, size: 16),
+                      label: const Text('Reject'),
+                      onPressed: () => _showRejectDialog(context, id, name),
+                    ),
                   ),
-                ),
               ],
             ),
           ],

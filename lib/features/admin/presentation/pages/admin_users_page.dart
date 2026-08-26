@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
+import '../../../../core/security/admin_access.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../../../../core/theme/uicons.dart';
 import '../cubit/admin_cubit.dart';
 import '../../data/models/admin_models.dart';
@@ -34,10 +37,13 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
       appBar: AppBar(
         title: const Text('User Management'),
         actions: [
-          IconButton(
-            icon: const Icon(Uicons.user),
-            onPressed: () => _showCreateUserDialog(context),
-          ),
+          if (AdminAccess.canAccessItem(
+                  GetIt.instance<TokenStorage>().currentUser,
+                  'users.create'))
+            IconButton(
+              icon: const Icon(Uicons.user),
+              onPressed: () => _showCreateUserDialog(context),
+            ),
         ],
       ),
       body: Column(
@@ -208,10 +214,23 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
             if (action == 'edit') _showEditUserDialog(context, user);
             if (action == 'delete') _confirmDelete(context, user);
           },
-          itemBuilder: (_) => [
-            const PopupMenuItem(value: 'edit', child: Text('Edit')),
-            const PopupMenuItem(value: 'delete', child: Text('Delete')),
-          ],
+          itemBuilder: (_) {
+            final items = <PopupMenuEntry<String>>[];
+            if (AdminAccess.canAccessItem(
+                    GetIt.instance<TokenStorage>().currentUser,
+                    'users.update')) {
+              items.add(const PopupMenuItem(value: 'edit', child: Text('Edit')));
+            }
+            if (AdminAccess.canAccessItem(
+                    GetIt.instance<TokenStorage>().currentUser,
+                    'users.delete')) {
+              items.add(const PopupMenuItem(value: 'delete', child: Text('Delete')));
+            }
+            if (items.isEmpty) {
+              items.add(const PopupMenuItem(enabled: false, child: Text('No actions')));
+            }
+            return items;
+          },
         ),
       ),
     );
