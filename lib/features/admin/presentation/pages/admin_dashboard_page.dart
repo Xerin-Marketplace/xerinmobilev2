@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../core/security/admin_access.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../../../../core/theme/uicons.dart';
+import '../../../../features/auth/data/models/user_model.dart';
 import '../cubit/admin_cubit.dart';
 import '../../data/models/admin_models.dart';
 
@@ -203,14 +207,55 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       subtitle: Text(alert.alertType, style: const TextStyle(fontSize: 12)),
       trailing: alert.isResolved
           ? const Icon(Uicons.checkCircle, size: 18, color: Colors.green)
-          : TextButton(
-              onPressed: () => context.read<AdminCubit>().resolveAlert(alert.id),
-              child: const Text('Resolve'),
-            ),
+          : AdminAccess.canAccessItem(
+                  GetIt.instance<TokenStorage>().currentUser,
+                  'alerts.resolve')
+              ? TextButton(
+                  onPressed: () =>
+                      context.read<AdminCubit>().resolveAlert(alert.id),
+                  child: const Text('Resolve'),
+                )
+              : const SizedBox.shrink(),
     );
   }
 
   Widget _buildQuickActions(BuildContext context) {
+    final user = GetIt.instance<TokenStorage>().currentUser;
+    final actions = <_QuickAction>[];
+
+    if (AdminAccess.canAccessSection(user, 'Sellers')) {
+      actions.add(_QuickAction('Sellers', Uicons.storeAlt, Colors.orange, AppConstants.adminSellersRoute));
+    }
+    if (AdminAccess.canAccessSection(user, 'Products')) {
+      actions.add(_QuickAction('Products', Uicons.boxOpen, Colors.teal, AppConstants.adminProductsRoute));
+    }
+    if (AdminAccess.canAccessSection(user, 'Orders')) {
+      actions.add(_QuickAction('Orders', Uicons.shoppingBag, Colors.blue, AppConstants.adminOrdersRoute));
+    }
+    if (AdminAccess.canAccessSection(user, 'Users')) {
+      actions.add(_QuickAction('Users', Uicons.users, Colors.purple, AppConstants.adminUsersRoute));
+    }
+    if (AdminAccess.canAccessSection(user, 'Wallets')) {
+      actions.add(_QuickAction('Wallets', Uicons.wallet, Colors.green, AppConstants.adminWalletsRoute));
+    }
+    if (AdminAccess.canAccessSection(user, 'Refunds')) {
+      actions.add(_QuickAction('Refunds', Uicons.rotateLeft, Colors.red, AppConstants.adminRefundsRoute));
+    }
+    if (AdminAccess.canAccessSection(user, 'Reviews')) {
+      actions.add(_QuickAction('Reviews', Uicons.star, Colors.amber, AppConstants.adminReviewsRoute));
+    }
+    if (AdminAccess.canAccessSection(user, 'Analytics')) {
+      actions.add(_QuickAction('Analytics', Uicons.barChart, Colors.indigo, AppConstants.adminAnalyticsRoute));
+    }
+    if (AdminAccess.canAccessSection(user, 'Alerts')) {
+      actions.add(_QuickAction('Alerts', Uicons.bell, Colors.pink, AppConstants.adminAlertsRoute));
+    }
+    if (AdminAccess.canAccessSection(user, 'ActivityLogs')) {
+      actions.add(_QuickAction('Logs', Uicons.clock, Colors.grey, AppConstants.adminActivityLogsRoute));
+    }
+
+    if (actions.isEmpty) return const SizedBox.shrink();
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -227,26 +272,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
               childAspectRatio: 1,
-              children: [
-                _actionTile('Sellers', Uicons.storeAlt, Colors.orange, () =>
-                    context.push(AppConstants.adminSellersRoute)),
-                _actionTile('Products', Uicons.boxOpen, Colors.teal, () =>
-                    context.push(AppConstants.adminProductsRoute)),
-                _actionTile('Orders', Uicons.shoppingBag, Colors.blue, () =>
-                    context.push(AppConstants.adminOrdersRoute)),
-                _actionTile('Users', Uicons.users, Colors.purple, () =>
-                    context.push(AppConstants.adminUsersRoute)),
-                _actionTile('Wallets', Uicons.wallet, Colors.green, () =>
-                    context.push(AppConstants.adminWalletsRoute)),
-                _actionTile('Refunds', Uicons.rotateLeft, Colors.red, () =>
-                    context.push(AppConstants.adminRefundsRoute)),
-                _actionTile('Reviews', Uicons.star, Colors.amber, () =>
-                    context.push(AppConstants.adminReviewsRoute)),
-                _actionTile('Analytics', Uicons.barChart, Colors.indigo, () =>
-                    context.push(AppConstants.adminAnalyticsRoute)),
-                _actionTile('Alerts', Uicons.bell, Colors.pink, () =>
-                    context.push(AppConstants.adminAlertsRoute)),
-              ],
+              children: actions
+                  .map((a) => _actionTile(a.label, a.icon, a.color, () => context.push(a.route)))
+                  .toList(),
             ),
           ],
         ),
@@ -283,4 +311,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   String _humanize(String s) => s.replaceAll('_', ' ').split(' ')
       .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
       .join(' ');
+}
+
+class _QuickAction {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final String route;
+  const _QuickAction(this.label, this.icon, this.color, this.route);
 }

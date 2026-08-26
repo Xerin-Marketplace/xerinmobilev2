@@ -240,7 +240,7 @@ Future<void> initServiceLocator({bool reset = false}) async {
 
   // Admin
   sl.registerLazySingleton<AdminRemoteDataSource>(
-      () => AdminRemoteDataSource(sl(), sl()));
+      () => AdminRemoteDataSource(sl()));
   sl.registerFactory<AdminCubit>(
     () => AdminCubit(
       dataSource: sl(),

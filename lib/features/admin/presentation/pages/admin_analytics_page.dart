@@ -71,7 +71,7 @@ class _AdminAnalyticsPageState extends State<AdminAnalyticsPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Uicons.exclamationTriangle, size: 48, color: Colors.red),
+                  const Icon(Uicons.triangleWarning, size: 48, color: Colors.red),
                   const SizedBox(height: 16),
                   Text(state.message, textAlign: TextAlign.center),
                   const SizedBox(height: 16),
@@ -98,11 +98,11 @@ class _AdminAnalyticsPageState extends State<AdminAnalyticsPage> {
       crossAxisSpacing: 12,
       childAspectRatio: 1.5,
       children: [
-        _metricCard('Revenue', '${o.currency} ${_fmt(o.totalRevenue)}', Uicons.dollarCircle, Colors.green),
+        _metricCard('Revenue', '${o.currency} ${_fmt(o.totalRevenue)}', Uicons.dollar, Colors.green),
         _metricCard('Orders', o.totalOrders.toString(), Uicons.shoppingBag, Colors.blue),
-        _metricCard('Avg Order', '${o.currency} ${_fmt(o.avgOrderValue)}', Uicons.chartLine, Colors.purple),
-        _metricCard('Customers', o.totalCustomers.toString(), Uicons.userGroup, Colors.orange),
-        _metricCard('Sellers', o.totalSellers.toString(), Uicons.store, Colors.teal),
+        _metricCard('Avg Order', '${o.currency} ${_fmt(o.avgOrderValue)}', Uicons.chartSimple, Colors.purple),
+        _metricCard('Customers', o.totalCustomers.toString(), Uicons.users, Colors.orange),
+        _metricCard('Sellers', o.totalSellers.toString(), Uicons.storeAlt, Colors.teal),
         _metricCard('Products', o.totalProducts.toString(), Uicons.boxOpen, Colors.indigo),
       ],
     );

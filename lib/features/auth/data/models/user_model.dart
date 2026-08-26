@@ -8,6 +8,7 @@ class UserModel {
   final String status;
   final String accountType;
   final List<String> roles;
+  final List<String> permissions;
   final bool isSeller;
   final String? sellerStatus;
 
@@ -21,6 +22,7 @@ class UserModel {
     required this.status,
     this.accountType = 'customer',
     this.roles = const [],
+    this.permissions = const [],
     this.isSeller = false,
     this.sellerStatus,
   });
@@ -36,6 +38,31 @@ class UserModel {
   bool get isSuperAdmin =>
       accountType == 'super_admin' || roles.contains('super_admin');
 
+  bool get isStaffUser {
+    if (accountType == 'admin' ||
+        accountType == 'super_admin' ||
+        isSuperAdmin) {
+      return true;
+    }
+    const basicNonStaffRoles = {'buyer', 'customer', 'seller'};
+    return roles.any((r) => !basicNonStaffRoles.contains(r.toLowerCase()));
+  }
+
+  bool hasPermission(String permission) {
+    if (isSuperAdmin) return true;
+    return permissions.contains(permission);
+  }
+
+  bool hasAnyPermission(List<String> perms) {
+    if (perms.isEmpty || isSuperAdmin) return true;
+    return perms.any(hasPermission);
+  }
+
+  bool hasAllPermissions(List<String> perms) {
+    if (perms.isEmpty || isSuperAdmin) return true;
+    return perms.every(hasPermission);
+  }
+
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
         id: json['id']?.toString() ?? '',
         firstName: json['first_name'] as String? ?? '',
@@ -46,6 +73,10 @@ class UserModel {
         status: json['status']?.toString() ?? 'active',
         accountType: json['account_type'] as String? ?? 'customer',
         roles: (json['roles'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            const [],
+        permissions: (json['permissions'] as List<dynamic>?)
                 ?.map((e) => e.toString())
                 .toList() ??
             const [],
@@ -63,6 +94,7 @@ class UserModel {
         'status': status,
         'account_type': accountType,
         'roles': roles,
+        'permissions': permissions,
         'is_seller': isSeller,
         'seller_status': sellerStatus,
       };

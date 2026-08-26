@@ -3,7 +3,9 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/notifications/notification_service.dart';
+import '../../core/security/admin_access.dart';
 import '../../core/storage/token_storage.dart';
+import '../../features/auth/data/models/user_model.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/legal_page.dart';
 import '../../features/auth/presentation/pages/lock_screen_page.dart';
@@ -93,7 +95,8 @@ class AppRouter {
     redirect: (context, state) {
       final path = state.uri.path;
       final isPublic = _publicRoutes.contains(path);
-      final isAuthenticated = GetIt.instance<TokenStorage>().isAuthenticated;
+      final tokenStorage = GetIt.instance<TokenStorage>();
+      final isAuthenticated = tokenStorage.isAuthenticated;
 
       if (!isPublic && !isAuthenticated) {
         return AppConstants.signInRoute;
@@ -101,6 +104,16 @@ class AppRouter {
       if (isPublic && isAuthenticated && path != '/splash' && path != '/onboarding') {
         return AppConstants.homeRoute;
       }
+
+      // Admin route protection — check role-based permissions
+      if (isAuthenticated && AdminAccess.routeToSection.containsKey(path)) {
+        final UserModel? user = tokenStorage.currentUser;
+        if (!AdminAccess.canAccessRoute(user, path)) {
+ // Not authorised — send to customer home
+          return AppConstants.homeRoute;
+        }
+      }
+
       return null;
     },
     routes: [

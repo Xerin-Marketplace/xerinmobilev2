@@ -1,17 +1,14 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:logger/logger.dart';
 
 import '../../../../config/constants/api_constants.dart';
 import '../../../../core/network/api_client.dart';
-import '../../../../core/error/exceptions.dart';
+import '../../../../core/errors/exceptions.dart';
 import '../models/admin_models.dart';
 
 class AdminRemoteDataSource {
   final ApiClient _client;
-  final Logger _logger;
 
-  const AdminRemoteDataSource(this._client, this._logger);
+  const AdminRemoteDataSource(this._client);
 
   // ─── Dashboard ───
   Future<AdminDashboardSummaryModel> getDashboardSummary({

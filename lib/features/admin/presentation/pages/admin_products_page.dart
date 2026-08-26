@@ -72,7 +72,7 @@ class _AdminProductsPageState extends State<AdminProductsPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Uicons.exclamationTriangle, size: 48, color: Colors.red),
+                  const Icon(Uicons.triangleWarning, size: 48, color: Colors.red),
                   const SizedBox(height: 16),
                   Text(state.message, textAlign: TextAlign.center),
                   const SizedBox(height: 16),
@@ -110,7 +110,7 @@ class _AdminProductsPageState extends State<AdminProductsPage> {
             Row(
               children: [
                 if (images.isNotEmpty)
-                  ClipRoundedRect(
+                  ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
                       images[0]?.toString() ?? '',
@@ -166,7 +166,7 @@ class _AdminProductsPageState extends State<AdminProductsPage> {
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red, foregroundColor: Colors.white),
-                    icon: const Icon(Uicons.timesCircle, size: 16),
+                    icon: const Icon(Uicons.circleXmark, size: 16),
                     label: const Text('Reject'),
                     onPressed: () => _showRejectDialog(context, id, name),
                   ),

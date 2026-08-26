@@ -107,6 +107,10 @@ class AuthCubit extends Cubit<AuthState> {
         _logger.i('✅ User from token: ${user.fullName}, account_type: ${user.accountType}');
       }
 
+      if (user != null) {
+        await _tokenStorage.saveUser(user);
+      }
+
       emit(AuthLoginSuccess(
         token: token,
         user: user,

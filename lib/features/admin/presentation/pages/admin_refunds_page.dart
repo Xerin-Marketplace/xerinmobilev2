@@ -113,7 +113,7 @@ class _AdminRefundsPageState extends State<AdminRefundsPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Uicons.exclamationTriangle, size: 48, color: Colors.red),
+                const Icon(Uicons.triangleWarning, size: 48, color: Colors.red),
                 const SizedBox(height: 16),
                 Text(state.message, textAlign: TextAlign.center),
                 const SizedBox(height: 16),

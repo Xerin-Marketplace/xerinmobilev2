@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../config/constants/api_constants.dart';
-import '../../../../config/constants/app_constants.dart';
 import '../../../../core/theme/uicons.dart';
 import '../cubit/admin_cubit.dart';
 import '../../data/models/admin_models.dart';
@@ -124,7 +121,7 @@ class _AdminSellersPageState extends State<AdminSellersPage> {
         contentPadding: const EdgeInsets.all(16),
         leading: CircleAvatar(
           backgroundColor: color.withValues(alpha: 0.1),
-          child: Icon(Uicons.store, color: color),
+          child: Icon(Uicons.storeAlt, color: color),
         ),
         title: Text(seller.businessName,
             style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -170,7 +167,7 @@ class _AdminSellersPageState extends State<AdminSellersPage> {
                   children: [
                     CircleAvatar(
                       backgroundColor: _statusColor(seller.status).withValues(alpha: 0.1),
-                      child: Icon(Uicons.store, color: _statusColor(seller.status)),
+                      child: Icon(Uicons.storeAlt, color: _statusColor(seller.status)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -226,7 +223,7 @@ class _AdminSellersPageState extends State<AdminSellersPage> {
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red, foregroundColor: Colors.white),
-                  icon: const Icon(Uicons.timesCircle, size: 18),
+                  icon: const Icon(Uicons.circleXmark, size: 18),
                   label: const Text('Reject'),
                   onPressed: () => _showRejectDialog(context, seller.id),
                 ),
