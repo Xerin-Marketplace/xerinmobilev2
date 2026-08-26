@@ -386,4 +386,14 @@ class BrokerCubit extends Cubit<BrokerState> {
       emit(BrokerError(message: e.message));
     }
   }
+
+  Future<Map<String, dynamic>?> getReferralLink(String offerId) async {
+    try {
+      return await _dataSource.getReferralLink(offerId);
+    } on ServerException catch (e) {
+      _logger.e('Referral link error: ${e.message}');
+      emit(BrokerError(message: e.message));
+      return null;
+    }
+  }
 }

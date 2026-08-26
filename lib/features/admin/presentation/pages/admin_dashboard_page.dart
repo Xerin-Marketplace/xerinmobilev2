@@ -255,6 +255,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     if (AdminAccess.canAccessSection(user, 'Roles')) {
       actions.add(_QuickAction('Roles', Uicons.userShield, Colors.brown, AppConstants.adminRolesRoute));
     }
+    if (AdminAccess.canAccessSection(user, 'Catalog')) {
+      actions.add(_QuickAction('Catalog', Uicons.category, Colors.cyan, AppConstants.adminCatalogRoute));
+    }
+    if (AdminAccess.canAccessSection(user, 'Payments')) {
+      actions.add(_QuickAction('Payments', Uicons.creditCard, Colors.lime, AppConstants.adminPaymentsRoute));
+    }
+    if (AdminAccess.canAccessSection(user, 'Orders')) {
+      actions.add(_QuickAction('All Orders', Uicons.truckBox, Colors.lightBlue, AppConstants.adminAllOrdersRoute));
+    }
 
     if (actions.isEmpty) return const SizedBox.shrink();
 

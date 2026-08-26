@@ -38,6 +38,8 @@ abstract class AppConstants {
   static const String supportTicketDetailRoute = '/support-ticket-detail';
   static const String supportTicketCreateRoute = '/support-ticket-create';
   static const String deliveryVerificationRoute = '/delivery-verification';
+  static const String customerSecurityRoute = '/customer-security';
+  static const String customerReviewsRoute = '/customer-reviews';
   static const String checkoutRoute = '/checkout';
   static const String paymentProcessingRoute = '/payment-processing';
 
@@ -85,6 +87,8 @@ abstract class AppConstants {
   static const String sellerPickupLocationsRoute = '/seller-pickup-locations';
   static const String sellerFulfillmentRoute = '/seller-fulfillment';
   static const String sellerFulfillmentDetailRoute = '/seller-fulfillment-detail';
+  static const String sellerCancellationsRoute = '/seller-cancellations';
+  static const String sellerReturnsRoute = '/seller-returns';
 
   // Broker panel routes
   static const String brokerDashboardRoute = '/broker-dashboard';
@@ -94,6 +98,12 @@ abstract class AppConstants {
   static const String brokerProductsRoute = '/broker-products';
   static const String brokerAnalyticsRoute = '/broker-analytics';
   static const String brokerEarningsRoute = '/broker-earnings';
+  static const String mawingaFindProductsRoute = '/mawinga-find-products';
+  static const String mawingaShareEarnRoute = '/mawinga-share-earn';
+  static const String mawingaLeaderboardRoute = '/mawinga-leaderboard';
+  static const String mawingaAcademyRoute = '/mawinga-academy';
+  static const String mawingaStoreRoute = '/mawinga-store';
+  static const String mawingaReferralRoute = '/mawinga-referral';
 
   // Admin panel routes
   static const String adminDashboardRoute = '/admin-dashboard';

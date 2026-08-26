@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../../core/theme/uicons.dart';
+import '../../data/models/broker_models.dart';
+import '../../data/models/mawinga_models.dart';
 import '../cubit/broker_cubit.dart';
 
 class BrokerDashboardPage extends StatefulWidget {
@@ -26,7 +28,7 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Broker Panel'),
+        title: const Text('Mawinga Hub'),
         actions: [
           IconButton(
             icon: const Icon(Uicons.refresh),
@@ -98,9 +100,16 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
     final quickActions = [
       {'title': 'KYC', 'desc': approved ? 'Verified' : 'Complete verification', 'icon': Uicons.shieldCheck, 'route': AppConstants.brokerKycRoute},
       {'title': 'Wallet', 'desc': approved ? 'Balance & payouts' : 'Locked', 'icon': Uicons.wallet, 'route': AppConstants.brokerWalletRoute},
+      {'title': 'Find Products', 'desc': approved ? 'Browse & sell' : 'Locked', 'icon': Uicons.search, 'route': AppConstants.mawingaFindProductsRoute},
+      {'title': 'Share & Earn', 'desc': approved ? 'Share products' : 'Locked', 'icon': Uicons.share, 'route': AppConstants.mawingaShareEarnRoute},
+      {'title': 'My Products', 'desc': approved ? 'Your listings' : 'Locked', 'icon': Uicons.box, 'route': AppConstants.brokerProductsRoute},
       {'title': 'Opportunities', 'desc': approved ? 'Browse campaigns' : 'Locked', 'icon': Uicons.barChart, 'route': AppConstants.brokerOpportunitiesRoute},
-      {'title': 'Products', 'desc': approved ? 'Your listings' : 'Locked', 'icon': Uicons.box, 'route': AppConstants.brokerProductsRoute},
+      {'title': 'Earnings', 'desc': approved ? 'Commission history' : 'Locked', 'icon': Uicons.sackDollar, 'route': AppConstants.brokerEarningsRoute},
       {'title': 'Analytics', 'desc': approved ? 'Performance' : 'Locked', 'icon': Uicons.chartPie, 'route': AppConstants.brokerAnalyticsRoute},
+      {'title': 'Leaderboard', 'desc': approved ? 'Top Mawinga' : 'Locked', 'icon': Uicons.trophy, 'route': AppConstants.mawingaLeaderboardRoute},
+      {'title': 'Academy', 'desc': 'Learn & grow', 'icon': Uicons.book, 'route': AppConstants.mawingaAcademyRoute},
+      {'title': 'My Store', 'desc': approved ? 'Digital store' : 'Locked', 'icon': Uicons.shop, 'route': AppConstants.mawingaStoreRoute},
+      {'title': 'Invite', 'desc': 'Refer & earn', 'icon': Uicons.user, 'route': AppConstants.mawingaReferralRoute},
     ];
 
     return SingleChildScrollView(
@@ -123,7 +132,7 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Broker Center',
+                  'XERIN MAWINGA',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -133,7 +142,7 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Welcome, ${broker.firstName ?? 'Broker'}',
+                  'Welcome, ${broker.firstName ?? 'Mawinga'}',
                   style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w900,
@@ -142,7 +151,7 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Broker ID: ${broker.brokerCode}',
+                  'Mawinga ID: ${broker.brokerCode}',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -168,6 +177,10 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
               ],
             ),
           ),
+          if (approved && analytics != null) ...[
+            const SizedBox(height: 16),
+            _buildLevelCard(context, analytics, colorScheme),
+          ],
           if (!approved) ...[
             const SizedBox(height: 20),
             Container(
@@ -345,6 +358,115 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
               );
             }).toList(),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLevelCard(BuildContext context, BrokerAnalyticsOverviewModel analytics, ColorScheme cs) {
+    final totalSales = analytics.successfulSales;
+    final currentLevel = MawingaLevel.getLevelForSales(totalSales);
+    final nextLevel = MawingaLevel.getNextLevel(currentLevel);
+    final isMaxLevel = currentLevel.name == nextLevel.name;
+    final salesInLevel = totalSales - currentLevel.minSales;
+    final salesNeeded = isMaxLevel ? 0 : nextLevel.minSales - totalSales;
+    final levelRange = currentLevel.maxSales - currentLevel.minSales + 1;
+    final progress = isMaxLevel ? 1.0 : (salesInLevel / levelRange).clamp(0.0, 1.0);
+
+    final levelColors = {
+      'Starter': Colors.grey,
+      'Bronze': const Color(0xFFB45309),
+      'Silver': const Color(0xFF64748B),
+      'Gold': const Color(0xFFD97706),
+      'Platinum': const Color(0xFF7C3AED),
+    };
+    final levelColor = levelColors[currentLevel.name] ?? cs.primary;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: levelColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: levelColor.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: levelColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  currentLevel.name == 'Platinum' ? Uicons.star :
+                  currentLevel.name == 'Gold' ? Uicons.crown :
+                  currentLevel.name == 'Silver' ? Uicons.trophy :
+                  currentLevel.name == 'Bronze' ? Uicons.medal :
+                  Uicons.seedling,
+                  size: 24,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${currentLevel.name} Mawinga',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: cs.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$totalSales total sales',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: cs.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: cs.onSurface.withValues(alpha: 0.08),
+              valueColor: AlwaysStoppedAnimation(levelColor),
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (!isMaxLevel)
+            Text(
+              'You need $salesNeeded more sales to reach ${nextLevel.name}',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: cs.onSurface.withValues(alpha: 0.5),
+              ),
+            )
+          else
+            Text(
+              'Maximum level reached! You are a top Mawinga.',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: levelColor,
+              ),
+            ),
         ],
       ),
     );

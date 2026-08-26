@@ -180,16 +180,17 @@ abstract class ApiConstants {
   static String couponValidate(String code) => '/coupons/validate/$code';
 
   // Recommendation endpoints
-  static const String recommendedProducts = '/products/recommended';
-  static const String trendingProducts = '/products/trending';
-  static const String flashDeals = '/products/flash-deals';
-  static const String recentlyViewed = '/products/recently-viewed';
+  static const String recommendedProducts = '/recommendations';
+  static const String recentlyViewed = '/recommendations/recently-viewed';
   static const String relatedProducts = '/products/related';
   static String relatedByProduct(String productId) =>
       '/products/$productId/related';
-  static const String newArrivals = '/products/new-arrivals';
-  static const String topRated = '/products/top-rated';
-  static const String bestSellers = '/products/best-sellers';
+  // Discovery feeds that don't have dedicated endpoints use /products
+  static const String trendingProducts = '/products';
+  static const String flashDeals = '/products';
+  static const String newArrivals = '/products';
+  static const String topRated = '/products';
+  static const String bestSellers = '/products';
 
   // Store endpoints (public browsing)
   static String storeProducts(String slug) => '/stores/$slug/products';
@@ -499,7 +500,7 @@ abstract class ApiConstants {
   static const String adminPaymentsDashboard = '/admin/payments/dashboard';
   static const String adminPayments = '/admin/payments';
   static String adminPaymentById(String paymentId) => '/admin/payments/$paymentId';
-  static const String adminRefunds = '/admin/refunds';
+  static const String adminRefundsAdmin = '/admin/refunds';
   static String adminRefundById(String refundId) => '/admin/refunds/$refundId';
 
   // Admin Orders endpoints
@@ -508,10 +509,6 @@ abstract class ApiConstants {
   static String adminOrderWorkflow(String orderId) =>
       '/orders/$orderId/workflow';
   static String adminOrderStatus(String orderId) => '/orders/$orderId/status';
-
-  // Seller order messages
-  static String sellerOrderMessages(String sellerOrderId) =>
-      '/seller/orders/$sellerOrderId/messages';
 
   // Logistics endpoints
   static const String logisticsCountryOptions = '/logistics/country-options';

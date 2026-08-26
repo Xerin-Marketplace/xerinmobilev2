@@ -1100,7 +1100,7 @@ class AdminRemoteDataSource {
       };
       if (status != null) params['status'] = status;
       final response = await _client.get(
-        ApiConstants.adminRefunds,
+        ApiConstants.adminRefundsAdmin,
         queryParameters: params,
       );
       final data = response.data;

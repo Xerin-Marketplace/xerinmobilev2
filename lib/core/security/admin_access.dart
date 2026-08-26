@@ -71,6 +71,14 @@ class AdminAccess {
       'can_assign_permissions',
       'manage_users',
     ],
+    'Catalog': [
+      'admin_brands:read',
+      'admin_product_categories:read',
+      'admin_business_categories:read',
+    ],
+    'Payments': [
+      'admin_dashboard_finance:read',
+    ],
   };
 
   // ─── Item-level / action-level permissions ───────────────────

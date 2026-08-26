@@ -26,12 +26,14 @@ class CustomerProfilePage extends StatelessWidget {
           {'icon': Uicons.user, 'label': 'Personal Info', 'route': AppConstants.profileInfoRoute},
           {'icon': Uicons.mapPin, 'label': 'Addresses', 'route': AppConstants.addressesRoute},
           {'icon': Uicons.creditCard, 'label': 'Payment Methods', 'route': AppConstants.paymentMethodsRoute},
+          {'icon': Uicons.lock, 'label': 'Security', 'route': AppConstants.customerSecurityRoute},
         ],
       },
       {
         'title': 'Shopping',
         'items': [
           {'icon': Uicons.shoppingBag, 'label': 'Order History', 'route': AppConstants.orderHistoryRoute},
+          {'icon': Uicons.star, 'label': 'My Reviews', 'route': AppConstants.customerReviewsRoute},
           {'icon': Uicons.hashtag, 'label': 'Promotions & Deals', 'route': AppConstants.promotionsRoute},
         ],
       },

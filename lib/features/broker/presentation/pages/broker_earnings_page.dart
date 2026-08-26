@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/theme/uicons.dart';
-import '../../data/models/broker_models.dart';
 import '../cubit/broker_cubit.dart';
 
 class BrokerEarningsPage extends StatefulWidget {
@@ -85,7 +84,7 @@ class _BrokerEarningsPageState extends State<BrokerEarningsPage> {
                             color: cs.onSurface.withValues(alpha: 0.5))),
                     const SizedBox(height: 4),
                     Text(
-                      '${summary.lifetimeEarnings} TZS',
+                      '${summary.lifetimeCommission} ${summary.currency}',
                       style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -100,12 +99,12 @@ class _BrokerEarningsPageState extends State<BrokerEarningsPage> {
               children: [
               Expanded(
                 child: _statCard(cs, 'Pending',
-                    '${summary.pendingEarnings} TZS', Colors.orange),
+                    '${summary.pendingAmount} ${summary.currency}', Colors.orange),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _statCard(cs, 'Paid Out',
-                    '${summary.walletPaidOut} TZS', Colors.green),
+                child: _statCard(cs, 'Available',
+                    '${summary.availableAmount} ${summary.currency}', Colors.green),
               ),
               ],
             ),

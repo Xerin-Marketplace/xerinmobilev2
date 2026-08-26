@@ -52,6 +52,8 @@ import '../../features/customer/presentation/pages/support_tickets_page.dart';
 import '../../features/customer/presentation/pages/support_ticket_detail_page.dart';
 import '../../features/customer/presentation/pages/support_ticket_create_page.dart';
 import '../../features/customer/presentation/pages/delivery_verification_page.dart';
+import '../../features/customer/presentation/pages/customer_security_page.dart';
+import '../../features/customer/presentation/pages/customer_reviews_page.dart';
 import '../../features/customer/presentation/pages/trending_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/seller/presentation/pages/seller_dashboard_page.dart';
@@ -69,6 +71,8 @@ import '../../features/seller/presentation/pages/seller_questions_page.dart';
 import '../../features/seller/presentation/pages/seller_pickup_locations_page.dart';
 import '../../features/seller/presentation/pages/seller_fulfillment_page.dart';
 import '../../features/seller/presentation/pages/seller_fulfillment_detail_page.dart';
+import '../../features/seller/presentation/pages/seller_cancellations_page.dart';
+import '../../features/seller/presentation/pages/seller_returns_page.dart';
 import '../../features/broker/presentation/pages/broker_dashboard_page.dart';
 import '../../features/broker/presentation/pages/broker_kyc_page.dart';
 import '../../features/broker/presentation/pages/broker_wallet_page.dart';
@@ -76,6 +80,12 @@ import '../../features/broker/presentation/pages/broker_opportunities_page.dart'
 import '../../features/broker/presentation/pages/broker_products_page.dart';
 import '../../features/broker/presentation/pages/broker_analytics_page.dart';
 import '../../features/broker/presentation/pages/broker_earnings_page.dart';
+import '../../features/broker/presentation/pages/mawinga_find_products_page.dart';
+import '../../features/broker/presentation/pages/mawinga_share_earn_page.dart';
+import '../../features/broker/presentation/pages/mawinga_leaderboard_page.dart';
+import '../../features/broker/presentation/pages/mawinga_academy_page.dart';
+import '../../features/broker/presentation/pages/mawinga_store_page.dart';
+import '../../features/broker/presentation/pages/mawinga_referral_page.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/admin_sellers_page.dart';
 import '../../features/admin/presentation/pages/admin_products_page.dart';
@@ -336,6 +346,14 @@ class AppRouter {
         builder: (context, state) => const DeliveryVerificationPage(),
       ),
       GoRoute(
+        path: AppConstants.customerSecurityRoute,
+        builder: (context, state) => const CustomerSecurityPage(),
+      ),
+      GoRoute(
+        path: AppConstants.customerReviewsRoute,
+        builder: (context, state) => const CustomerReviewsPage(),
+      ),
+      GoRoute(
         path: AppConstants.checkoutRoute,
         builder: (context, state) => const CheckoutPage(),
       ),
@@ -518,6 +536,14 @@ class AppRouter {
           );
         },
       ),
+      GoRoute(
+        path: AppConstants.sellerCancellationsRoute,
+        builder: (context, state) => const SellerCancellationsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerReturnsRoute,
+        builder: (context, state) => const SellerReturnsPage(),
+      ),
       // Broker panel routes
       GoRoute(
         path: AppConstants.brokerDashboardRoute,
@@ -546,6 +572,30 @@ class AppRouter {
       GoRoute(
         path: AppConstants.brokerEarningsRoute,
         builder: (context, state) => const BrokerEarningsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.mawingaFindProductsRoute,
+        builder: (context, state) => const MawingaFindProductsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.mawingaShareEarnRoute,
+        builder: (context, state) => const MawingaShareEarnPage(),
+      ),
+      GoRoute(
+        path: AppConstants.mawingaLeaderboardRoute,
+        builder: (context, state) => const MawingaLeaderboardPage(),
+      ),
+      GoRoute(
+        path: AppConstants.mawingaAcademyRoute,
+        builder: (context, state) => const MawingaAcademyPage(),
+      ),
+      GoRoute(
+        path: AppConstants.mawingaStoreRoute,
+        builder: (context, state) => const MawingaStorePage(),
+      ),
+      GoRoute(
+        path: AppConstants.mawingaReferralRoute,
+        builder: (context, state) => const MawingaReferralPage(),
       ),
       // Admin panel routes
       GoRoute(

@@ -421,6 +421,8 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
       ('Promotions', Uicons.ticket, AppConstants.sellerPromotionsRoute),
       ('Reviews', Uicons.star, AppConstants.sellerReviewsRoute),
       ('Q&A', Uicons.circleQuestion, AppConstants.sellerQuestionsRoute),
+      ('Cancellations', Uicons.circleXmark, AppConstants.sellerCancellationsRoute),
+      ('Returns', Uicons.arrowLeft, AppConstants.sellerReturnsRoute),
     ];
 
     return GridView.builder(
