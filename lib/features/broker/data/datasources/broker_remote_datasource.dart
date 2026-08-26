@@ -148,6 +148,26 @@ class BrokerRemoteDataSource {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getCommissions({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final response = await _client.get(
+        ApiConstants.brokerCommissions,
+        queryParameters: {'page': page, 'page_size': pageSize},
+      );
+      final data = response.data;
+      if (data is List) return data.cast<Map<String, dynamic>>();
+      if (data is Map && data['results'] != null) {
+        return (data['results'] as List).cast<Map<String, dynamic>>();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
   Future<BrokerWalletModel> getWallet() async {
     try {
       final response = await _client.get(ApiConstants.brokerWallet);

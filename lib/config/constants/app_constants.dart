@@ -37,6 +37,7 @@ abstract class AppConstants {
   static const String supportTicketsRoute = '/support-tickets';
   static const String supportTicketDetailRoute = '/support-ticket-detail';
   static const String supportTicketCreateRoute = '/support-ticket-create';
+  static const String deliveryVerificationRoute = '/delivery-verification';
   static const String checkoutRoute = '/checkout';
   static const String paymentProcessingRoute = '/payment-processing';
 
@@ -92,6 +93,7 @@ abstract class AppConstants {
   static const String brokerOpportunitiesRoute = '/broker-opportunities';
   static const String brokerProductsRoute = '/broker-products';
   static const String brokerAnalyticsRoute = '/broker-analytics';
+  static const String brokerEarningsRoute = '/broker-earnings';
 
   // Admin panel routes
   static const String adminDashboardRoute = '/admin-dashboard';
@@ -107,6 +109,25 @@ abstract class AppConstants {
   static const String adminAlertsRoute = '/admin-alerts';
   static const String adminActivityLogsRoute = '/admin-activity-logs';
   static const String adminRolesRoute = '/admin-roles';
+  static const String adminFinanceRoute = '/admin-finance';
+  static const String adminAdvertisementsRoute = '/admin-advertisements';
+  static const String adminMarketplaceSettingsRoute = '/admin-marketplace-settings';
+
+  // Admin additional routes
+  static const String adminCatalogRoute = '/admin-catalog';
+  static const String adminPaymentsRoute = '/admin-payments';
+  static const String adminAllOrdersRoute = '/admin-all-orders';
+  static const String adminOrderDetailRoute = '/admin-order-detail';
+
+  // Logistics panel routes
+  static const String logisticsDashboardRoute = '/logistics-dashboard';
+  static const String logisticsShipmentsRoute = '/logistics-shipments';
+  static const String logisticsWalletRoute = '/logistics-wallet';
+  static const String logisticsTeamRoute = '/logistics-team';
+  static const String logisticsPricingRoute = '/logistics-pricing';
+  static const String logisticsIntegrationRoute = '/logistics-integration';
+  static const String logisticsOnboardingRoute = '/logistics-onboarding';
+  static const String logisticsSettingsRoute = '/logistics-settings';
 
   // Timeouts
   static const int connectionTimeoutSeconds = 30;

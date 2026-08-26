@@ -84,6 +84,16 @@ class BrokerWalletLoaded extends BrokerState {
   });
 }
 
+class BrokerEarningsLoaded extends BrokerState {
+  final BrokerCommissionSummaryModel summary;
+  final List<Map<String, dynamic>> commissions;
+
+  const BrokerEarningsLoaded({
+    required this.summary,
+    this.commissions = const [],
+  });
+}
+
 class BrokerProductsLoaded extends BrokerState {
   final List<BrokerProductModel> products;
 
@@ -355,6 +365,24 @@ class BrokerCubit extends Cubit<BrokerState> {
       emit(BrokerAnalyticsLoaded(overview: overview));
     } on ServerException catch (e) {
       _logger.e('Broker analytics error: ${e.message}');
+      emit(BrokerError(message: e.message));
+    }
+  }
+
+  Future<void> loadEarnings() async {
+    emit(const BrokerLoading());
+    try {
+      final summary = await _dataSource.getCommissionSummary();
+      List<Map<String, dynamic>> commissions = [];
+      try {
+        commissions = await _dataSource.getCommissions();
+      } catch (_) {}
+      emit(BrokerEarningsLoaded(
+        summary: summary,
+        commissions: commissions,
+      ));
+    } on ServerException catch (e) {
+      _logger.e('Broker earnings error: ${e.message}');
       emit(BrokerError(message: e.message));
     }
   }

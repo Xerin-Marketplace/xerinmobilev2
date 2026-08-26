@@ -16,10 +16,12 @@ import 'features/customer/presentation/cubit/promotion_cubit.dart';
 import 'features/customer/presentation/cubit/recommendation_cubit.dart';
 import 'features/customer/presentation/cubit/search_cubit.dart';
 import 'features/customer/presentation/cubit/support_cubit.dart';
+import 'features/customer/presentation/cubit/delivery_verification_cubit.dart';
 import 'features/customer/presentation/cubit/wishlist_cubit.dart';
 import 'features/seller/presentation/cubit/seller_cubit.dart';
 import 'features/broker/presentation/cubit/broker_cubit.dart';
 import 'features/admin/presentation/cubit/admin_cubit.dart';
+import 'features/logistics/presentation/cubit/logistics_cubit.dart';
 
 /// Root app widget.
 class XerinApp extends StatefulWidget {
@@ -53,9 +55,11 @@ class _XerinAppState extends State<XerinApp> {
         BlocProvider(create: (_) => sl<PromotionCubit>()),
         BlocProvider(create: (_) => sl<SearchCubit>()),
         BlocProvider(create: (_) => sl<SupportCubit>()),
+        BlocProvider(create: (_) => sl<DeliveryVerificationCubit>()),
         BlocProvider(create: (_) => sl<SellerCubit>()),
         BlocProvider(create: (_) => sl<BrokerCubit>()),
         BlocProvider(create: (_) => sl<AdminCubit>()),
+        BlocProvider(create: (_) => sl<LogisticsCubit>()),
       ],
       child: BlocBuilder<AppThemeCubit, AppThemeState>(
         builder: (context, state) {

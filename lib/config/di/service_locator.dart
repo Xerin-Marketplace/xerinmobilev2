@@ -26,6 +26,7 @@ import '../../features/customer/data/datasources/recommendation_remote_datasourc
 import '../../features/customer/data/datasources/review_remote_datasource.dart';
 import '../../features/customer/data/datasources/search_remote_datasource.dart';
 import '../../features/customer/data/datasources/support_remote_datasource.dart';
+import '../../features/customer/data/datasources/delivery_verification_remote_datasource.dart';
 import '../../features/customer/data/datasources/wishlist_remote_datasource.dart';
 import '../../features/customer/presentation/cubit/cart_cubit.dart';
 import '../../features/customer/presentation/cubit/customer_cubit.dart';
@@ -38,6 +39,7 @@ import '../../features/customer/presentation/cubit/recommendation_cubit.dart';
 import '../../features/customer/presentation/cubit/review_cubit.dart';
 import '../../features/customer/presentation/cubit/search_cubit.dart';
 import '../../features/customer/presentation/cubit/support_cubit.dart';
+import '../../features/customer/presentation/cubit/delivery_verification_cubit.dart';
 import '../../features/customer/presentation/cubit/wishlist_cubit.dart';
 import '../../features/seller/data/datasources/seller_remote_datasource.dart';
 import '../../features/seller/presentation/cubit/seller_cubit.dart';
@@ -45,6 +47,8 @@ import '../../features/broker/data/datasources/broker_remote_datasource.dart';
 import '../../features/broker/presentation/cubit/broker_cubit.dart';
 import '../../features/admin/data/datasources/admin_remote_datasource.dart';
 import '../../features/admin/presentation/cubit/admin_cubit.dart';
+import '../../features/logistics/data/datasources/logistics_remote_datasource.dart';
+import '../../features/logistics/presentation/cubit/logistics_cubit.dart';
 import '../constants/api_constants.dart';
 
 final GetIt sl = GetIt.instance;
@@ -266,11 +270,31 @@ Future<void> initServiceLocator({bool reset = false}) async {
     ),
   );
 
+  // Delivery Verification
+  sl.registerLazySingleton<DeliveryVerificationRemoteDataSource>(
+      () => DeliveryVerificationRemoteDataSource(sl()));
+  sl.registerFactory<DeliveryVerificationCubit>(
+    () => DeliveryVerificationCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+
   // Admin
   sl.registerLazySingleton<AdminRemoteDataSource>(
       () => AdminRemoteDataSource(sl()));
   sl.registerFactory<AdminCubit>(
     () => AdminCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+
+  // Logistics
+  sl.registerLazySingleton<LogisticsRemoteDataSource>(
+      () => LogisticsRemoteDataSource(sl()));
+  sl.registerFactory<LogisticsCubit>(
+    () => LogisticsCubit(
       dataSource: sl(),
       logger: sl(),
     ),

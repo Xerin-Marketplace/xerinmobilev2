@@ -254,6 +254,54 @@ class AdminMarketplaceSettingsLoaded extends AdminState {
   const AdminMarketplaceSettingsLoaded(this.settings);
 }
 
+class AdminCatalogLoaded extends AdminState {
+  final List<Map<String, dynamic>> brands;
+  final List<Map<String, dynamic>> productCategories;
+  final List<Map<String, dynamic>> businessCategories;
+  final Map<String, dynamic>? summary;
+  const AdminCatalogLoaded({
+    this.brands = const [],
+    this.productCategories = const [],
+    this.businessCategories = const [],
+    this.summary,
+  });
+}
+
+class AdminPaymentsLoaded extends AdminState {
+  final List<Map<String, dynamic>> payments;
+  final Map<String, dynamic>? dashboard;
+  final String? statusFilter;
+  const AdminPaymentsLoaded({
+    this.payments = const [],
+    this.dashboard,
+    this.statusFilter,
+  });
+}
+
+class AdminAllOrdersLoaded extends AdminState {
+  final List<Map<String, dynamic>> orders;
+  final int total;
+  final int page;
+  final int pageSize;
+  final bool loadingMore;
+  final String? statusFilter;
+  final String? searchQuery;
+  const AdminAllOrdersLoaded({
+    this.orders = const [],
+    this.total = 0,
+    this.page = 1,
+    this.pageSize = 20,
+    this.loadingMore = false,
+    this.statusFilter,
+    this.searchQuery,
+  });
+}
+
+class AdminOrderDetailLoaded extends AdminState {
+  final Map<String, dynamic> order;
+  const AdminOrderDetailLoaded(this.order);
+}
+
 // ─── Cubit ───
 class AdminCubit extends Cubit<AdminState> {
   final AdminRemoteDataSource _dataSource;
@@ -947,6 +995,113 @@ class AdminCubit extends Cubit<AdminState> {
       await loadMarketplaceSettings();
     } catch (e) {
       _logger.e('AdminCubit.updateMarketplaceSettings error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  // ─── Catalog ───
+  Future<void> loadCatalog() async {
+    emit(const AdminLoading());
+    try {
+      final brands = await _dataSource.getCatalogBrands();
+      final productCategories =
+          await _dataSource.getCatalogProductCategories();
+      final businessCategories =
+          await _dataSource.getCatalogBusinessCategories();
+      Map<String, dynamic>? summary;
+      try {
+        summary = await _dataSource.getCatalogSummary();
+      } catch (_) {}
+      emit(AdminCatalogLoaded(
+        brands: brands,
+        productCategories: productCategories,
+        businessCategories: businessCategories,
+        summary: summary,
+      ));
+    } catch (e) {
+      _logger.e('AdminCubit.loadCatalog error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> createBrand(String name, {String? description}) async {
+    try {
+      await _dataSource.createBrand({'name': name, 'description': description});
+      emit(const AdminActionSuccess('Brand created'));
+      await loadCatalog();
+    } catch (e) {
+      _logger.e('AdminCubit.createBrand error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> updateBrand(
+      String brandId, Map<String, dynamic> data) async {
+    try {
+      await _dataSource.updateBrand(brandId, data);
+      emit(const AdminActionSuccess('Brand updated'));
+      await loadCatalog();
+    } catch (e) {
+      _logger.e('AdminCubit.updateBrand error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  // ─── Payments ───
+  Future<void> loadPayments({String? status}) async {
+    emit(const AdminLoading());
+    try {
+      final payments = await _dataSource.getAllPayments(status: status);
+      Map<String, dynamic>? dashboard;
+      try {
+        dashboard = await _dataSource.getPaymentsDashboard();
+      } catch (_) {}
+      emit(AdminPaymentsLoaded(
+        payments: payments,
+        dashboard: dashboard,
+        statusFilter: status,
+      ));
+    } catch (e) {
+      _logger.e('AdminCubit.loadPayments error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  // ─── Admin All Orders ───
+  Future<void> loadAllOrders({String? status, String? search}) async {
+    emit(const AdminLoading());
+    try {
+      final orders =
+          await _dataSource.getAdminAllOrders(status: status, search: search);
+      emit(AdminAllOrdersLoaded(
+        orders: orders,
+        statusFilter: status,
+        searchQuery: search,
+      ));
+    } catch (e) {
+      _logger.e('AdminCubit.loadAllOrders error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> loadOrderDetail(String orderId) async {
+    emit(const AdminLoading());
+    try {
+      final order = await _dataSource.getOrderDetail(orderId);
+      emit(AdminOrderDetailLoaded(order));
+    } catch (e) {
+      _logger.e('AdminCubit.loadOrderDetail error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> updateOrderStatus(String orderId, String status) async {
+    try {
+      await _dataSource.updateOrderStatus(orderId, status);
+      emit(const AdminActionSuccess('Order status updated'));
+      await loadOrderDetail(orderId);
+    } catch (e) {
+      _logger.e('AdminCubit.updateOrderStatus error: $e');
       emit(AdminError(e.toString()));
     }
   }

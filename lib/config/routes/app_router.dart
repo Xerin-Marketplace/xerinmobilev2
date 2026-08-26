@@ -51,6 +51,7 @@ import '../../features/customer/presentation/pages/stores_page.dart';
 import '../../features/customer/presentation/pages/support_tickets_page.dart';
 import '../../features/customer/presentation/pages/support_ticket_detail_page.dart';
 import '../../features/customer/presentation/pages/support_ticket_create_page.dart';
+import '../../features/customer/presentation/pages/delivery_verification_page.dart';
 import '../../features/customer/presentation/pages/trending_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/seller/presentation/pages/seller_dashboard_page.dart';
@@ -74,6 +75,7 @@ import '../../features/broker/presentation/pages/broker_wallet_page.dart';
 import '../../features/broker/presentation/pages/broker_opportunities_page.dart';
 import '../../features/broker/presentation/pages/broker_products_page.dart';
 import '../../features/broker/presentation/pages/broker_analytics_page.dart';
+import '../../features/broker/presentation/pages/broker_earnings_page.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/admin_sellers_page.dart';
 import '../../features/admin/presentation/pages/admin_products_page.dart';
@@ -86,6 +88,21 @@ import '../../features/admin/presentation/pages/admin_analytics_page.dart';
 import '../../features/admin/presentation/pages/admin_alerts_page.dart';
 import '../../features/admin/presentation/pages/admin_activity_logs_page.dart';
 import '../../features/admin/presentation/pages/admin_roles_page.dart';
+import '../../features/admin/presentation/pages/admin_finance_page.dart';
+import '../../features/admin/presentation/pages/admin_advertisements_page.dart';
+import '../../features/admin/presentation/pages/admin_marketplace_settings_page.dart';
+import '../../features/admin/presentation/pages/admin_catalog_page.dart';
+import '../../features/admin/presentation/pages/admin_payments_page.dart';
+import '../../features/admin/presentation/pages/admin_all_orders_page.dart';
+import '../../features/admin/presentation/pages/admin_order_detail_page.dart';
+import '../../features/logistics/presentation/pages/logistics_dashboard_page.dart';
+import '../../features/logistics/presentation/pages/logistics_shipments_page.dart';
+import '../../features/logistics/presentation/pages/logistics_wallet_page.dart';
+import '../../features/logistics/presentation/pages/logistics_team_page.dart';
+import '../../features/logistics/presentation/pages/logistics_pricing_page.dart';
+import '../../features/logistics/presentation/pages/logistics_integration_page.dart';
+import '../../features/logistics/presentation/pages/logistics_onboarding_page.dart';
+import '../../features/logistics/presentation/pages/logistics_settings_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../constants/app_constants.dart';
 
@@ -315,6 +332,10 @@ class AppRouter {
         builder: (context, state) => const SupportTicketCreatePage(),
       ),
       GoRoute(
+        path: AppConstants.deliveryVerificationRoute,
+        builder: (context, state) => const DeliveryVerificationPage(),
+      ),
+      GoRoute(
         path: AppConstants.checkoutRoute,
         builder: (context, state) => const CheckoutPage(),
       ),
@@ -522,6 +543,10 @@ class AppRouter {
         path: AppConstants.brokerAnalyticsRoute,
         builder: (context, state) => const BrokerAnalyticsPage(),
       ),
+      GoRoute(
+        path: AppConstants.brokerEarningsRoute,
+        builder: (context, state) => const BrokerEarningsPage(),
+      ),
       // Admin panel routes
       GoRoute(
         path: AppConstants.adminDashboardRoute,
@@ -574,6 +599,70 @@ class AppRouter {
       GoRoute(
         path: AppConstants.adminRolesRoute,
         builder: (context, state) => const AdminRolesPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminFinanceRoute,
+        builder: (context, state) => const AdminFinancePage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminAdvertisementsRoute,
+        builder: (context, state) => const AdminAdvertisementsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminMarketplaceSettingsRoute,
+        builder: (context, state) => const AdminMarketplaceSettingsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminCatalogRoute,
+        builder: (context, state) => const AdminCatalogPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminPaymentsRoute,
+        builder: (context, state) => const AdminPaymentsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminAllOrdersRoute,
+        builder: (context, state) => const AdminAllOrdersPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminOrderDetailRoute,
+        builder: (context, state) {
+          final orderId = state.uri.queryParameters['id'] ?? '';
+          return AdminOrderDetailPage(orderId: orderId);
+        },
+      ),
+      // Logistics panel routes
+      GoRoute(
+        path: AppConstants.logisticsDashboardRoute,
+        builder: (context, state) => const LogisticsDashboardPage(),
+      ),
+      GoRoute(
+        path: AppConstants.logisticsShipmentsRoute,
+        builder: (context, state) => const LogisticsShipmentsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.logisticsWalletRoute,
+        builder: (context, state) => const LogisticsWalletPage(),
+      ),
+      GoRoute(
+        path: AppConstants.logisticsTeamRoute,
+        builder: (context, state) => const LogisticsTeamPage(),
+      ),
+      GoRoute(
+        path: AppConstants.logisticsPricingRoute,
+        builder: (context, state) => const LogisticsPricingPage(),
+      ),
+      GoRoute(
+        path: AppConstants.logisticsIntegrationRoute,
+        builder: (context, state) => const LogisticsIntegrationPage(),
+      ),
+      GoRoute(
+        path: AppConstants.logisticsOnboardingRoute,
+        builder: (context, state) => const LogisticsOnboardingPage(),
+      ),
+      GoRoute(
+        path: AppConstants.logisticsSettingsRoute,
+        builder: (context, state) => const LogisticsSettingsPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

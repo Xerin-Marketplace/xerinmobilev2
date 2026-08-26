@@ -486,6 +486,33 @@ abstract class ApiConstants {
   static const String adminMarketplaceCommissionPreview =
       '/admin/marketplace-settings/commission-preview';
 
+  // Admin Catalog endpoints
+  static const String adminCatalogSummary = '/admin/catalog/summary';
+  static const String adminCatalogProducts = '/admin/catalog/products';
+  static const String adminCatalogProductCategories =
+      '/admin/catalog/product-categories';
+  static const String adminCatalogBusinessCategories =
+      '/admin/catalog/business-categories';
+  static const String adminCatalogBrands = '/admin/catalog/brands';
+
+  // Admin Payments endpoints
+  static const String adminPaymentsDashboard = '/admin/payments/dashboard';
+  static const String adminPayments = '/admin/payments';
+  static String adminPaymentById(String paymentId) => '/admin/payments/$paymentId';
+  static const String adminRefunds = '/admin/refunds';
+  static String adminRefundById(String refundId) => '/admin/refunds/$refundId';
+
+  // Admin Orders endpoints
+  static const String adminOrdersAll = '/orders/admin/all';
+  static String adminOrderDetail(String orderId) => '/orders/$orderId';
+  static String adminOrderWorkflow(String orderId) =>
+      '/orders/$orderId/workflow';
+  static String adminOrderStatus(String orderId) => '/orders/$orderId/status';
+
+  // Seller order messages
+  static String sellerOrderMessages(String sellerOrderId) =>
+      '/seller/orders/$sellerOrderId/messages';
+
   // Logistics endpoints
   static const String logisticsCountryOptions = '/logistics/country-options';
   static const String logisticsCompanies = '/logistics/companies';
@@ -519,6 +546,26 @@ abstract class ApiConstants {
       '/logistics/companies/$companyId/integration';
   static const String logisticsMeIntegration = '/logistics/me/integration';
   static const String logisticsMeWebhookEvents = '/logistics/me/webhook-events';
+  static const String logisticsMeDashboard = '/logistics/me/dashboard';
+  static const String logisticsMeAccount = '/logistics/me/account';
+  static const String logisticsMeCompany = '/logistics/me/company';
+  static const String logisticsMeShipments = '/logistics/me/shipments';
+  static String logisticsMeShipmentHandover(String shipmentId) =>
+      '/logistics/me/shipments/$shipmentId/handover';
+  static String logisticsMeShipmentArrivedForPickup(String shipmentId) =>
+      '/logistics/me/shipments/$shipmentId/arrived-for-pickup';
+  static String logisticsMeShipmentPickupProof(String shipmentId) =>
+      '/logistics/me/shipments/$shipmentId/pickup-proof';
+  static const String logisticsMeOnboarding = '/logistics/me/onboarding';
+  static const String logisticsMeOnboardingSubmit =
+      '/logistics/me/onboarding/submit';
+  static const String logisticsMeDocuments = '/logistics/me/documents';
+  static const String logisticsMeDocumentsRequirements =
+      '/logistics/me/documents/requirements';
+  static String logisticsMeDocumentById(String docId) =>
+      '/logistics/me/documents/$docId';
+  static String logisticsMeDocumentView(String docId) =>
+      '/logistics/me/documents/$docId/view';
 
   // Logistics Wallet endpoints
   static const String logisticsWalletMe = '/logistics/wallet/me';

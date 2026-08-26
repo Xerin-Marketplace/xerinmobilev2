@@ -204,6 +204,13 @@ class AdminAccess {
     '/admin-alerts': 'Alerts',
     '/admin-activity-logs': 'ActivityLogs',
     '/admin-roles': 'Roles',
+    '/admin-finance': 'Finance',
+    '/admin-advertisements': 'Advertisements',
+    '/admin-marketplace-settings': 'MarketplaceSettings',
+    '/admin-catalog': 'Catalog',
+    '/admin-payments': 'Payments',
+    '/admin-all-orders': 'Orders',
+    '/admin-order-detail': 'Orders',
   };
 
   /// Returns `true` if [routePath] is an admin route that the [user]
