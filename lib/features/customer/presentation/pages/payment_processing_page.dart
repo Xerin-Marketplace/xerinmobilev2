@@ -35,6 +35,7 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
   Timer? _pollTimer;
   int _attempts = 0;
   static const int _maxAttempts = 30;
+  bool _isRetrying = false;
 
   late AnimationController _successController;
   late AnimationController _failController;
@@ -94,7 +95,7 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
       }
 
       final cubit = context.read<CustomerCubit>();
-      final payment = await cubit.checkPaymentStatus(widget.paymentId!);
+      final payment = await cubit.verifyPaymentStatus(widget.paymentId!);
 
       if (!mounted) return;
 
@@ -137,6 +138,31 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
       _statusMessage = 'Payment confirmation timed out. Check your order history for updates.';
     });
     _failController.forward();
+  }
+
+  Future<void> _retryPayment() async {
+    if (widget.paymentId == null || widget.paymentId!.isEmpty) return;
+    setState(() {
+      _isRetrying = true;
+      _uiState = _PaymentUIState.processing;
+      _statusMessage = 'Retrying payment...';
+      _attempts = 0;
+    });
+    final cubit = context.read<CustomerCubit>();
+    final payment = await cubit.retryPayment(paymentId: widget.paymentId!);
+    if (!mounted) return;
+    setState(() => _isRetrying = false);
+    if (payment == null) {
+      _onPaymentFailed('Retry failed. Please try again later.');
+      return;
+    }
+    if (payment.isCompleted) {
+      _onPaymentSuccess();
+    } else if (payment.isFailed || payment.isCancelled) {
+      _onPaymentFailed('Payment was declined. Please try again.');
+    } else {
+      _pollPaymentStatus();
+    }
   }
 
   @override
@@ -376,16 +402,25 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: () => context.go('/checkout'),
+            onPressed: _isRetrying ? null : _retryPayment,
             style: ElevatedButton.styleFrom(
               backgroundColor: cs.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               elevation: 0,
             ),
-            child: const Text('Try Again',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
+            child: _isRetrying
+              ? const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+                    SizedBox(width: 12),
+                    Text('Retrying...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  ],
+                )
+              : const Text('Retry Payment',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
           ),
         ),
         const SizedBox(height: 12),

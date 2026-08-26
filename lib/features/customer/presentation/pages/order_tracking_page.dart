@@ -10,6 +10,21 @@ class OrderTrackingPage extends StatelessWidget {
 
   const OrderTrackingPage({super.key, required this.order});
 
+  Color _shipmentStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'delivered':
+        return const Color(0xFF22C55E);
+      case 'dispatched':
+      case 'in_transit':
+        return const Color(0xFF8B5CF6);
+      case 'out_for_delivery':
+        return const Color(0xFF3B82F6);
+      case 'pending':
+      default:
+        return const Color(0xFFF59E0B);
+    }
+  }
+
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
       case 'completed':
@@ -202,6 +217,16 @@ class OrderTrackingPage extends StatelessWidget {
                           ),
                         ),
                       ),
+                    // Shipment tracking info
+                    if (order.shipments.isNotEmpty) ...[
+                      const SizedBox(height: 28),
+                      Text('Shipment Tracking',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w700, color: colorScheme.onSurface)),
+                      const SizedBox(height: 12),
+                      ...order.shipments.map((shipment) => _buildShipmentCard(shipment, colorScheme, isDark)),
+                    ],
+
                     const SizedBox(height: 28),
                     if (order.statusHistory.isNotEmpty) ...[
                       Text('Status History',
@@ -258,5 +283,152 @@ class OrderTrackingPage extends StatelessWidget {
     } catch (_) {
       return isoDate;
     }
+  }
+
+  Widget _buildShipmentCard(ShipmentModel shipment, ColorScheme cs, bool isDark) {
+    final statusColor = _shipmentStatusColor(shipment.status);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF252525) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Shipment header
+          Row(
+            children: [
+              Container(
+                width: 36, height: 36,
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Uicons.shippingFast, color: statusColor, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(shipment.carrierName ?? 'Xerin Express',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurface),
+                    ),
+                    if (shipment.trackingNumber != null) ...[
+                      const SizedBox(height: 2),
+                      Text('Tracking: ${shipment.trackingNumber}',
+                        style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(shipment.status.replaceAll('_', ' ').toUpperCase(),
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: statusColor),
+                ),
+              ),
+            ],
+          ),
+          if (shipment.estimatedDeliveryFrom != null || shipment.estimatedDeliveryTo != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Icon(Uicons.clock, size: 14, color: cs.onSurface.withValues(alpha: 0.4)),
+                const SizedBox(width: 6),
+                Text('Est. delivery: ${_formatDateRange(shipment.estimatedDeliveryFrom, shipment.estimatedDeliveryTo)}',
+                  style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
+                ),
+              ],
+            ),
+          ],
+          // Tracking events
+          if (shipment.trackingEvents.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            ...shipment.trackingEvents.map((event) => _buildTrackingEvent(event, cs, statusColor)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrackingEvent(ShipmentTrackingEventModel event, ColorScheme cs, Color accentColor) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 10, height: 10,
+                decoration: BoxDecoration(
+                  color: accentColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              Container(
+                width: 2, height: 28,
+                color: cs.onSurface.withValues(alpha: 0.1),
+              ),
+            ],
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(event.status.replaceAll('_', ' ').toUpperCase(),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface),
+                ),
+                if (event.location != null) ...[
+                  const SizedBox(height: 2),
+                  Text(event.location!,
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
+                  ),
+                ],
+                if (event.notes != null) ...[
+                  const SizedBox(height: 2),
+                  Text(event.notes!,
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
+                  ),
+                ],
+                if (event.createdAt != null) ...[
+                  const SizedBox(height: 2),
+                  Text(_formatDate(event.createdAt!),
+                    style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.3)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDateRange(String? from, String? to) {
+    String fmt(String? iso) {
+      if (iso == null) return '';
+      try {
+        final dt = DateTime.parse(iso);
+        return '${dt.day}/${dt.month}/${dt.year}';
+      } catch (_) {
+        return iso;
+      }
+    }
+    final f = fmt(from);
+    final t = fmt(to);
+    if (f.isEmpty) return 'By $t';
+    if (t.isEmpty) return 'From $f';
+    return '$f - $t';
   }
 }

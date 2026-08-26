@@ -4,19 +4,31 @@ class CartModel {
   final String id;
   final String userId;
   final String? couponCode;
+  final String? promotionCode;
+  final Map<String, dynamic>? promotion;
   final List<CartItemModel> items;
   final double subtotal;
+  final double couponDiscountAmount;
+  final double promotionDiscountAmount;
   final double discountAmount;
   final double total;
+  final String currency;
+  final List<String> validationMessages;
 
   const CartModel({
     required this.id,
     required this.userId,
     this.couponCode,
+    this.promotionCode,
+    this.promotion,
     this.items = const [],
     this.subtotal = 0.0,
+    this.couponDiscountAmount = 0.0,
+    this.promotionDiscountAmount = 0.0,
     this.discountAmount = 0.0,
     this.total = 0.0,
+    this.currency = 'TZS',
+    this.validationMessages = const [],
   });
 
   int get itemCount => items.fold(0, (sum, item) => sum + item.quantity);
@@ -35,16 +47,23 @@ class CartModel {
 
   factory CartModel.fromJson(Map<String, dynamic> json) {
     final itemsList = json['items'] as List<dynamic>? ?? [];
+    final valMsgs = json['validation_messages'] as List<dynamic>? ?? [];
     return CartModel(
       id: json['id']?.toString() ?? '',
       userId: json['user_id']?.toString() ?? '',
       couponCode: json['coupon_code'] as String?,
+      promotionCode: json['promotion_code'] as String?,
+      promotion: json['promotion'] as Map<String, dynamic>?,
       items: itemsList
           .map((e) => CartItemModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       subtotal: _parsePrice(json['subtotal']),
+      couponDiscountAmount: _parsePrice(json['coupon_discount_amount']),
+      promotionDiscountAmount: _parsePrice(json['promotion_discount_amount']),
       discountAmount: _parsePrice(json['discount_amount']),
       total: _parsePrice(json['total']),
+      currency: json['currency'] as String? ?? 'TZS',
+      validationMessages: valMsgs.map((e) => e.toString()).toList(),
     );
   }
 

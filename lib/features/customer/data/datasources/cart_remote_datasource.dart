@@ -92,4 +92,66 @@ class CartRemoteDataSource {
       throw ServerException(_client.getErrorMessage(e));
     }
   }
+
+  Future<List<Map<String, dynamic>>> getAvailablePromotions() async {
+    try {
+      final response = await _client.get(ApiConstants.cartAvailablePromotions);
+      final data = response.data;
+      List<dynamic> list;
+      if (data is List) {
+        list = data;
+      } else if (data is Map && data['items'] != null) {
+        list = data['items'] as List;
+      } else {
+        list = [];
+      }
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<CartModel> applyPromotion(String code) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.cartApplyPromotion,
+        data: {'code': code},
+      );
+      return CartModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<CartModel> removePromotion() async {
+    try {
+      final response = await _client.delete(ApiConstants.cartRemovePromotion);
+      return CartModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<CartModel> validateCart() async {
+    try {
+      final response = await _client.post(ApiConstants.cartValidate);
+      return CartModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> mergeGuestCart(
+    List<Map<String, dynamic>> items,
+  ) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.cartMerge,
+        data: {'items': items},
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
 }

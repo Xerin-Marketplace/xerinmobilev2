@@ -24,18 +24,32 @@ class CheckoutPage extends StatefulWidget {
 class _CheckoutPageState extends State<CheckoutPage> {
   final _notesController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _couponController = TextEditingController();
   final _recipientNameController = TextEditingController();
   final _recipientPhoneController = TextEditingController();
   String? _selectedAddressId;
   String _selectedPaymentMethod = 'mobile_money';
+  String _selectedProvider = '';
   bool _isProcessing = false;
   bool _isFetchingLocation = false;
+  bool _isFetchingQuotes = false;
+  bool _isApplyingCoupon = false;
   String? _locationStatusText;
+  List<Map<String, dynamic>> _shippingQuotes = [];
+  Map<String, dynamic>? _selectedShippingRate;
+  String? _appliedCouponCode;
 
   static const _paymentTypes = [
     {'value': 'mobile_money', 'label': 'Mobile Money', 'icon': Uicons.mobile, 'color': Color(0xFF22C55E), 'subtitle': 'Pay via MNO'},
     {'value': 'card', 'label': 'Card', 'icon': Uicons.creditCard, 'color': Color(0xFFF59E0B), 'subtitle': 'Visa / Mastercard'},
     {'value': 'cash_on_delivery', 'label': 'Cash on Delivery', 'icon': Uicons.shippingFast, 'color': Color(0xFF3B82F6), 'subtitle': 'Pay on arrival'},
+  ];
+
+  static const _mobileMoneyProviders = [
+    {'value': 'M-Pesa', 'label': 'M-Pesa', 'color': Color(0xFF22C55E)},
+    {'value': 'Airtel Money', 'label': 'Airtel Money', 'color': Color(0xFFE53935)},
+    {'value': 'Halopesa', 'label': 'HaloPesa', 'color': Color(0xFF3B82F6)},
+    {'value': 'Tigo Pesa', 'label': 'Tigo Pesa', 'color': Color(0xFF8B5CF6)},
   ];
 
   @override
@@ -50,9 +64,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
   void dispose() {
     _notesController.dispose();
     _phoneController.dispose();
+    _couponController.dispose();
     _recipientNameController.dispose();
     _recipientPhoneController.dispose();
     super.dispose();
+  }
+
+  double _parsePrice(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value.replaceAll(',', '')) ?? 0.0;
+    return 0.0;
+  }
+
+  double get _shippingAmount {
+    if (_selectedShippingRate == null) return 0.0;
+    return _parsePrice(_selectedShippingRate!['amount']);
   }
 
   String _formatCurrency(double amount) {
@@ -88,26 +114,105 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
+  Future<void> _fetchShippingQuotes() async {
+    if (_selectedAddressId == null) return;
+    final cartState = context.read<CartCubit>().state;
+    final subtotal = cartState is CartLoaded ? cartState.cart.subtotal : 0.0;
+    if (subtotal <= 0) return;
+
+    setState(() => _isFetchingQuotes = true);
+    try {
+      final quotes = await context.read<CustomerCubit>().fetchShippingQuotes(
+        addressId: _selectedAddressId!,
+        subtotal: subtotal,
+      );
+      setState(() {
+        _shippingQuotes = quotes;
+        _isFetchingQuotes = false;
+        if (quotes.isNotEmpty) {
+          _selectedShippingRate = quotes.first;
+        } else {
+          _selectedShippingRate = null;
+        }
+      });
+    } catch (e) {
+      setState(() => _isFetchingQuotes = false);
+      if (mounted) {
+        NotificationService().error('Failed to fetch shipping rates: $e');
+      }
+    }
+  }
+
+  Future<void> _applyCoupon() async {
+    final code = _couponController.text.trim();
+    if (code.isEmpty) {
+      NotificationService().warning('Please enter a coupon code');
+      return;
+    }
+    setState(() => _isApplyingCoupon = true);
+    try {
+      await context.read<CartCubit>().applyCoupon(code);
+      setState(() {
+        _appliedCouponCode = code;
+        _isApplyingCoupon = false;
+      });
+      if (mounted) NotificationService().success('Coupon applied successfully');
+    } catch (e) {
+      setState(() => _isApplyingCoupon = false);
+      if (mounted) NotificationService().error('Failed to apply coupon: $e');
+    }
+  }
+
+  Future<void> _removeCoupon() async {
+    setState(() => _isApplyingCoupon = true);
+    try {
+      await context.read<CartCubit>().removeCoupon();
+      setState(() {
+        _appliedCouponCode = null;
+        _couponController.clear();
+        _isApplyingCoupon = false;
+      });
+      if (mounted) NotificationService().success('Coupon removed');
+    } catch (e) {
+      setState(() => _isApplyingCoupon = false);
+      if (mounted) NotificationService().error('Failed to remove coupon: $e');
+    }
+  }
+
   Future<void> _placeOrder() async {
     if (_selectedAddressId == null) {
       NotificationService().warning('Please select a delivery address');
       return;
     }
 
-    if (_selectedPaymentMethod == 'mobile_money' && _phoneController.text.trim().isEmpty) {
-      NotificationService().warning('Please enter your phone number');
+    if (_selectedShippingRate == null) {
+      NotificationService().warning('Please select a shipping method');
       return;
+    }
+
+    if (_selectedPaymentMethod == 'mobile_money') {
+      if (_phoneController.text.trim().isEmpty) {
+        NotificationService().warning('Please enter your phone number');
+        return;
+      }
+      if (_selectedProvider.isEmpty) {
+        NotificationService().warning('Please select a mobile money provider');
+        return;
+      }
     }
 
     setState(() => _isProcessing = true);
 
     final cubit = context.read<CustomerCubit>();
+    final shippingRateId = _selectedShippingRate!['rate_id']?.toString() ?? '';
 
     await cubit.placeOrderAndPay(
-      shippingAddressId: _selectedAddressId,
+      shippingAddressId: _selectedAddressId!,
+      shippingRateId: shippingRateId,
+      couponCode: _appliedCouponCode,
       notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
       paymentMethod: _selectedPaymentMethod,
-      provider: null,
+      provider: _selectedPaymentMethod == 'mobile_money' ? _selectedProvider : null,
       phoneNumber: _selectedPaymentMethod == 'mobile_money' ? _phoneController.text.trim() : null,
     );
 
@@ -158,6 +263,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             if (_selectedAddressId == null && addresses.isNotEmpty) {
               final defaultAddr = addresses.where((a) => a.isDefault).firstOrNull;
               _selectedAddressId = (defaultAddr ?? addresses.first).id;
+              _fetchShippingQuotes();
             }
 
             return Stack(
@@ -271,6 +377,103 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               ),
                               const SizedBox(height: 16),
 
+                              // Shipping Method Selection
+                              _buildSectionCard(
+                                title: 'Shipping Method',
+                                icon: Uicons.shippingFast,
+                                cs: colorScheme,
+                                child: _isFetchingQuotes
+                                  ? const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+                                  : _shippingQuotes.isEmpty
+                                    ? _buildEmptyState('No shipping available', 'Select an address to see options', Uicons.truckBox, colorScheme)
+                                    : Column(
+                                        children: _shippingQuotes.map((rate) => _buildShippingOption(rate, colorScheme, isDark)).toList(),
+                                      ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Coupon / Discount
+                              _buildSectionCard(
+                                title: 'Coupon / Discount',
+                                icon: Uicons.tags,
+                                cs: colorScheme,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (_appliedCouponCode != null) ...[
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF22C55E).withValues(alpha: 0.06),
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.2)),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            const Icon(Uicons.badgeCheck, color: Color(0xFF22C55E), size: 18),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: Text('Coupon "$_appliedCouponCode" applied',
+                                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF22C55E)),
+                                              ),
+                                            ),
+                                            GestureDetector(
+                                              onTap: _isApplyingCoupon ? null : _removeCoupon,
+                                              child: const Icon(Uicons.crossSmall, color: Color(0xFF22C55E), size: 18),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ] else ...[
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextField(
+                                              controller: _couponController,
+                                              decoration: InputDecoration(
+                                                hintText: 'Enter coupon code',
+                                                hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.3)),
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                  borderSide: BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.1)),
+                                                ),
+                                                enabledBorder: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                  borderSide: BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.1)),
+                                                ),
+                                                focusedBorder: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                  borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+                                                ),
+                                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          SizedBox(
+                                            height: 50,
+                                            child: ElevatedButton(
+                                              onPressed: _isApplyingCoupon ? null : _applyCoupon,
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: colorScheme.primary,
+                                                foregroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                elevation: 0,
+                                              ),
+                                              child: _isApplyingCoupon
+                                                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                                : const Text('Apply', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
                               // Payment Method
                               _buildSectionCard(
                                 title: 'Payment Method',
@@ -281,6 +484,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                   children: [
                                     ..._paymentTypes.map((type) => _buildPaymentOption(type, colorScheme, isDark)),
                                     if (_selectedPaymentMethod == 'mobile_money') ...[
+                                      const SizedBox(height: 16),
+                                      // Provider selection
+                                      Text('Select Provider',
+                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.onSurface.withValues(alpha: 0.6)),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Wrap(
+                                        spacing: 8,
+                                        runSpacing: 8,
+                                        children: _mobileMoneyProviders.map((p) => _buildProviderChip(p, colorScheme)).toList(),
+                                      ),
                                       const SizedBox(height: 16),
                                       _buildPhoneInput(colorScheme),
                                     ],
@@ -329,7 +543,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 cs: colorScheme,
                                 child: _buildSummaryContent(cartTotal, colorScheme),
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 100),
                             ],
                           ],
                         ),
@@ -363,6 +577,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildPlaceOrderButton(ColorScheme cs, double cartTotal) {
+    final total = cartTotal + _shippingAmount;
     return ElevatedButton(
       onPressed: _isProcessing ? null : _placeOrder,
       style: ElevatedButton.styleFrom(
@@ -385,7 +600,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               children: [
                 const Icon(Uicons.lock, size: 18),
                 const SizedBox(width: 8),
-                Text('Pay ${_formatCurrency(cartTotal)}',
+                Text('Pay ${_formatCurrency(total)}',
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
               ],
@@ -424,11 +639,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildSummaryContent(double cartTotal, ColorScheme cs) {
+    final shipping = _shippingAmount;
+    final discount = cartTotal - (context.read<CartCubit>().state is CartLoaded ? (context.read<CartCubit>().state as CartLoaded).cart.total : cartTotal);
+    final grandTotal = cartTotal + shipping - (discount > 0 ? discount : 0);
     return Column(
       children: [
         _summaryRow('Subtotal', _formatCurrency(cartTotal), cs),
+        if (discount > 0) ...[
+          const SizedBox(height: 8),
+          _summaryRow('Discount', '- ${_formatCurrency(discount)}', cs, color: const Color(0xFF22C55E)),
+        ],
         const SizedBox(height: 8),
-        _summaryRow('Shipping', 'Calculated at checkout', cs),
+        _summaryRow('Shipping', _selectedShippingRate == null ? 'Select a method' : _formatCurrency(shipping), cs),
         const SizedBox(height: 8),
         _summaryRow('Tax', 'Included', cs),
         const SizedBox(height: 12),
@@ -438,7 +660,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface)),
-            Text(_formatCurrency(cartTotal),
+            Text(_formatCurrency(grandTotal),
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: cs.primary)),
           ],
         ),
@@ -473,6 +695,102 @@ class _CheckoutPageState extends State<CheckoutPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildShippingOption(Map<String, dynamic> rate, ColorScheme cs, bool isDark) {
+    final isSelected = _selectedShippingRate?['rate_id'] == rate['rate_id'];
+    final methodName = rate['method_name'] as String? ?? 'Shipping';
+    final carrierName = rate['carrier_name'] as String? ?? 'Xerin Express';
+    final amount = _parsePrice(rate['amount']);
+    final minDays = rate['min_delivery_days'] as int? ?? 1;
+    final maxDays = rate['max_delivery_days'] as int? ?? 7;
+    final isFree = amount == 0;
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedShippingRate = rate),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isSelected ? cs.primary.withValues(alpha: 0.03) : (isDark ? const Color(0xFF1E1E1E) : cs.surface),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.06),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                color: isSelected ? cs.primary.withValues(alpha: 0.12) : cs.onSurface.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Uicons.shippingFast, color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.4), size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(methodName,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isSelected ? cs.primary : cs.onSurface),
+                  ),
+                  const SizedBox(height: 2),
+                  Text('$carrierName • $minDays-$maxDays days',
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(isFree ? 'FREE' : _formatCurrency(amount),
+              style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w800,
+                color: isFree ? const Color(0xFF22C55E) : cs.onSurface,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 22, height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.2), width: 2),
+              ),
+              child: isSelected
+                ? Center(child: Container(width: 10, height: 10, decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle)))
+                : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProviderChip(Map<String, dynamic> provider, ColorScheme cs) {
+    final isSelected = _selectedProvider == provider['value'];
+    final color = provider['color'] as Color;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedProvider = provider['value'] as String),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.1) : cs.onSurface.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? color : cs.onSurface.withValues(alpha: 0.08),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Text(provider['label'] as String,
+          style: TextStyle(
+            fontSize: 13, fontWeight: FontWeight.w700,
+            color: isSelected ? color : cs.onSurface.withValues(alpha: 0.6),
+          ),
+        ),
+      ),
     );
   }
 
@@ -799,7 +1117,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Widget _buildAddressSelector(AddressModel address, ColorScheme cs, bool isDark) {
     final isSelected = _selectedAddressId == address.id;
     return GestureDetector(
-      onTap: () => setState(() => _selectedAddressId = address.id),
+      onTap: () {
+        setState(() => _selectedAddressId = address.id);
+        _fetchShippingQuotes();
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
@@ -859,12 +1180,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _summaryRow(String label, String value, ColorScheme cs) {
+  Widget _summaryRow(String label, String value, ColorScheme cs, {Color? color}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.5))),
-        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface)),
+        Text(label, style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.6))),
+        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: color ?? cs.onSurface)),
       ],
     );
   }

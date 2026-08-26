@@ -326,15 +326,19 @@ class CustomerCubit extends Cubit<CustomerState> {
   }
 
   Future<bool> placeOrder({
-    String? shippingAddressId,
+    required String shippingAddressId,
+    required String shippingRateId,
     String? couponCode,
+    String? promotionCode,
     String? notes,
   }) async {
     emit(const CustomerActionInProgress());
     try {
       final order = await _dataSource.createOrder(
         shippingAddressId: shippingAddressId,
+        shippingRateId: shippingRateId,
         couponCode: couponCode,
+        promotionCode: promotionCode,
         notes: notes,
       );
       _logger.i('✅ Order placed: ${order.id}');
@@ -355,8 +359,10 @@ class CustomerCubit extends Cubit<CustomerState> {
   // =========================
 
   Future<PaymentModel?> placeOrderAndPay({
-    String? shippingAddressId,
+    required String shippingAddressId,
+    required String shippingRateId,
     String? couponCode,
+    String? promotionCode,
     String? notes,
     required String paymentMethod,
     String? provider,
@@ -368,7 +374,9 @@ class CustomerCubit extends Cubit<CustomerState> {
     try {
       final order = await _dataSource.createOrder(
         shippingAddressId: shippingAddressId,
+        shippingRateId: shippingRateId,
         couponCode: couponCode,
+        promotionCode: promotionCode,
         notes: notes,
       );
       _logger.i('✅ Order placed: ${order.id}');
@@ -484,5 +492,253 @@ class CustomerCubit extends Cubit<CustomerState> {
       }
     }
     return null;
+  }
+
+  // =========================
+  // PAYMENT RETRY & VERIFY
+  // =========================
+
+  Future<PaymentModel?> retryPayment({
+    required String paymentId,
+    String? provider,
+    String? phoneNumber,
+    String? successUrl,
+    String? failureUrl,
+  }) async {
+    emit(const PaymentInProgress(message: 'Retrying payment...'));
+    try {
+      final payment = await _paymentDataSource.retryPayment(
+        paymentId: paymentId,
+        provider: provider,
+        phoneNumber: phoneNumber,
+        successUrl: successUrl,
+        failureUrl: failureUrl,
+      );
+      _logger.i('✅ Payment retried: ${payment.id}, status: ${payment.status}');
+      String? checkoutUrl;
+      if (payment.providerResponse != null) {
+        checkoutUrl = payment.providerResponse!['checkout_url'] as String?;
+      }
+      if (payment.isCompleted) {
+        emit(PaymentSuccess(
+          paymentId: payment.id,
+          orderId: payment.orderId,
+          method: payment.method,
+        ));
+      } else if (payment.isProcessing || payment.isPending) {
+        emit(PaymentSuccess(
+          paymentId: payment.id,
+          orderId: payment.orderId,
+          method: payment.method,
+          checkoutUrl: checkoutUrl,
+        ));
+      } else if (payment.isFailed) {
+        emit(const PaymentFailed('Payment was rejected by the provider'));
+      } else {
+        emit(PaymentSuccess(
+          paymentId: payment.id,
+          orderId: payment.orderId,
+          method: payment.method,
+          checkoutUrl: checkoutUrl,
+        ));
+      }
+      return payment;
+    } on ServerException catch (e) {
+      _logger.e('❌ Payment retry failed: ${e.message}');
+      emit(PaymentFailed(e.message));
+      return null;
+    } catch (e) {
+      _logger.e('❌ Payment retry error: $e');
+      emit(PaymentFailed('Failed to retry payment: $e'));
+      return null;
+    }
+  }
+
+  Future<PaymentModel?> verifyPaymentStatus(String paymentId) async {
+    try {
+      final payment = await _paymentDataSource.verifyPaymentStatus(paymentId);
+      _logger.i('✅ Payment verified: ${payment.id}, status: ${payment.status}');
+      emit(PaymentStatusUpdated(paymentId: payment.id, status: payment.status));
+      if (payment.isCompleted) {
+        emit(PaymentSuccess(
+          paymentId: payment.id,
+          orderId: payment.orderId,
+          method: payment.method,
+        ));
+      } else if (payment.isFailed || payment.isCancelled) {
+        emit(PaymentFailed(payment.status == 'cancelled'
+            ? 'Payment was cancelled'
+            : 'Payment failed'));
+      }
+      return payment;
+    } on ServerException catch (e) {
+      _logger.e('❌ Payment verify failed: ${e.message}');
+      return null;
+    } catch (e) {
+      _logger.e('❌ Payment verify error: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getOrderPaymentState(String orderId) async {
+    try {
+      return await _paymentDataSource.getOrderPaymentState(orderId);
+    } on ServerException catch (e) {
+      _logger.e('❌ Order payment state failed: ${e.message}');
+      return null;
+    } catch (e) {
+      _logger.e('❌ Order payment state error: $e');
+      return null;
+    }
+  }
+
+  // =========================
+  // SHIPPING QUOTES
+  // =========================
+
+  Future<List<Map<String, dynamic>>> fetchShippingQuotes({
+    required String addressId,
+    required double subtotal,
+    double weightKg = 0,
+  }) async {
+    try {
+      return await _dataSource.getShippingQuote(
+        addressId: addressId,
+        subtotal: subtotal,
+        weightKg: weightKg,
+      );
+    } on ServerException catch (e) {
+      _logger.e('❌ Shipping quotes failed: ${e.message}');
+      return [];
+    } catch (e) {
+      _logger.e('❌ Shipping quotes error: $e');
+      return [];
+    }
+  }
+
+  // =========================
+  // ORDER DETAIL & ESCROW
+  // =========================
+
+  Future<Map<String, dynamic>?> getCustomerOrderDetail(String orderId) async {
+    try {
+      return await _dataSource.getCustomerOrderDetail(orderId);
+    } on ServerException catch (e) {
+      _logger.e('❌ Customer order detail failed: ${e.message}');
+      return null;
+    } catch (e) {
+      _logger.e('❌ Customer order detail error: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getEscrowStatus(String orderId) async {
+    try {
+      return await _dataSource.getEscrowStatus(orderId);
+    } on ServerException catch (e) {
+      _logger.e('❌ Escrow status failed: ${e.message}');
+      return null;
+    } catch (e) {
+      _logger.e('❌ Escrow status error: $e');
+      return null;
+    }
+  }
+
+  Future<bool> approveReceipt(String orderId, {String? note}) async {
+    emit(const CustomerActionInProgress());
+    try {
+      await _dataSource.approveReceipt(orderId, note: note);
+      _logger.i('✅ Receipt approved: $orderId');
+      emit(const CustomerActionSuccess('Receipt confirmed successfully'));
+      return true;
+    } on ServerException catch (e) {
+      emit(CustomerActionError(e.message));
+      return false;
+    } catch (e) {
+      emit(CustomerActionError('Failed to approve receipt: $e'));
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getOrderWorkflow(String orderId) async {
+    try {
+      return await _dataSource.getOrderWorkflow(orderId);
+    } on ServerException catch (e) {
+      _logger.e('❌ Order workflow failed: ${e.message}');
+      return null;
+    } catch (e) {
+      _logger.e('❌ Order workflow error: $e');
+      return null;
+    }
+  }
+
+  // =========================
+  // NOTIFICATION SUMMARY & PREFERENCES
+  // =========================
+
+  Future<Map<String, dynamic>?> getNotificationSummary() async {
+    try {
+      return await _dataSource.getNotificationSummary();
+    } on ServerException catch (e) {
+      _logger.e('❌ Notification summary failed: ${e.message}');
+      return null;
+    } catch (e) {
+      _logger.e('❌ Notification summary error: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getNotificationPreferences() async {
+    try {
+      return await _dataSource.getNotificationPreferences();
+    } on ServerException catch (e) {
+      _logger.e('❌ Notification preferences failed: ${e.message}');
+      return null;
+    } catch (e) {
+      _logger.e('❌ Notification preferences error: $e');
+      return null;
+    }
+  }
+
+  Future<bool> updateNotificationPreferences(Map<String, dynamic> preferences) async {
+    emit(const CustomerActionInProgress());
+    try {
+      await _dataSource.updateNotificationPreferences(preferences);
+      _logger.i('✅ Notification preferences updated');
+      emit(const CustomerActionSuccess('Notification preferences updated'));
+      return true;
+    } on ServerException catch (e) {
+      emit(CustomerActionError(e.message));
+      return false;
+    } catch (e) {
+      emit(CustomerActionError('Failed to update preferences: $e'));
+      return false;
+    }
+  }
+
+  // =========================
+  // CHANGE PASSWORD
+  // =========================
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    emit(const CustomerActionInProgress());
+    try {
+      await _dataSource.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      _logger.i('✅ Password changed');
+      emit(const CustomerActionSuccess('Password changed successfully'));
+      return true;
+    } on ServerException catch (e) {
+      emit(CustomerActionError(e.message));
+      return false;
+    } catch (e) {
+      emit(CustomerActionError('Failed to change password: $e'));
+      return false;
+    }
   }
 }

@@ -63,6 +63,34 @@ abstract class AppConstants {
   static const String shopTanzaniaRoute = '/shop-tanzania';
   static const String wholesaleRoute = '/wholesale';
 
+  // Seller panel routes
+  static const String sellerDashboardRoute = '/seller-dashboard';
+  static const String sellerOrdersRoute = '/seller-orders';
+  static const String sellerOrderDetailRoute = '/seller-order-detail';
+  static const String sellerProductsRoute = '/seller-products';
+  static const String sellerInventoryRoute = '/seller-inventory';
+  static const String sellerStoreRoute = '/seller-store';
+  static const String sellerKycRoute = '/seller-kyc';
+  static const String sellerWalletRoute = '/seller-wallet';
+  static const String sellerAnalyticsRoute = '/seller-analytics';
+  static const String sellerPromotionsRoute = '/seller-promotions';
+  static const String sellerReviewsRoute = '/seller-reviews';
+  static const String sellerQuestionsRoute = '/seller-questions';
+
+  // Admin panel routes
+  static const String adminDashboardRoute = '/admin-dashboard';
+  static const String adminSellersRoute = '/admin-sellers';
+  static const String adminSellerDetailRoute = '/admin-seller-detail';
+  static const String adminProductsRoute = '/admin-products';
+  static const String adminOrdersRoute = '/admin-orders';
+  static const String adminUsersRoute = '/admin-users';
+  static const String adminWalletsRoute = '/admin-wallets';
+  static const String adminRefundsRoute = '/admin-refunds';
+  static const String adminReviewsRoute = '/admin-reviews';
+  static const String adminAnalyticsRoute = '/admin-analytics';
+  static const String adminAlertsRoute = '/admin-alerts';
+  static const String adminActivityLogsRoute = '/admin-activity-logs';
+
   // Timeouts
   static const int connectionTimeoutSeconds = 30;
   static const int receiveTimeoutSeconds = 30;

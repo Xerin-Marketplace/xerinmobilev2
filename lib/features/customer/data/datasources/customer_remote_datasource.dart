@@ -229,16 +229,20 @@ class CustomerRemoteDataSource {
   }
 
   Future<OrderModel> createOrder({
-    String? shippingAddressId,
+    required String shippingAddressId,
+    required String shippingRateId,
     String? couponCode,
+    String? promotionCode,
     String? notes,
   }) async {
     try {
       final response = await _client.post(
         ApiConstants.orders,
         data: {
-          if (shippingAddressId != null) 'shipping_address_id': shippingAddressId,
+          'shipping_address_id': shippingAddressId,
+          'shipping_rate_id': shippingRateId,
           if (couponCode != null) 'coupon_code': couponCode,
+          if (promotionCode != null) 'promotion_code': promotionCode,
           if (notes != null) 'notes': notes,
         },
       );
@@ -390,6 +394,82 @@ class CustomerRemoteDataSource {
         list = [];
       }
       return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // ORDER DETAIL & ESCROW
+  // =========================
+
+  Future<Map<String, dynamic>> getCustomerOrderDetail(String orderId) async {
+    try {
+      final response = await _client.get(ApiConstants.orderCustomerDetail(orderId));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> getEscrowStatus(String orderId) async {
+    try {
+      final response = await _client.get(ApiConstants.orderEscrow(orderId));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> approveReceipt(String orderId, {String? note}) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.orderApproveReceipt(orderId),
+        data: {if (note != null) 'note': note},
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> getOrderWorkflow(String orderId) async {
+    try {
+      final response = await _client.get(ApiConstants.orderWorkflow(orderId));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // NOTIFICATION SUMMARY & PREFERENCES
+  // =========================
+
+  Future<Map<String, dynamic>> getNotificationSummary() async {
+    try {
+      final response = await _client.get(ApiConstants.notificationsSummary);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> getNotificationPreferences() async {
+    try {
+      final response = await _client.get(ApiConstants.notificationPreferences);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<void> updateNotificationPreferences(Map<String, dynamic> preferences) async {
+    try {
+      await _client.patch(
+        ApiConstants.notificationPreferences,
+        data: preferences,
+      );
     } on DioException catch (e) {
       throw ServerException(_client.getErrorMessage(e));
     }

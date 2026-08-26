@@ -46,6 +46,29 @@ import '../../features/customer/presentation/pages/settings_page.dart';
 import '../../features/customer/presentation/pages/stores_page.dart';
 import '../../features/customer/presentation/pages/trending_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
+import '../../features/seller/presentation/pages/seller_dashboard_page.dart';
+import '../../features/seller/presentation/pages/seller_orders_page.dart';
+import '../../features/seller/presentation/pages/seller_order_detail_page.dart';
+import '../../features/seller/presentation/pages/seller_products_page.dart';
+import '../../features/seller/presentation/pages/seller_inventory_page.dart';
+import '../../features/seller/presentation/pages/seller_store_page.dart';
+import '../../features/seller/presentation/pages/seller_kyc_page.dart';
+import '../../features/seller/presentation/pages/seller_wallet_page.dart';
+import '../../features/seller/presentation/pages/seller_analytics_page.dart';
+import '../../features/seller/presentation/pages/seller_promotions_page.dart';
+import '../../features/seller/presentation/pages/seller_reviews_page.dart';
+import '../../features/seller/presentation/pages/seller_questions_page.dart';
+import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
+import '../../features/admin/presentation/pages/admin_sellers_page.dart';
+import '../../features/admin/presentation/pages/admin_products_page.dart';
+import '../../features/admin/presentation/pages/admin_orders_page.dart';
+import '../../features/admin/presentation/pages/admin_users_page.dart';
+import '../../features/admin/presentation/pages/admin_wallets_page.dart';
+import '../../features/admin/presentation/pages/admin_refunds_page.dart';
+import '../../features/admin/presentation/pages/admin_reviews_page.dart';
+import '../../features/admin/presentation/pages/admin_analytics_page.dart';
+import '../../features/admin/presentation/pages/admin_alerts_page.dart';
+import '../../features/admin/presentation/pages/admin_activity_logs_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../constants/app_constants.dart';
 
@@ -348,6 +371,108 @@ class AppRouter {
       GoRoute(
         path: AppConstants.wholesaleRoute,
         builder: (context, state) => const WholesalePage(),
+      ),
+      // Seller panel routes
+      GoRoute(
+        path: AppConstants.sellerDashboardRoute,
+        builder: (context, state) => const SellerDashboardPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerOrdersRoute,
+        builder: (context, state) => const SellerOrdersPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerOrderDetailRoute,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final orderId = extra?['orderId'] as String? ?? '';
+          return SellerOrderDetailPage(orderId: orderId);
+        },
+      ),
+      GoRoute(
+        path: AppConstants.sellerProductsRoute,
+        builder: (context, state) => const SellerProductsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerInventoryRoute,
+        builder: (context, state) => const SellerInventoryPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerStoreRoute,
+        builder: (context, state) => const SellerStorePage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerKycRoute,
+        builder: (context, state) => const SellerKycPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerWalletRoute,
+        builder: (context, state) => const SellerWalletPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerAnalyticsRoute,
+        builder: (context, state) => const SellerAnalyticsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerPromotionsRoute,
+        builder: (context, state) => const SellerPromotionsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerReviewsRoute,
+        builder: (context, state) => const SellerReviewsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerQuestionsRoute,
+        builder: (context, state) => const SellerQuestionsPage(),
+      ),
+      // Admin panel routes
+      GoRoute(
+        path: AppConstants.adminDashboardRoute,
+        builder: (context, state) => const AdminDashboardPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminSellersRoute,
+        builder: (context, state) => const AdminSellersPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminSellerDetailRoute,
+        builder: (context, state) => const AdminSellersPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminProductsRoute,
+        builder: (context, state) => const AdminProductsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminOrdersRoute,
+        builder: (context, state) => const AdminOrdersPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminUsersRoute,
+        builder: (context, state) => const AdminUsersPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminWalletsRoute,
+        builder: (context, state) => const AdminWalletsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminRefundsRoute,
+        builder: (context, state) => const AdminRefundsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminReviewsRoute,
+        builder: (context, state) => const AdminReviewsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminAnalyticsRoute,
+        builder: (context, state) => const AdminAnalyticsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminAlertsRoute,
+        builder: (context, state) => const AdminAlertsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminActivityLogsRoute,
+        builder: (context, state) => const AdminActivityLogsPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

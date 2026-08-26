@@ -36,6 +36,10 @@ import '../../features/customer/presentation/cubit/recommendation_cubit.dart';
 import '../../features/customer/presentation/cubit/review_cubit.dart';
 import '../../features/customer/presentation/cubit/search_cubit.dart';
 import '../../features/customer/presentation/cubit/wishlist_cubit.dart';
+import '../../features/seller/data/datasources/seller_remote_datasource.dart';
+import '../../features/seller/presentation/cubit/seller_cubit.dart';
+import '../../features/admin/data/datasources/admin_remote_datasource.dart';
+import '../../features/admin/presentation/cubit/admin_cubit.dart';
 import '../constants/api_constants.dart';
 
 final GetIt sl = GetIt.instance;
@@ -219,6 +223,26 @@ Future<void> initServiceLocator({bool reset = false}) async {
       () => SearchRemoteDataSource(sl()));
   sl.registerFactory<SearchCubit>(
     () => SearchCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+
+  // Seller
+  sl.registerLazySingleton<SellerRemoteDataSource>(
+      () => SellerRemoteDataSource(sl()));
+  sl.registerFactory<SellerCubit>(
+    () => SellerCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+
+  // Admin
+  sl.registerLazySingleton<AdminRemoteDataSource>(
+      () => AdminRemoteDataSource(sl(), sl()));
+  sl.registerFactory<AdminCubit>(
+    () => AdminCubit(
       dataSource: sl(),
       logger: sl(),
     ),

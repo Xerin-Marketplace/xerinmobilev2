@@ -36,6 +36,7 @@ abstract class ApiConstants {
   static String addressById(String id) => '/addresses/$id';
 
   // Seller endpoints
+  static const String sellerRegister = '/sellers/register';
   static const String sellerProfile = '/sellers/me';
   static const String sellerBusinessProfile = '/sellers/profile';
   static const String sellerKycDocuments = '/sellers/kyc-documents';
@@ -44,6 +45,11 @@ abstract class ApiConstants {
   static const String sellerPayoutAccounts = '/sellers/payout-accounts';
   static String sellerPayoutAccountById(String id) =>
       '/sellers/payout-accounts/$id';
+  static String sellerKycDocumentById(String id) => '/sellers/kyc-documents/$id';
+  static String sellerKycDocumentViewUrl(String id) => '/sellers/kyc-documents/$id/view';
+  static const String sellerDashboard = '/seller/dashboard';
+  static const String sellerPricingPreview = '/seller/pricing/preview';
+  static const String businessCategories = '/admin/business-categories';
 
   // Seller admin endpoints
   static const String adminPendingSellers = '/sellers/admin/pending';
@@ -74,6 +80,11 @@ abstract class ApiConstants {
       '/admin/sellers/$id/approve';
   static String adminRejectSellerById(String id) =>
       '/admin/sellers/$id/reject';
+  static String adminStartSellerReview(String id) =>
+      '/admin/sellers/$id/start-review';
+  static const String adminPermissions = '/admin/permissions';
+  static String adminUserPermissions(String userId) =>
+      '/admin/users/$userId/permissions';
   static const String adminProductsPending = '/admin/products/pending';
   static String adminApproveProduct(String id) =>
       '/admin/products/$id/approve';
@@ -124,17 +135,34 @@ abstract class ApiConstants {
   static String cartItemById(String id) => '/cart/items/$id';
   static const String cartApplyCoupon = '/cart/apply-coupon';
   static const String cartRemoveCoupon = '/cart/coupon';
+  static const String cartAvailablePromotions = '/cart/promotions/available';
+  static const String cartApplyPromotion = '/cart/apply-promotion';
+  static const String cartRemovePromotion = '/cart/promotion';
+  static const String cartValidate = '/cart/validate';
+  static const String cartMerge = '/cart/merge';
 
   // Order endpoints
   static const String orders = '/orders';
   static const String myOrders = '/orders/my-orders';
   static String orderById(String id) => '/orders/$id';
   static String orderStatus(String id) => '/orders/$id/status';
+  static String orderCustomerDetail(String id) => '/orders/$id/customer-detail';
+  static String orderEscrow(String id) => '/orders/$id/escrow';
+  static String orderApproveReceipt(String id) => '/orders/$id/approve-receipt';
+  static String orderWorkflow(String id) => '/orders/$id/workflow';
+  static String orderWorkflowReconcile(String id) => '/orders/$id/workflow/reconcile';
+  static String orderInvoice(String id) => '/orders/$id/invoice.pdf';
+  static String orderReceipt(String id) => '/orders/$id/receipt.pdf';
+  static String orderRef(String orderNumber) => '/orders/ref/$orderNumber';
 
   // Payment endpoints
   static const String paymentsInitiate = '/payments/initiate';
   static const String paymentsCallback = '/payments/callback';
+  static const String paymentsMyPayments = '/payments/my-payments';
   static String paymentById(String id) => '/payments/$id';
+  static String paymentRetry(String id) => '/payments/$id/retry';
+  static String paymentVerifyStatus(String id) => '/payments/$id/verify-status';
+  static String paymentOrderState(String orderId) => '/payments/orders/$orderId/state';
   static String paymentCallbackByProvider(String provider) =>
       '/payments/callback/$provider';
 
@@ -247,6 +275,9 @@ abstract class ApiConstants {
   static String sellerOrderReadyToShip(String id) => '/seller/orders/$id/ready-to-ship';
   static String sellerOrderDispatch(String id) => '/seller/orders/$id/dispatch';
   static String sellerOrderRequestCancellation(String id) => '/seller/orders/$id/request-cancellation';
+  static String sellerOrderMessages(String id) => '/seller/orders/$id/messages';
+  static String sellerOrderPackage(String id) => '/seller/orders/$id/package';
+  static String sellerOrderReadiness(String id) => '/seller/orders/$id/fulfillment-readiness';
 
   // Seller Inventory endpoints (prefix /seller/inventory)
   static const String sellerInventory = '/seller/inventory';
@@ -287,6 +318,7 @@ abstract class ApiConstants {
   static const String myWallet = '/wallet/me';
   static const String myWalletTransactions = '/wallet/me/transactions';
   static const String myWalletPayouts = '/wallet/me/payouts';
+  static const String requestPayout = '/wallet/me/payouts';
   static String cancelPayout(String payoutId) => '/wallet/me/payouts/$payoutId/cancel';
   static const String adminWallets = '/wallet/admin/wallets';
   static const String adminPayouts = '/wallet/admin/payouts';
@@ -317,6 +349,11 @@ abstract class ApiConstants {
   static const String shippingRates = '/shipping/rates';
   static String shippingRateById(String rateId) => '/shipping/rates/$rateId';
   static const String shippingQuote = '/shipping/quote';
+  static const String shippingCheckoutConfig = '/shipping/checkout-config';
+  static const String shippingDetectDeliveryMode = '/shipping/detect-delivery-mode';
+  static const String shippingEligibleLogistics = '/shipping/eligible-logistics';
+  static const String shippingMultiSellerPricing = '/shipping/multi-seller-pricing';
+  static const String shippingCheckoutDeliveryQuote = '/shipping/checkout-delivery-quote';
   static const String myShipments = '/shipping/shipments/my';
   static const String sellerShipments = '/shipping/shipments/seller';
   static String shipmentById(String shipmentId) => '/shipping/shipments/$shipmentId';

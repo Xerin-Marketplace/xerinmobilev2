@@ -165,6 +165,75 @@ class CartCubit extends Cubit<CartState> {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getAvailablePromotions() async {
+    try {
+      return await _dataSource.getAvailablePromotions();
+    } on ServerException catch (e) {
+      _logger.e('❌ Available promotions error: ${e.message}');
+      return [];
+    } catch (e) {
+      _logger.e('❌ Available promotions unexpected error: $e');
+      return [];
+    }
+  }
+
+  Future<void> applyPromotion(String code) async {
+    final current = state;
+    if (current is CartLoaded) {
+      emit(current.copyWith(isRefreshing: true));
+    }
+    try {
+      final cart = await _dataSource.applyPromotion(code);
+      _lastCart = cart;
+      emit(CartLoaded(cart: cart));
+      _logger.i('✅ Promotion applied: $code');
+    } on ServerException catch (e) {
+      _logger.e('❌ Apply promotion error: ${e.message}');
+      emit(CartError(message: e.message, lastCart: _lastCart));
+    } catch (e) {
+      _logger.e('❌ Apply promotion unexpected error: $e');
+      emit(CartError(message: 'Failed to apply promotion', lastCart: _lastCart));
+    }
+  }
+
+  Future<void> removePromotion() async {
+    final current = state;
+    if (current is CartLoaded) {
+      emit(current.copyWith(isRefreshing: true));
+    }
+    try {
+      final cart = await _dataSource.removePromotion();
+      _lastCart = cart;
+      emit(CartLoaded(cart: cart));
+      _logger.i('✅ Promotion removed');
+    } on ServerException catch (e) {
+      _logger.e('❌ Remove promotion error: ${e.message}');
+      emit(CartError(message: e.message, lastCart: _lastCart));
+    } catch (e) {
+      _logger.e('❌ Remove promotion unexpected error: $e');
+      emit(CartError(message: 'Failed to remove promotion', lastCart: _lastCart));
+    }
+  }
+
+  Future<void> validateCart() async {
+    try {
+      final cart = await _dataSource.validateCart();
+      _lastCart = cart;
+      if (cart.items.isEmpty) {
+        emit(const CartEmpty());
+      } else {
+        emit(CartLoaded(cart: cart));
+      }
+      _logger.i('✅ Cart validated');
+    } on ServerException catch (e) {
+      _logger.e('❌ Cart validate error: ${e.message}');
+      emit(CartError(message: e.message, lastCart: _lastCart));
+    } catch (e) {
+      _logger.e('❌ Cart validate unexpected error: $e');
+      emit(CartError(message: 'Failed to validate cart', lastCart: _lastCart));
+    }
+  }
+
   int get itemCount {
     if (_lastCart != null) return _lastCart!.itemCount;
     final current = state;

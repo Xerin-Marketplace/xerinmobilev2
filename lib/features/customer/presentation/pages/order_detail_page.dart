@@ -1,15 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../../shared/widgets/app_icon.dart';
+import '../cubit/customer_cubit.dart';
 import '../../data/models/order_model.dart';
 import '../../../../core/theme/uicons.dart';
 
-class OrderDetailPage extends StatelessWidget {
+class OrderDetailPage extends StatefulWidget {
   final OrderModel order;
 
   const OrderDetailPage({super.key, required this.order});
+
+  @override
+  State<OrderDetailPage> createState() => _OrderDetailPageState();
+}
+
+class _OrderDetailPageState extends State<OrderDetailPage> {
+  Map<String, dynamic>? _escrowStatus;
+  bool _isApprovingReceipt = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchEscrowStatus();
+  }
+
+  Future<void> _fetchEscrowStatus() async {
+    final result = await context.read<CustomerCubit>().getEscrowStatus(widget.order.id);
+    if (mounted) {
+      setState(() {
+        _escrowStatus = result;
+      });
+    }
+  }
+
+  Future<void> _approveReceipt() async {
+    setState(() => _isApprovingReceipt = true);
+    final success = await context.read<CustomerCubit>().approveReceipt(widget.order.id);
+    if (mounted) {
+      setState(() => _isApprovingReceipt = false);
+      if (success) {
+        _fetchEscrowStatus();
+      }
+    }
+  }
+
+  OrderModel get order => widget.order;
 
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
@@ -56,6 +94,8 @@ class OrderDetailPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final statusColor = _statusColor(order.status);
+    final canApproveReceipt = order.status.toLowerCase() == 'delivered' &&
+        (_escrowStatus == null || _escrowStatus!['receipt_approved'] != true);
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -145,6 +185,13 @@ class OrderDetailPage extends StatelessWidget {
                       const SizedBox(height: 12),
                       ...order.shipments.map((s) => _buildShipmentCard(s, colorScheme, isDark)),
                     ],
+                    // Escrow status
+                    if (_escrowStatus != null) ...[
+                      const SizedBox(height: 24),
+                      _buildSectionTitle('Escrow & Payment', colorScheme),
+                      const SizedBox(height: 12),
+                      _buildEscrowCard(_escrowStatus!, colorScheme, isDark),
+                    ],
                     if (order.statusHistory.isNotEmpty) ...[
                       const SizedBox(height: 24),
                       _buildSectionTitle('Status History', colorScheme),
@@ -215,6 +262,29 @@ class OrderDetailPage extends StatelessWidget {
                             style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                       ),
                     ),
+                    if (canApproveReceipt) ...[
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          onPressed: _isApprovingReceipt ? null : _approveReceipt,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF22C55E),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          icon: _isApprovingReceipt
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : const Icon(Uicons.badgeCheck, size: 20),
+                          label: Text(_isApprovingReceipt ? 'Confirming...' : 'Confirm Receipt',
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -395,6 +465,111 @@ class OrderDetailPage extends StatelessWidget {
               color: valueColor ?? cs.onSurface,
             )),
       ],
+    );
+  }
+
+  Widget _buildEscrowCard(Map<String, dynamic> escrow, ColorScheme cs, bool isDark) {
+    final escrowStatus = escrow['escrow_status'] as String? ?? 'pending';
+    final receiptApproved = escrow['receipt_approved'] as bool? ?? false;
+    final fundsReleased = escrow['funds_released'] as bool? ?? false;
+    final sellerPayoutStatus = escrow['seller_payout_status'] as String?;
+
+    Color escrowColor;
+    IconData escrowIcon;
+    switch (escrowStatus.toLowerCase()) {
+      case 'released':
+      case 'completed':
+        escrowColor = const Color(0xFF22C55E);
+        escrowIcon = Uicons.checkCircle;
+        break;
+      case 'held':
+      case 'funds_held':
+        escrowColor = const Color(0xFF3B82F6);
+        escrowIcon = Uicons.shield;
+        break;
+      case 'refunded':
+        escrowColor = const Color(0xFFE53935);
+        escrowIcon = Uicons.circleXmark;
+        break;
+      default:
+        escrowColor = const Color(0xFFF59E0B);
+        escrowIcon = Uicons.clock;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF252525) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  color: escrowColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(escrowIcon, color: escrowColor, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Escrow: ${escrowStatus.split('_').map((w) => w[0].toUpperCase() + w.substring(1)).join(' ')}',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: escrowColor),
+                    ),
+                    const SizedBox(height: 2),
+                    Text('Your payment is protected',
+                      style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _summaryRow('Receipt Confirmed', receiptApproved ? 'Yes' : 'No', cs,
+              valueColor: receiptApproved ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)),
+          const SizedBox(height: 8),
+          _summaryRow('Funds Released', fundsReleased ? 'Yes' : 'No', cs,
+              valueColor: fundsReleased ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)),
+          if (sellerPayoutStatus != null) ...[
+            const SizedBox(height: 8),
+            _summaryRow('Seller Payout', sellerPayoutStatus.toUpperCase(), cs),
+          ],
+          if (!receiptApproved && order.status.toLowerCase() == 'delivered') ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF22C55E).withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Uicons.info, color: Color(0xFF22C55E), size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text('Confirm receipt to release funds to the seller and complete the transaction.',
+                      style: TextStyle(fontSize: 12, height: 1.4, color: cs.onSurface.withValues(alpha: 0.6)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
