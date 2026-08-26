@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logger/logger.dart';
 
 import '../../data/datasources/seller_remote_datasource.dart';
+import '../../data/models/pickup_location_model.dart';
 import '../../data/models/seller_models.dart';
 
 // ─── States ───
@@ -162,6 +163,26 @@ class SellerError extends SellerState {
   final String message;
 
   const SellerError(this.message);
+}
+
+class SellerPickupLocationsLoaded extends SellerState {
+  final List<PickupLocationModel> locations;
+
+  const SellerPickupLocationsLoaded(this.locations);
+}
+
+class SellerFulfillmentsLoaded extends SellerState {
+  final List<SellerFulfillmentModel> fulfillments;
+  final Map<String, dynamic>? summary;
+
+  const SellerFulfillmentsLoaded(this.fulfillments, [this.summary]);
+}
+
+class SellerFulfillmentDetailLoaded extends SellerState {
+  final SellerFulfillmentModel fulfillment;
+  final List<FulfillmentTrackingEvent> tracking;
+
+  const SellerFulfillmentDetailLoaded(this.fulfillment, this.tracking);
 }
 
 // ─── Cubit ───
@@ -698,6 +719,95 @@ class SellerCubit extends Cubit<SellerState> {
     } catch (e) {
       _logger.e('SellerCubit.previewPricing error: $e');
       return null;
+    }
+  }
+
+  // ─── Pickup Locations ───
+  Future<void> loadPickupLocations() async {
+    emit(const SellerLoading());
+    try {
+      final locations = await _dataSource.getPickupLocations();
+      emit(SellerPickupLocationsLoaded(locations));
+    } catch (e) {
+      _logger.e('SellerCubit.loadPickupLocations error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> createPickupLocation(Map<String, dynamic> data) async {
+    try {
+      await _dataSource.createPickupLocation(data);
+      final locations = await _dataSource.getPickupLocations();
+      emit(SellerPickupLocationsLoaded(locations));
+      emit(const SellerActionSuccess('Pickup location created'));
+    } catch (e) {
+      _logger.e('SellerCubit.createPickupLocation error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> updatePickupLocation(
+      String locationId, Map<String, dynamic> data) async {
+    try {
+      await _dataSource.updatePickupLocation(locationId, data);
+      final locations = await _dataSource.getPickupLocations();
+      emit(SellerPickupLocationsLoaded(locations));
+      emit(const SellerActionSuccess('Pickup location updated'));
+    } catch (e) {
+      _logger.e('SellerCubit.updatePickupLocation error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> deletePickupLocation(String locationId) async {
+    try {
+      await _dataSource.deletePickupLocation(locationId);
+      final locations = await _dataSource.getPickupLocations();
+      emit(SellerPickupLocationsLoaded(locations));
+      emit(const SellerActionSuccess('Pickup location deleted'));
+    } catch (e) {
+      _logger.e('SellerCubit.deletePickupLocation error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> setDefaultPickupLocation(String locationId) async {
+    try {
+      await _dataSource.setDefaultPickupLocation(locationId);
+      final locations = await _dataSource.getPickupLocations();
+      emit(SellerPickupLocationsLoaded(locations));
+      emit(const SellerActionSuccess('Default pickup location set'));
+    } catch (e) {
+      _logger.e('SellerCubit.setDefaultPickupLocation error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  // ─── Fulfillment ───
+  Future<void> loadFulfillments({String? status}) async {
+    emit(const SellerLoading());
+    try {
+      final summary = await _dataSource.getFulfillmentSummary();
+      final fulfillments =
+          await _dataSource.getFulfillments(status: status);
+      emit(SellerFulfillmentsLoaded(fulfillments, summary));
+    } catch (e) {
+      _logger.e('SellerCubit.loadFulfillments error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> loadFulfillmentDetail(String sellerOrderId) async {
+    emit(const SellerLoading());
+    try {
+      final fulfillment =
+          await _dataSource.getFulfillmentDetail(sellerOrderId);
+      final tracking =
+          await _dataSource.getFulfillmentTracking(sellerOrderId);
+      emit(SellerFulfillmentDetailLoaded(fulfillment, tracking));
+    } catch (e) {
+      _logger.e('SellerCubit.loadFulfillmentDetail error: $e');
+      emit(SellerError(e.toString()));
     }
   }
 }

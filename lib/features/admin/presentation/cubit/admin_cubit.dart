@@ -233,6 +233,27 @@ class AdminError extends AdminState {
   const AdminError(this.message);
 }
 
+class AdminFinanceLoaded extends AdminState {
+  final Map<String, dynamic> escrowHolds;
+  final Map<String, dynamic> reconciliation;
+  final Map<String, dynamic>? settings;
+  const AdminFinanceLoaded({
+    required this.escrowHolds,
+    required this.reconciliation,
+    this.settings,
+  });
+}
+
+class AdminAdvertisementsLoaded extends AdminState {
+  final List<Map<String, dynamic>> ads;
+  const AdminAdvertisementsLoaded(this.ads);
+}
+
+class AdminMarketplaceSettingsLoaded extends AdminState {
+  final Map<String, dynamic> settings;
+  const AdminMarketplaceSettingsLoaded(this.settings);
+}
+
 // ─── Cubit ───
 class AdminCubit extends Cubit<AdminState> {
   final AdminRemoteDataSource _dataSource;
@@ -770,6 +791,162 @@ class AdminCubit extends Cubit<AdminState> {
       emit(const AdminActionSuccess('User permissions updated'));
     } catch (e) {
       _logger.e('AdminCubit.assignUserPermissions error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  // ─── Finance ───
+  Future<void> loadFinanceData({String? escrowStatus}) async {
+    emit(const AdminLoading());
+    try {
+      final escrow = await _dataSource.getEscrowHolds(status: escrowStatus);
+      final reconciliation = await _dataSource.getFinanceReconciliation();
+      final settings = await _dataSource.getFinanceSettings();
+      emit(AdminFinanceLoaded(
+        escrowHolds: escrow,
+        reconciliation: reconciliation,
+        settings: settings,
+      ));
+    } catch (e) {
+      _logger.e('AdminCubit.loadFinanceData error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> releaseEscrowHold(String holdId, {String? note}) async {
+    try {
+      await _dataSource.releaseEscrowHold(holdId, note);
+      emit(const AdminActionSuccess('Escrow hold released'));
+      await loadFinanceData();
+    } catch (e) {
+      _logger.e('AdminCubit.releaseEscrowHold error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> disputeEscrowHold(String holdId, String reason) async {
+    try {
+      await _dataSource.disputeEscrowHold(holdId, reason);
+      emit(const AdminActionSuccess('Escrow hold disputed'));
+      await loadFinanceData();
+    } catch (e) {
+      _logger.e('AdminCubit.disputeEscrowHold error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> reconcileOrder(String orderId) async {
+    try {
+      await _dataSource.reconcileOrder(orderId);
+      emit(const AdminActionSuccess('Order reconciled'));
+      await loadFinanceData();
+    } catch (e) {
+      _logger.e('AdminCubit.reconcileOrder error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> updateFinanceSettings(Map<String, dynamic> data) async {
+    try {
+      await _dataSource.updateFinanceSettings(data);
+      emit(const AdminActionSuccess('Finance settings updated'));
+      await loadFinanceData();
+    } catch (e) {
+      _logger.e('AdminCubit.updateFinanceSettings error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<double?> fxConvert(String from, String to, double amount) async {
+    try {
+      final result = await _dataSource.fxConvert(from, to, amount);
+      return (result['converted_amount'] as num?)?.toDouble();
+    } catch (e) {
+      _logger.e('AdminCubit.fxConvert error: $e');
+      emit(AdminError(e.toString()));
+      return null;
+    }
+  }
+
+  // ─── Advertisements ───
+  Future<void> loadAdvertisements({String? status}) async {
+    emit(const AdminLoading());
+    try {
+      final data = await _dataSource.getAdvertisements(status: status);
+      final list = data['results'] as List<dynamic>? ?? [];
+      emit(AdminAdvertisementsLoaded(
+        list.cast<Map<String, dynamic>>(),
+      ));
+    } catch (e) {
+      _logger.e('AdminCubit.loadAdvertisements error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> createAdvertisement(Map<String, dynamic> data) async {
+    try {
+      await _dataSource.createAdvertisement(data);
+      emit(const AdminActionSuccess('Advertisement created'));
+      await loadAdvertisements();
+    } catch (e) {
+      _logger.e('AdminCubit.createAdvertisement error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> updateAdvertisement(
+      String adId, Map<String, dynamic> data) async {
+    try {
+      await _dataSource.updateAdvertisement(adId, data);
+      emit(const AdminActionSuccess('Advertisement updated'));
+      await loadAdvertisements();
+    } catch (e) {
+      _logger.e('AdminCubit.updateAdvertisement error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> deleteAdvertisement(String adId) async {
+    try {
+      await _dataSource.deleteAdvertisement(adId);
+      emit(const AdminActionSuccess('Advertisement deleted'));
+      await loadAdvertisements();
+    } catch (e) {
+      _logger.e('AdminCubit.deleteAdvertisement error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> pauseAdvertisement(String adId) async {
+    try {
+      await _dataSource.pauseAdvertisement(adId);
+      emit(const AdminActionSuccess('Advertisement paused'));
+      await loadAdvertisements();
+    } catch (e) {
+      _logger.e('AdminCubit.pauseAdvertisement error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  // ─── Marketplace Settings ───
+  Future<void> loadMarketplaceSettings() async {
+    emit(const AdminLoading());
+    try {
+      final settings = await _dataSource.getMarketplaceSettings();
+      emit(AdminMarketplaceSettingsLoaded(settings));
+    } catch (e) {
+      _logger.e('AdminCubit.loadMarketplaceSettings error: $e');
+      emit(AdminError(e.toString()));
+    }
+  }
+
+  Future<void> updateMarketplaceSettings(Map<String, dynamic> data) async {
+    try {
+      await _dataSource.updateMarketplaceSettings(data);
+      emit(const AdminActionSuccess('Marketplace settings updated'));
+      await loadMarketplaceSettings();
+    } catch (e) {
+      _logger.e('AdminCubit.updateMarketplaceSettings error: $e');
       emit(AdminError(e.toString()));
     }
   }

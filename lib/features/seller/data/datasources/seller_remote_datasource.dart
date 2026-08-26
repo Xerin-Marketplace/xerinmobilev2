@@ -554,4 +554,176 @@ class SellerRemoteDataSource {
       throw ServerException(_client.getErrorMessage(e));
     }
   }
+
+  // ─── Pickup Locations ───
+  Future<List<PickupLocationModel>> getPickupLocations({
+    int page = 1,
+    int pageSize = 20,
+    String? search,
+    bool? isActive,
+    bool? isDefault,
+  }) async {
+    try {
+      final params = <String, dynamic>{
+        'page': page,
+        'page_size': pageSize,
+      };
+      if (search != null) params['search'] = search;
+      if (isActive != null) params['is_active'] = isActive;
+      if (isDefault != null) params['is_default'] = isDefault;
+
+      final response = await _client.get(
+        ApiConstants.sellerPickupLocations,
+        queryParameters: params,
+      );
+      final data = response.data;
+      List<dynamic> list;
+      if (data is List) {
+        list = data;
+      } else if (data is Map && data['results'] != null) {
+        list = data['results'] as List;
+      } else {
+        list = [];
+      }
+      return list
+          .map((e) =>
+              PickupLocationModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<PickupLocationModel> createPickupLocation(
+      Map<String, dynamic> data) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.sellerPickupLocations,
+        data: data,
+      );
+      return PickupLocationModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<PickupLocationModel> updatePickupLocation(
+      String locationId, Map<String, dynamic> data) async {
+    try {
+      final response = await _client.patch(
+        ApiConstants.sellerPickupLocationById(locationId),
+        data: data,
+      );
+      return PickupLocationModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<void> deletePickupLocation(String locationId) async {
+    try {
+      await _client.delete(ApiConstants.sellerPickupLocationById(locationId));
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<PickupLocationModel> setDefaultPickupLocation(
+      String locationId) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.sellerPickupLocationDefault(locationId),
+      );
+      return PickupLocationModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // ─── Seller Fulfillment ───
+  Future<Map<String, dynamic>> getFulfillmentSummary() async {
+    try {
+      final response =
+          await _client.get(ApiConstants.sellerFulfillmentSummary);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<SellerFulfillmentModel>> getFulfillments({
+    int page = 1,
+    int pageSize = 20,
+    String? status,
+  }) async {
+    try {
+      final params = <String, dynamic>{
+        'page': page,
+        'page_size': pageSize,
+      };
+      if (status != null) params['status'] = status;
+
+      final response = await _client.get(
+        ApiConstants.sellerFulfillment,
+        queryParameters: params,
+      );
+      final data = response.data;
+      List<dynamic> list;
+      if (data is List) {
+        list = data;
+      } else if (data is Map && data['results'] != null) {
+        list = data['results'] as List;
+      } else {
+        list = [];
+      }
+      return list
+          .map((e) => SellerFulfillmentModel.fromJson(
+              e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<SellerFulfillmentModel> getFulfillmentDetail(
+      String sellerOrderId) async {
+    try {
+      final response = await _client.get(
+        ApiConstants.sellerFulfillmentById(sellerOrderId),
+      );
+      return SellerFulfillmentModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<FulfillmentTrackingEvent>> getFulfillmentTracking(
+      String sellerOrderId) async {
+    try {
+      final response = await _client.get(
+        ApiConstants.sellerFulfillmentTracking(sellerOrderId),
+      );
+      final data = response.data;
+      List<dynamic> list;
+      if (data is List) {
+        list = data;
+      } else if (data is Map && data['results'] != null) {
+        list = data['results'] as List;
+      } else if (data is Map && data['events'] != null) {
+        list = data['events'] as List;
+      } else {
+        list = [];
+      }
+      return list
+          .map((e) => FulfillmentTrackingEvent.fromJson(
+              e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
 }

@@ -65,6 +65,9 @@ import '../../features/seller/presentation/pages/seller_analytics_page.dart';
 import '../../features/seller/presentation/pages/seller_promotions_page.dart';
 import '../../features/seller/presentation/pages/seller_reviews_page.dart';
 import '../../features/seller/presentation/pages/seller_questions_page.dart';
+import '../../features/seller/presentation/pages/seller_pickup_locations_page.dart';
+import '../../features/seller/presentation/pages/seller_fulfillment_page.dart';
+import '../../features/seller/presentation/pages/seller_fulfillment_detail_page.dart';
 import '../../features/broker/presentation/pages/broker_dashboard_page.dart';
 import '../../features/broker/presentation/pages/broker_kyc_page.dart';
 import '../../features/broker/presentation/pages/broker_wallet_page.dart';
@@ -476,6 +479,23 @@ class AppRouter {
       GoRoute(
         path: AppConstants.sellerQuestionsRoute,
         builder: (context, state) => const SellerQuestionsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerPickupLocationsRoute,
+        builder: (context, state) => const SellerPickupLocationsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerFulfillmentRoute,
+        builder: (context, state) => const SellerFulfillmentPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerFulfillmentDetailRoute,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return SellerFulfillmentDetailPage(
+            sellerOrderId: extra?['sellerOrderId'] as String? ?? '',
+          );
+        },
       ),
       // Broker panel routes
       GoRoute(

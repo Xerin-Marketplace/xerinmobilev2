@@ -81,6 +81,9 @@ abstract class AppConstants {
   static const String sellerPromotionsRoute = '/seller-promotions';
   static const String sellerReviewsRoute = '/seller-reviews';
   static const String sellerQuestionsRoute = '/seller-questions';
+  static const String sellerPickupLocationsRoute = '/seller-pickup-locations';
+  static const String sellerFulfillmentRoute = '/seller-fulfillment';
+  static const String sellerFulfillmentDetailRoute = '/seller-fulfillment-detail';
 
   // Broker panel routes
   static const String brokerDashboardRoute = '/broker-dashboard';

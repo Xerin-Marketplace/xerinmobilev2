@@ -702,4 +702,249 @@ class AdminRemoteDataSource {
       throw ServerException(_client.getErrorMessage(e));
     }
   }
+
+  // ─── Finance ───
+  Future<Map<String, dynamic>> getFinanceOrderLifecycle(
+      String orderId) async {
+    try {
+      final response = await _client.get(
+        ApiConstants.adminFinanceOrderLifecycle(orderId),
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> getFinanceReconciliation({
+    int page = 1,
+    int pageSize = 20,
+    String? status,
+  }) async {
+    try {
+      final params = <String, dynamic>{
+        'page': page,
+        'page_size': pageSize,
+      };
+      if (status != null) params['status'] = status;
+      final response = await _client.get(
+        ApiConstants.adminFinanceReconciliation,
+        queryParameters: params,
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> reconcileOrder(String orderId) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.adminFinanceReconciliationOrder(orderId),
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> addReconciliationEvent(
+      String recordId, Map<String, dynamic> data) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.adminFinanceReconciliationEvents(recordId),
+        data: data,
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> getFinanceSettings() async {
+    try {
+      final response =
+          await _client.get(ApiConstants.adminFinanceSettings);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> updateFinanceSettings(
+      Map<String, dynamic> data) async {
+    try {
+      final response = await _client.patch(
+        ApiConstants.adminFinanceSettings,
+        data: data,
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> fxConvert(
+      String from, String to, double amount) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.adminFinanceFxConvert,
+        data: {'from_currency': from, 'to_currency': to, 'amount': amount},
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> getEscrowHolds({
+    int page = 1,
+    int pageSize = 20,
+    String? status,
+  }) async {
+    try {
+      final params = <String, dynamic>{
+        'page': page,
+        'page_size': pageSize,
+      };
+      if (status != null) params['status'] = status;
+      final response = await _client.get(
+        ApiConstants.adminFinanceEscrowHolds,
+        queryParameters: params,
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> getEscrowHold(String holdId) async {
+    try {
+      final response = await _client.get(
+        ApiConstants.adminFinanceEscrowHoldById(holdId),
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> releaseEscrowHold(
+      String holdId, String? note) async {
+    try {
+      final body = <String, dynamic>{};
+      if (note != null) body['note'] = note;
+      final response = await _client.post(
+        ApiConstants.adminFinanceEscrowHoldRelease(holdId),
+        data: body,
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> disputeEscrowHold(
+      String holdId, String reason) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.adminFinanceEscrowHoldDispute(holdId),
+        data: {'reason': reason},
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // ─── Advertisements ───
+  Future<Map<String, dynamic>> getAdvertisements({
+    int page = 1,
+    int pageSize = 20,
+    String? status,
+  }) async {
+    try {
+      final params = <String, dynamic>{
+        'page': page,
+        'page_size': pageSize,
+      };
+      if (status != null) params['status'] = status;
+      final response = await _client.get(
+        ApiConstants.adminAdvertisements,
+        queryParameters: params,
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> createAdvertisement(
+      Map<String, dynamic> data) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.adminAdvertisements,
+        data: data,
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> updateAdvertisement(
+      String adId, Map<String, dynamic> data) async {
+    try {
+      final response = await _client.patch(
+        ApiConstants.adminAdvertisementById(adId),
+        data: data,
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<void> deleteAdvertisement(String adId) async {
+    try {
+      await _client.delete(ApiConstants.adminAdvertisementById(adId));
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> pauseAdvertisement(String adId) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.adminAdvertisementPause(adId),
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // ─── Marketplace Settings ───
+  Future<Map<String, dynamic>> getMarketplaceSettings() async {
+    try {
+      final response =
+          await _client.get(ApiConstants.adminMarketplaceSettings);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> updateMarketplaceSettings(
+      Map<String, dynamic> data) async {
+    try {
+      final response = await _client.patch(
+        ApiConstants.adminMarketplaceSettings,
+        data: data,
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
 }
