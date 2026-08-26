@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/theme/uicons.dart';
 import '../cubit/broker_cubit.dart';
-import '../../data/models/broker_models.dart';
 
 class BrokerKycPage extends StatefulWidget {
   const BrokerKycPage({super.key});
@@ -210,7 +209,7 @@ class _BrokerKycPageState extends State<BrokerKycPage> {
                       child: Row(
                         children: [
                           Icon(
-                            isUploaded ? Uicons.circleCheck : Uicons.upload,
+                            isUploaded ? Uicons.checkCircle : Uicons.upload,
                             color: isUploaded
                                 ? Colors.green
                                 : isMissing

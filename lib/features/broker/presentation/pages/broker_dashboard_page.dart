@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../config/constants/app_constants.dart';
 import '../../../../core/theme/uicons.dart';
 import '../cubit/broker_cubit.dart';
-import '../../data/models/broker_models.dart';
 
 class BrokerDashboardPage extends StatefulWidget {
   const BrokerDashboardPage({super.key});

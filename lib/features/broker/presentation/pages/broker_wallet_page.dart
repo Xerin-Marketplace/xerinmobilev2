@@ -390,7 +390,7 @@ class _BrokerWalletPageState extends State<BrokerWalletPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                value: 'mobile_money',
+                initialValue: 'mobile_money',
                 decoration: const InputDecoration(labelText: 'Account Type'),
                 items: const [
                   DropdownMenuItem(value: 'mobile_money', child: Text('Mobile Money')),

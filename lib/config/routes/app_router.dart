@@ -48,6 +48,9 @@ import '../../features/customer/presentation/pages/recently_viewed_page.dart';
 import '../../features/customer/presentation/pages/search_page.dart';
 import '../../features/customer/presentation/pages/settings_page.dart';
 import '../../features/customer/presentation/pages/stores_page.dart';
+import '../../features/customer/presentation/pages/support_tickets_page.dart';
+import '../../features/customer/presentation/pages/support_ticket_detail_page.dart';
+import '../../features/customer/presentation/pages/support_ticket_create_page.dart';
 import '../../features/customer/presentation/pages/trending_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/seller/presentation/pages/seller_dashboard_page.dart';
@@ -147,6 +150,10 @@ class AppRouter {
       GoRoute(
         path: AppConstants.sellerRegisterRoute,
         builder: (context, state) => const SellerRegisterPage(),
+      ),
+      GoRoute(
+        path: AppConstants.brokerRegisterRoute,
+        builder: (context, state) => const BrokerRegisterPage(),
       ),
       GoRoute(
         path: AppConstants.verifyOtpRoute,
@@ -286,6 +293,23 @@ class AppRouter {
       GoRoute(
         path: AppConstants.helpSupportRoute,
         builder: (context, state) => const HelpSupportPage(),
+      ),
+      GoRoute(
+        path: AppConstants.supportTicketsRoute,
+        builder: (context, state) => const SupportTicketsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.supportTicketDetailRoute,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return SupportTicketDetailPage(
+            ticketId: extra?['ticketId'] as String? ?? '',
+          );
+        },
+      ),
+      GoRoute(
+        path: AppConstants.supportTicketCreateRoute,
+        builder: (context, state) => const SupportTicketCreatePage(),
       ),
       GoRoute(
         path: AppConstants.checkoutRoute,
@@ -452,6 +476,31 @@ class AppRouter {
       GoRoute(
         path: AppConstants.sellerQuestionsRoute,
         builder: (context, state) => const SellerQuestionsPage(),
+      ),
+      // Broker panel routes
+      GoRoute(
+        path: AppConstants.brokerDashboardRoute,
+        builder: (context, state) => const BrokerDashboardPage(),
+      ),
+      GoRoute(
+        path: AppConstants.brokerKycRoute,
+        builder: (context, state) => const BrokerKycPage(),
+      ),
+      GoRoute(
+        path: AppConstants.brokerWalletRoute,
+        builder: (context, state) => const BrokerWalletPage(),
+      ),
+      GoRoute(
+        path: AppConstants.brokerOpportunitiesRoute,
+        builder: (context, state) => const BrokerOpportunitiesPage(),
+      ),
+      GoRoute(
+        path: AppConstants.brokerProductsRoute,
+        builder: (context, state) => const BrokerProductsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.brokerAnalyticsRoute,
+        builder: (context, state) => const BrokerAnalyticsPage(),
       ),
       // Admin panel routes
       GoRoute(

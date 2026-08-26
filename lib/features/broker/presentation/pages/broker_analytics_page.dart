@@ -35,7 +35,7 @@ class _BrokerAnalyticsPageState extends State<BrokerAnalyticsPage> {
         title: const Text('Analytics'),
         actions: [
           PopupMenuButton<int>(
-            icon: const Icon(Uicons.calendar),
+            icon: const Icon(Uicons.clock),
             onSelected: _changePeriod,
             itemBuilder: (context) => [
               const PopupMenuItem(value: 7, child: Text('Last 7 days')),

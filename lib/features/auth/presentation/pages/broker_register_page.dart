@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
+import '../../../../core/theme/country_data.dart';
 import '../../../../core/theme/uicons.dart';
+import '../../../../core/widgets/country_picker_field.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
@@ -25,7 +27,6 @@ class _BrokerRegisterPageState extends State<BrokerRegisterPage>
   final _phoneCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _confirmPassCtrl = TextEditingController();
-  final _countryCtrl = TextEditingController(text: 'Tanzania');
   final _regionCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
 
@@ -33,12 +34,7 @@ class _BrokerRegisterPageState extends State<BrokerRegisterPage>
   bool _obscurePass = true;
   bool _obscureConfirm = true;
 
-  static const List<Map<String, String>> _countries = [
-    {'name': 'Tanzania', 'flag': '🇹🇿', 'dialCode': '+255', 'regex': r'^[67]\d{8}$'},
-    {'name': 'Kenya', 'flag': '🇰🇪', 'dialCode': '+254', 'regex': r'^[71]\d{8}$'},
-    {'name': 'Uganda', 'flag': '🇺🇬', 'dialCode': '+256', 'regex': r'^[7]\d{8}$'},
-  ];
-  int _selectedCountryIdx = 0;
+  Country _selectedCountry = CountryData.defaultCountry;
 
   late final AnimationController _animCtrl;
   late final Animation<Offset> _slideAnim;
@@ -67,7 +63,6 @@ class _BrokerRegisterPageState extends State<BrokerRegisterPage>
     _phoneCtrl.dispose();
     _passCtrl.dispose();
     _confirmPassCtrl.dispose();
-    _countryCtrl.dispose();
     _regionCtrl.dispose();
     _cityCtrl.dispose();
     _animCtrl.dispose();
@@ -75,7 +70,7 @@ class _BrokerRegisterPageState extends State<BrokerRegisterPage>
   }
 
   String get _fullPhone =>
-      '${_countries[_selectedCountryIdx]['dialCode']}${_phoneCtrl.text.trim()}';
+      '${_selectedCountry.dialCode}${_phoneCtrl.text.trim()}';
 
   void _onRegister() {
     if (!_formKey.currentState!.validate()) return;
@@ -86,7 +81,7 @@ class _BrokerRegisterPageState extends State<BrokerRegisterPage>
           email: _emailCtrl.text.trim(),
           phone: _fullPhone,
           password: _passCtrl.text,
-          country: _countryCtrl.text.trim(),
+          country: _selectedCountry.name,
           region: _regionCtrl.text.trim(),
           city: _cityCtrl.text.trim(),
         );
@@ -192,7 +187,12 @@ class _BrokerRegisterPageState extends State<BrokerRegisterPage>
                             hint: 'e.g. 712345678',
                             keyboardType: TextInputType.phone,
                             maxLength: 9,
-                            prefix: _countryPicker(colorScheme),
+                            prefix: CountryPickerField(
+                              selectedCountry: _selectedCountry,
+                              onSelected: (country) =>
+                                  setState(() => _selectedCountry = country),
+                              colorScheme: colorScheme,
+                            ),
                             prefixIconConstraints: const BoxConstraints(
                               minWidth: 120,
                               minHeight: 40,
@@ -208,12 +208,8 @@ class _BrokerRegisterPageState extends State<BrokerRegisterPage>
                               if (v == null || v.isEmpty) {
                                 return 'Enter your phone number';
                               }
-                              if (v.length != 9) {
-                                return 'Phone number must be 9 digits';
-                              }
-                              final regex = _countries[_selectedCountryIdx]['regex']!;
-                              if (!RegExp(regex).hasMatch(v)) {
-                                return 'Enter a valid ${_countries[_selectedCountryIdx]['name']} number';
+                              if (v.length < 6 || v.length > _selectedCountry.maxLength) {
+                                return 'Enter a valid phone number';
                               }
                               return null;
                             },
@@ -260,14 +256,50 @@ class _BrokerRegisterPageState extends State<BrokerRegisterPage>
                           _sectionTitle(context, 'Location',
                               'Where you will operate as a broker'),
                           const SizedBox(height: 16),
-                          AuthTextField(
-                            controller: _countryCtrl,
-                            label: 'Country',
-                            hint: 'e.g. Tanzania',
-                            icon: Uicons.globe,
-                            textCapitalization: TextCapitalization.words,
-                            validator: (v) =>
-                                v == null || v.isEmpty ? 'Required' : null,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: colorScheme.onSurface.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: colorScheme.onSurface.withValues(alpha: 0.1),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Text(_selectedCountry.flag,
+                                    style: const TextStyle(fontSize: 20)),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Country',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: colorScheme.onSurface
+                                              .withValues(alpha: 0.5),
+                                        ),
+                                      ),
+                                      Text(
+                                        _selectedCountry.name,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: colorScheme.onSurface,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(Uicons.globe,
+                                    size: 20,
+                                    color: colorScheme.onSurface
+                                        .withValues(alpha: 0.4)),
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 12),
                           Row(
@@ -363,76 +395,10 @@ class _BrokerRegisterPageState extends State<BrokerRegisterPage>
           subtitle,
           style: TextStyle(
             fontSize: 13,
-            color: colorScheme.onSurface.withValues(alpha: 0.45),
+            color: colorScheme.onSurface.withValues(alpha: null),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _countryPicker(ColorScheme colorScheme) {
-    final country = _countries[_selectedCountryIdx];
-    return Container(
-      margin: const EdgeInsets.only(left: 4, right: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-      decoration: BoxDecoration(
-        color: colorScheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: PopupMenuButton<int>(
-        initialValue: _selectedCountryIdx,
-        onSelected: (idx) => setState(() {
-          _selectedCountryIdx = idx;
-          _countryCtrl.text = _countries[idx]['name']!;
-        }),
-        itemBuilder: (context) {
-          return _countries.asMap().entries.map((entry) {
-            final c = entry.value;
-            return PopupMenuItem<int>(
-              value: entry.key,
-              child: Row(
-                children: [
-                  Text(c['flag']!, style: const TextStyle(fontSize: 20)),
-                  const SizedBox(width: 10),
-                  Text(
-                    c['dialCode']!,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    c['name']!,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList();
-        },
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(country['flag']!, style: const TextStyle(fontSize: 18)),
-            const SizedBox(width: 4),
-            Text(
-              country['dialCode']!,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: colorScheme.primary,
-              ),
-            ),
-            const SizedBox(width: 2),
-            Icon(Uicons.angleDown, size: 16, color: colorScheme.primary),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logger/logger.dart';
 
+import '../../../../core/errors/exceptions.dart';
 import '../../data/datasources/broker_remote_datasource.dart';
 import '../../data/models/broker_models.dart';
 
@@ -206,13 +207,11 @@ class BrokerCubit extends Cubit<BrokerState> {
   Future<void> loadOpportunities() async {
     emit(const BrokerLoading());
     try {
-      final results = await Future.wait([
-        _dataSource.getOpportunities(),
-        _dataSource.getAcceptedOpportunities(),
-      ]);
+      final opportunities = await _dataSource.getOpportunities();
+      final accepted = await _dataSource.getAcceptedOpportunities();
       emit(BrokerOpportunitiesLoaded(
-        opportunities: results[0] as List<BrokerOpportunityModel>,
-        accepted: results[1] as List<BrokerOpportunityModel>,
+        opportunities: opportunities,
+        accepted: accepted,
       ));
     } on ServerException catch (e) {
       _logger.e('Broker opportunities error: ${e.message}');
@@ -321,6 +320,30 @@ class BrokerCubit extends Cubit<BrokerState> {
       emit(BrokerProductsLoaded(products: products));
     } on ServerException catch (e) {
       _logger.e('Broker products error: ${e.message}');
+      emit(BrokerError(message: e.message));
+    }
+  }
+
+  Future<void> publishProduct(String id) async {
+    try {
+      await _dataSource.publishProduct(id);
+      _logger.i('Product published: $id');
+      emit(const BrokerActionSuccess(message: 'Product published'));
+      await loadProducts();
+    } on ServerException catch (e) {
+      _logger.e('Publish product error: ${e.message}');
+      emit(BrokerError(message: e.message));
+    }
+  }
+
+  Future<void> archiveProduct(String id) async {
+    try {
+      await _dataSource.archiveProduct(id);
+      _logger.i('Product archived: $id');
+      emit(const BrokerActionSuccess(message: 'Product archived'));
+      await loadProducts();
+    } on ServerException catch (e) {
+      _logger.e('Archive product error: ${e.message}');
       emit(BrokerError(message: e.message));
     }
   }

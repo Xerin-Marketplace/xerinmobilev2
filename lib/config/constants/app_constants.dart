@@ -34,6 +34,9 @@ abstract class AppConstants {
   static const String notificationsRoute = '/notifications';
   static const String settingsRoute = '/settings';
   static const String helpSupportRoute = '/help-support';
+  static const String supportTicketsRoute = '/support-tickets';
+  static const String supportTicketDetailRoute = '/support-ticket-detail';
+  static const String supportTicketCreateRoute = '/support-ticket-create';
   static const String checkoutRoute = '/checkout';
   static const String paymentProcessingRoute = '/payment-processing';
 

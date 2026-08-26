@@ -9,27 +9,15 @@ import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
 import '../widgets/auth_text_field.dart';
+import '../../../../core/theme/country_data.dart';
 import '../../../../core/theme/uicons.dart';
+import '../../../../core/widgets/country_picker_field.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
-}
-
-class _Country {
-  final String name;
-  final String flag;
-  final String dialCode;
-  final String regex;
-
-  const _Country({
-    required this.name,
-    required this.flag,
-    required this.dialCode,
-    required this.regex,
-  });
 }
 
 class _RegisterPageState extends State<RegisterPage>
@@ -51,18 +39,7 @@ class _RegisterPageState extends State<RegisterPage>
   bool _obscureConfirm = true;
   bool _agree = false;
 
-  static const List<_Country> _countries = [
-    _Country(
-        name: 'Tanzania',
-        flag: '🇹🇿',
-        dialCode: '+255',
-        regex: r'^[67]\d{8}$'),
-    _Country(
-        name: 'Kenya', flag: '🇰🇪', dialCode: '+254', regex: r'^[71]\d{8}$'),
-    _Country(
-        name: 'Uganda', flag: '🇺🇬', dialCode: '+256', regex: r'^[7]\d{8}$'),
-  ];
-  _Country _selectedCountry = _countries[0];
+  Country _selectedCountry = CountryData.defaultCountry;
 
   late final AnimationController _animCtrl;
   late final Animation<Offset> _slideAnim;
@@ -244,75 +221,11 @@ class _RegisterPageState extends State<RegisterPage>
                             hint: 'e.g. 712345678',
                             keyboardType: TextInputType.phone,
                             maxLength: 9,
-                            prefix: Container(
-                              margin: const EdgeInsets.only(left: 4, right: 4),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 6),
-                              decoration: BoxDecoration(
-                                color:
-                                    colorScheme.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: PopupMenuButton<_Country>(
-                                initialValue: _selectedCountry,
-                                onSelected: (country) =>
-                                    setState(() => _selectedCountry = country),
-                                itemBuilder: (context) {
-                                  return _countries.map((country) {
-                                    return PopupMenuItem<_Country>(
-                                      value: country,
-                                      child: Row(
-                                        children: [
-                                          Text(country.flag,
-                                              style: const TextStyle(
-                                                  fontSize: 20)),
-                                          const SizedBox(width: 10),
-                                          Text(
-                                            country.dialCode,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                              color: colorScheme.onSurface,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            country.name,
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              color: colorScheme.onSurface
-                                                  .withValues(alpha: 0.6),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList();
-                                },
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(_selectedCountry.flag,
-                                        style:
-                                            const TextStyle(fontSize: 18)),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      _selectedCountry.dialCode,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: colorScheme.primary,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 2),
-                                    Icon(
-                                      Uicons.angleDown,
-                                      size: 16,
-                                      color: colorScheme.primary,
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            prefix: CountryPickerField(
+                              selectedCountry: _selectedCountry,
+                              onSelected: (country) =>
+                                  setState(() => _selectedCountry = country),
+                              colorScheme: colorScheme,
                             ),
                             prefixIconConstraints: const BoxConstraints(
                               minWidth: 120,
@@ -329,11 +242,8 @@ class _RegisterPageState extends State<RegisterPage>
                               if (v == null || v.isEmpty) {
                                 return 'Enter your phone number';
                               }
-                              if (v.length != 9) {
-                                return 'Phone number must be 9 digits';
-                              }
-                              if (!RegExp(_selectedCountry.regex).hasMatch(v)) {
-                                return 'Enter a valid ${_selectedCountry.name} number';
+                              if (v.length < 6 || v.length > _selectedCountry.maxLength) {
+                                return 'Enter a valid phone number';
                               }
                               return null;
                             },

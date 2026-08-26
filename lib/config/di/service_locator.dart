@@ -25,6 +25,7 @@ import '../../features/customer/data/datasources/promotion_remote_datasource.dar
 import '../../features/customer/data/datasources/recommendation_remote_datasource.dart';
 import '../../features/customer/data/datasources/review_remote_datasource.dart';
 import '../../features/customer/data/datasources/search_remote_datasource.dart';
+import '../../features/customer/data/datasources/support_remote_datasource.dart';
 import '../../features/customer/data/datasources/wishlist_remote_datasource.dart';
 import '../../features/customer/presentation/cubit/cart_cubit.dart';
 import '../../features/customer/presentation/cubit/customer_cubit.dart';
@@ -36,9 +37,12 @@ import '../../features/customer/presentation/cubit/promotion_cubit.dart';
 import '../../features/customer/presentation/cubit/recommendation_cubit.dart';
 import '../../features/customer/presentation/cubit/review_cubit.dart';
 import '../../features/customer/presentation/cubit/search_cubit.dart';
+import '../../features/customer/presentation/cubit/support_cubit.dart';
 import '../../features/customer/presentation/cubit/wishlist_cubit.dart';
 import '../../features/seller/data/datasources/seller_remote_datasource.dart';
 import '../../features/seller/presentation/cubit/seller_cubit.dart';
+import '../../features/broker/data/datasources/broker_remote_datasource.dart';
+import '../../features/broker/presentation/cubit/broker_cubit.dart';
 import '../../features/admin/data/datasources/admin_remote_datasource.dart';
 import '../../features/admin/presentation/cubit/admin_cubit.dart';
 import '../constants/api_constants.dart';
@@ -237,6 +241,26 @@ Future<void> initServiceLocator({bool reset = false}) async {
       () => SellerRemoteDataSource(sl()));
   sl.registerFactory<SellerCubit>(
     () => SellerCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+
+  // Broker
+  sl.registerLazySingleton<BrokerRemoteDataSource>(
+      () => BrokerRemoteDataSource(sl()));
+  sl.registerFactory<BrokerCubit>(
+    () => BrokerCubit(
+      dataSource: sl(),
+      logger: sl(),
+    ),
+  );
+
+  // Support
+  sl.registerLazySingleton<SupportRemoteDataSource>(
+      () => SupportRemoteDataSource(sl()));
+  sl.registerFactory<SupportCubit>(
+    () => SupportCubit(
       dataSource: sl(),
       logger: sl(),
     ),

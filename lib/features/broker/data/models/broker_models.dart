@@ -294,6 +294,7 @@ class BrokerOpportunityModel {
   final String? productImage;
   final String commissionType;
   final String commissionValue;
+  final String currency;
   final String estimatedRewardPerUnit;
   final String estimatedSellerNetPerUnit;
   final int availableQuantity;
@@ -309,6 +310,7 @@ class BrokerOpportunityModel {
     this.productImage,
     required this.commissionType,
     required this.commissionValue,
+    this.currency = 'TZS',
     required this.estimatedRewardPerUnit,
     required this.estimatedSellerNetPerUnit,
     required this.availableQuantity,
@@ -328,6 +330,7 @@ class BrokerOpportunityModel {
       productImage: product['image_url']?.toString(),
       commissionType: offer['commission_type']?.toString() ?? 'fixed',
       commissionValue: offer['commission_value']?.toString() ?? '0',
+      currency: product['currency']?.toString() ?? 'TZS',
       estimatedRewardPerUnit:
           offer['estimated_reward_per_unit']?.toString() ?? '0',
       estimatedSellerNetPerUnit:

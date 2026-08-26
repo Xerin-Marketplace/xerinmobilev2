@@ -15,8 +15,10 @@ import 'features/customer/presentation/cubit/notification_cubit.dart';
 import 'features/customer/presentation/cubit/promotion_cubit.dart';
 import 'features/customer/presentation/cubit/recommendation_cubit.dart';
 import 'features/customer/presentation/cubit/search_cubit.dart';
+import 'features/customer/presentation/cubit/support_cubit.dart';
 import 'features/customer/presentation/cubit/wishlist_cubit.dart';
 import 'features/seller/presentation/cubit/seller_cubit.dart';
+import 'features/broker/presentation/cubit/broker_cubit.dart';
 import 'features/admin/presentation/cubit/admin_cubit.dart';
 
 /// Root app widget.
@@ -50,7 +52,9 @@ class _XerinAppState extends State<XerinApp> {
         BlocProvider(create: (_) => sl<NotificationCubit>()),
         BlocProvider(create: (_) => sl<PromotionCubit>()),
         BlocProvider(create: (_) => sl<SearchCubit>()),
+        BlocProvider(create: (_) => sl<SupportCubit>()),
         BlocProvider(create: (_) => sl<SellerCubit>()),
+        BlocProvider(create: (_) => sl<BrokerCubit>()),
         BlocProvider(create: (_) => sl<AdminCubit>()),
       ],
       child: BlocBuilder<AppThemeCubit, AppThemeState>(

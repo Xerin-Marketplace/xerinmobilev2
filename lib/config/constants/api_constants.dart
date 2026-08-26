@@ -401,6 +401,183 @@ abstract class ApiConstants {
   static const String brokerAnalyticsOverview = '/brokers/analytics/overview';
   static const String brokerAnalyticsCampaigns = '/brokers/analytics/campaigns';
 
+  // Support ticket endpoints
+  static const String supportTickets = '/support/tickets';
+  static const String supportMyTickets = '/support/tickets/my';
+  static String supportTicketById(String id) => '/support/tickets/$id';
+  static String supportTicketMessages(String id) => '/support/tickets/$id/messages';
+
+  // Seller Fulfillment endpoints
+  static const String sellerFulfillmentSummary = '/seller/fulfillment/summary';
+  static const String sellerFulfillment = '/seller/fulfillment';
+  static String sellerFulfillmentById(String sellerOrderId) =>
+      '/seller/fulfillment/$sellerOrderId';
+  static String sellerFulfillmentTracking(String sellerOrderId) =>
+      '/seller/fulfillment/$sellerOrderId/tracking';
+
+  // Seller Pickup Locations endpoints
+  static const String sellerPickupLocations = '/seller/pickup-locations';
+  static String sellerPickupLocationById(String id) =>
+      '/seller/pickup-locations/$id';
+  static String sellerPickupLocationDefault(String id) =>
+      '/seller/pickup-locations/$id/default';
+
+  // Map Locations endpoints
+  static const String mapConfig = '/locations/map/config';
+  static const String mapAutocomplete = '/locations/map/autocomplete';
+  static String mapPlaceDetails(String placeId) =>
+      '/locations/map/places/$placeId';
+  static const String mapReverseGeocode = '/locations/map/reverse-geocode';
+
+  // Delivery Verification endpoints
+  static String deliveryVerificationStart(String shipmentId) =>
+      '/delivery-verification/logistics/shipments/$shipmentId/start';
+  static String deliveryVerificationVerify(String proofId) =>
+      '/delivery-verification/logistics/proofs/$proofId/verify';
+  static const String deliveryVerificationMy = '/delivery-verification/customer/my';
+  static String deliveryVerificationDispute(String proofId) =>
+      '/delivery-verification/customer/proofs/$proofId/dispute';
+
+  // Advertisement endpoints (public)
+  static const String advertisementsActive = '/advertisements/active';
+  static String advertisementImpression(String id) =>
+      '/advertisements/$id/impression';
+  static String advertisementClick(String id) => '/advertisements/$id/click';
+  static String advertisementsBySlot(String placement) =>
+      '/advertisements/slot/$placement';
+  static const String advertisementSlots = '/advertisements/slots';
+
+  // Admin Advertisement endpoints
+  static const String adminAdvertisements = '/admin/advertisements';
+  static const String adminAdvertisementUploadImage =
+      '/admin/advertisements/upload-image';
+  static const String adminAdvertisementAnalytics =
+      '/admin/advertisements/analytics/overview';
+  static String adminAdvertisementById(String id) => '/admin/advertisements/$id';
+  static String adminAdvertisementActivate(String id) =>
+      '/admin/advertisements/$id/activate';
+  static String adminAdvertisementPause(String id) =>
+      '/admin/advertisements/$id/pause';
+
+  // Admin Finance endpoints
+  static String adminFinanceOrderLifecycle(String orderId) =>
+      '/admin/finance/orders/$orderId/lifecycle';
+  static String adminFinanceReconciliationOrder(String orderId) =>
+      '/admin/finance/reconciliation/orders/$orderId';
+  static const String adminFinanceReconciliation = '/admin/finance/reconciliation';
+  static String adminFinanceReconciliationEvents(String recordId) =>
+      '/admin/finance/reconciliation/$recordId/events';
+  static const String adminFinanceSettings = '/admin/finance/settings';
+  static const String adminFinanceFxConvert = '/admin/finance/fx/convert';
+  static const String adminFinanceEscrowHolds = '/admin/finance/escrow-holds';
+  static String adminFinanceEscrowHoldById(String holdId) =>
+      '/admin/finance/escrow-holds/$holdId';
+  static String adminFinanceEscrowHoldDispute(String holdId) =>
+      '/admin/finance/escrow-holds/$holdId/dispute';
+  static String adminFinanceEscrowHoldRelease(String holdId) =>
+      '/admin/finance/escrow-holds/$holdId/release';
+
+  // Admin Marketplace Settings endpoints
+  static const String adminMarketplaceSettings = '/admin/marketplace-settings';
+  static const String adminMarketplaceCommissionRules =
+      '/admin/marketplace-settings/commission-rules';
+  static String adminMarketplaceCommissionRuleById(String ruleId) =>
+      '/admin/marketplace-settings/commission-rules/$ruleId';
+  static const String adminMarketplaceCommissionPreview =
+      '/admin/marketplace-settings/commission-preview';
+
+  // Logistics endpoints
+  static const String logisticsCountryOptions = '/logistics/country-options';
+  static const String logisticsCompanies = '/logistics/companies';
+  static const String logisticsCompaniesOnboard = '/logistics/companies/onboard';
+  static String logisticsCompanyById(String companyId) =>
+      '/logistics/companies/$companyId';
+  static String logisticsCompanyResendCredentials(String companyId) =>
+      '/logistics/companies/$companyId/administrator/resend-credentials';
+  static String logisticsCompanyUsers(String companyId) =>
+      '/logistics/companies/$companyId/users';
+  static String logisticsCompanyUserById(String companyId, String userId) =>
+      '/logistics/companies/$companyId/users/$userId';
+  static const String logisticsMeUsers = '/logistics/me/users';
+  static String logisticsMeUserById(String userId) => '/logistics/me/users/$userId';
+  static const String logisticsServices = '/logistics/services';
+  static String logisticsServiceById(String serviceId) =>
+      '/logistics/services/$serviceId';
+  static const String logisticsZones = '/logistics/zones';
+  static String logisticsZoneById(String zoneId) => '/logistics/zones/$zoneId';
+  static const String logisticsMeZones = '/logistics/me/zones';
+  static String logisticsMeZoneById(String zoneId) => '/logistics/me/zones/$zoneId';
+  static const String logisticsRates = '/logistics/rates';
+  static String logisticsRateById(String rateId) => '/logistics/rates/$rateId';
+  static const String logisticsMePricing = '/logistics/me/pricing';
+  static const String logisticsMeServices = '/logistics/me/services';
+  static String logisticsMeServiceById(String serviceId) =>
+      '/logistics/me/services/$serviceId';
+  static const String logisticsMeRates = '/logistics/me/rates';
+  static String logisticsMeRateById(String rateId) => '/logistics/me/rates/$rateId';
+  static String logisticsCompanyIntegration(String companyId) =>
+      '/logistics/companies/$companyId/integration';
+  static const String logisticsMeIntegration = '/logistics/me/integration';
+  static const String logisticsMeWebhookEvents = '/logistics/me/webhook-events';
+
+  // Logistics Wallet endpoints
+  static const String logisticsWalletMe = '/logistics/wallet/me';
+  static const String logisticsWalletMeTransactions =
+      '/logistics/wallet/me/transactions';
+  static const String logisticsWalletMePayoutAccounts =
+      '/logistics/wallet/me/payout-accounts';
+  static String logisticsWalletMePayoutAccountById(String accountId) =>
+      '/logistics/wallet/me/payout-accounts/$accountId';
+  static const String logisticsWalletMePayouts = '/logistics/wallet/me/payouts';
+  static String logisticsWalletPayoutCancel(String payoutId) =>
+      '/logistics/wallet/me/payouts/$payoutId/cancel';
+  static String logisticsAdminPayoutAccountVerify(String accountId) =>
+      '/logistics/wallet/admin/payout-accounts/$accountId/verification';
+  static String logisticsAdminPayoutUpdate(String payoutId) =>
+      '/logistics/wallet/admin/payouts/$payoutId';
+  static String logisticsAdminWalletAdjust(String companyId) =>
+      '/logistics/wallet/admin/wallets/$companyId/adjustments';
+
+  // Broker admin endpoints
+  static const String brokerAdminList = '/brokers/admin';
+  static String brokerAdminById(String brokerId) => '/brokers/admin/$brokerId';
+  static String brokerAdminDocuments(String brokerId) =>
+      '/brokers/admin/$brokerId/documents';
+  static String brokerAdminDocumentView(String brokerId, String docId) =>
+      '/brokers/admin/$brokerId/documents/$docId/view';
+  static String brokerAdminStartReview(String brokerId) =>
+      '/brokers/admin/$brokerId/start-review';
+  static String brokerAdminApprove(String brokerId) =>
+      '/brokers/admin/$brokerId/approve';
+  static String brokerAdminReject(String brokerId) =>
+      '/brokers/admin/$brokerId/reject';
+  static String brokerAdminSuspend(String brokerId) =>
+      '/brokers/admin/$brokerId/suspend';
+  static String brokerAdminArchiveProduct(String productId) =>
+      '/brokers/admin/products/$productId/archive';
+  static const String brokerAdminRiskEvents = '/brokers/admin/security/risk-events';
+  static String brokerAdminRiskEventResolve(String eventId) =>
+      '/brokers/admin/security/risk-events/$eventId/resolve';
+  static String brokerAdminWalletFreeze(String brokerId) =>
+      '/brokers/admin/$brokerId/security/wallet-freeze';
+  static const String brokerAdminPayoutAccounts = '/brokers/admin/payout-accounts';
+  static String brokerAdminPayoutAccountVerify(String accountId) =>
+      '/brokers/admin/payout-accounts/$accountId/verification';
+  static const String brokerAdminPayouts = '/brokers/admin/payouts';
+  static String brokerAdminPayoutUpdate(String payoutId) =>
+      '/brokers/admin/payouts/$payoutId';
+  static const String brokerReferralClick = '/brokers/referrals';
+
+  // Seller admin document endpoints
+  static String adminSellerDocumentView(String docId) =>
+      '/sellers/admin/documents/$docId/view';
+  static String adminSellerDocumentDownload(String docId) =>
+      '/sellers/admin/documents/$docId/download';
+
+  // Seller apply endpoint
+  static const String sellerApply = '/sellers/apply';
+  static const String sellerApplicationStatus = '/sellers/application-status';
+
   // Common headers
   static const String contentType = 'application/json';
   static const String authorizationHeader = 'Authorization';

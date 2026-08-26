@@ -9,6 +9,8 @@ import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
 import '../widgets/auth_text_field.dart';
 import '../../../../core/theme/uicons.dart';
+import '../../../../core/theme/country_data.dart';
+import '../../../../core/widgets/country_picker_field.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -101,64 +103,77 @@ class _SignInPageState extends State<SignInPage>
   void _showVerifyDialog(BuildContext context, String email) {
     final phoneCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
+    Country selectedCountry = CountryData.defaultCountry;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Account Not Verified'),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Your account ($email) is not verified. Enter your phone number to receive an OTP.',
-                  style: const TextStyle(fontSize: 14),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: phoneCtrl,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number',
-                    hintText: '+255XXXXXXXXX',
-                    prefixIcon: Icon(Uicons.phone),
-                    border: OutlineInputBorder(),
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) => AlertDialog(
+            title: const Text('Account Not Verified'),
+            content: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Your account ($email) is not verified. Enter your phone number to receive an OTP.',
+                    style: const TextStyle(fontSize: 14),
                   ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return 'Enter your phone number';
-                    }
-                    if (v.trim().length < 10) {
-                      return 'Enter a valid phone number';
-                    }
-                    return null;
-                  },
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: phoneCtrl,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      labelText: 'Phone Number',
+                      hintText: 'e.g. 712345678',
+                      prefixIcon: CountryPickerField(
+                        selectedCountry: selectedCountry,
+                        onSelected: (country) =>
+                            setDialogState(() => selectedCountry = country),
+                      ),
+                      prefixIconConstraints: const BoxConstraints(
+                        minWidth: 110,
+                        maxWidth: 110,
+                      ),
+                      border: const OutlineInputBorder(),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return 'Enter your phone number';
+                      }
+                      if (v.trim().length < 6 ||
+                          v.trim().length > selectedCountry.maxLength) {
+                        return 'Enter a valid phone number';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  if (formKey.currentState!.validate()) {
+                    final phone =
+                        '${selectedCountry.dialCode}${phoneCtrl.text.trim()}';
+                    Navigator.of(dialogContext).pop();
+                    context.read<AuthCubit>().sendOtp(phone: phone);
+                    context.go(
+                      AppConstants.verifyOtpRoute,
+                      extra: {'phone': phone, 'fromLogin': true},
+                    );
+                  }
+                },
+                child: const Text('Send OTP'),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  final phone = phoneCtrl.text.trim();
-                  Navigator.of(dialogContext).pop();
-                  context.read<AuthCubit>().sendOtp(phone: phone);
-                  context.go(
-                    AppConstants.verifyOtpRoute,
-                    extra: {'phone': phone, 'fromLogin': true},
-                  );
-                }
-              },
-              child: const Text('Send OTP'),
-            ),
-          ],
         );
       },
     );
