@@ -5,6 +5,8 @@ import 'config/constants/app_constants.dart';
 import 'config/di/service_locator.dart';
 import 'config/routes/app_router.dart';
 import 'config/theme/app_theme.dart';
+import 'core/connectivity/connectivity_cubit.dart';
+import 'core/connectivity/no_internet_page.dart';
 import 'core/network/api_client.dart';
 import 'core/theme/app_theme_cubit.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
@@ -45,6 +47,7 @@ class _XerinAppState extends State<XerinApp> {
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: sl<AppThemeCubit>()),
+        BlocProvider.value(value: sl<ConnectivityCubit>()),
         BlocProvider(create: (_) => sl<AuthCubit>()),
         BlocProvider(create: (_) => sl<HomeCubit>()..loadHome()),
         BlocProvider(create: (_) => sl<CustomerCubit>()..loadAll()),
@@ -70,6 +73,19 @@ class _XerinAppState extends State<XerinApp> {
             darkTheme: AppTheme.darkTheme,
             themeMode: state.themeMode,
             routerConfig: AppRouter.router,
+            builder: (context, child) {
+              return BlocBuilder<ConnectivityCubit, ConnectivityState>(
+                builder: (context, connectivity) {
+                  if (connectivity.isOffline) {
+                    return NoInternetPage(
+                      onRetry: () =>
+                          sl<ConnectivityCubit>().check(),
+                    );
+                  }
+                  return child ?? const SizedBox.shrink();
+                },
+              );
+            },
           );
         },
       ),

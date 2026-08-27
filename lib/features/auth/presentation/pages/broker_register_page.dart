@@ -11,6 +11,8 @@ import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
 import '../widgets/auth_text_field.dart';
+import '../widgets/auth_background.dart';
+import '../widgets/theme_toggle_button.dart';
 
 class BrokerRegisterPage extends StatefulWidget {
   const BrokerRegisterPage({super.key});
@@ -113,25 +115,33 @@ class _BrokerRegisterPageState extends State<BrokerRegisterPage>
           ),
           title: const Text('Broker Registration'),
         ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Form(
-              key: _formKey,
-              child: FadeTransition(
-                opacity: _fadeAnim,
-                child: SlideTransition(
-                  position: _slideAnim,
-                  child: BlocBuilder<AuthCubit, AuthState>(
-                    buildWhen: (prev, curr) =>
-                        curr is AuthLoading || curr is AuthError,
-                    builder: (context, state) {
+        body: AuthBackground(
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Form(
+                key: _formKey,
+                child: FadeTransition(
+                  opacity: _fadeAnim,
+                  child: SlideTransition(
+                    position: _slideAnim,
+                    child: BlocBuilder<AuthCubit, AuthState>(
+                      buildWhen: (prev, curr) =>
+                          curr is AuthLoading || curr is AuthError,
+                      builder: (context, state) {
                       final isLoading = state is AuthLoading;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 4),
-                          const Center(child: AuthLogo(width: 140, height: 80)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const AuthLogo(width: 140, height: 80),
+                              const ThemeToggleButton(),
+                            ],
+                          ),
                           const SizedBox(height: 12),
                           _sectionTitle(context, 'Become a Broker',
                               'Promote products and earn commissions'),
@@ -372,6 +382,7 @@ class _BrokerRegisterPageState extends State<BrokerRegisterPage>
             ),
           ),
         ),
+      ),
       ),
     );
   }

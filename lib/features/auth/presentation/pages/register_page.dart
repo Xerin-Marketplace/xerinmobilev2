@@ -9,6 +9,8 @@ import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
 import '../widgets/auth_text_field.dart';
+import '../widgets/auth_background.dart';
+import '../widgets/theme_toggle_button.dart';
 import '../../../../core/theme/country_data.dart';
 import '../../../../core/theme/uicons.dart';
 import '../../../../core/widgets/country_picker_field.dart';
@@ -126,23 +128,31 @@ class _RegisterPageState extends State<RegisterPage>
     return BlocListener<AuthCubit, AuthState>(
       listener: _onStateChange,
       child: Scaffold(
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Form(
-              key: _formKey,
-              child: FadeTransition(
-                opacity: _fadeAnim,
-                child: SlideTransition(
-                  position: _slideAnim,
-                  child: BlocBuilder<AuthCubit, AuthState>(
-                    builder: (context, state) {
+        body: AuthBackground(
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Form(
+                key: _formKey,
+                child: FadeTransition(
+                  opacity: _fadeAnim,
+                  child: SlideTransition(
+                    position: _slideAnim,
+                    child: BlocBuilder<AuthCubit, AuthState>(
+                      builder: (context, state) {
                       final isLoading = state is AuthLoading;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 4),
-                          const AuthLogo(width: 140, height: 80),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const AuthLogo(width: 140, height: 80),
+                              const ThemeToggleButton(),
+                            ],
+                          ),
                           const SizedBox(height: 12),
                           Text(
                             'Create your account',
@@ -435,6 +445,7 @@ class _RegisterPageState extends State<RegisterPage>
             ),
           ),
         ),
+      ),
       ),
     );
   }

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../../config/di/service_locator.dart';
 import '../../../../core/theme/app_theme_cubit.dart';
-import '../../../../core/theme/uicons.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -26,25 +26,22 @@ class _OnboardingPageState extends State<OnboardingPage>
 
   final List<_OnboardingItem> _pages = const [
     _OnboardingItem(
-      image: 'assets/onboarding/1stonbaoidng .jpg',
-      icon: Uicons.storeAlt,
+      image: 'assets/images/ecommerce-phone-happy-black-woman-with-credit-card-online-shopping-digital-payment-app-home-smile-banking-excited-african-girl-checks-cash-budget-money-growth-savings-online_590464-111903.jpg',
       title: 'Welcome to XerinMarket',
       description:
-          'Your everyday shopping companion. Discover great products from trusted sellers, all in one place.',
+          'Shop from trusted sellers anywhere. Enjoy a seamless and secure online shopping experience.',
     ),
     _OnboardingItem(
-      image: 'assets/onboarding/deliveryobaording.jpg',
-      icon: Uicons.shippingFast,
-      title: 'Fast & Reliable Delivery',
+      image: 'assets/images/35124.jpg',
+      title: 'Sell Your Products Online',
       description:
-          'From cart to doorstep in record time. Track your orders every step of the way, right until they reach you.',
+          'Are you a seller? List your products on XerinMarket and reach customers across Tanzania. Start your business today at no high cost.',
     ),
     _OnboardingItem(
-      image: 'assets/onboarding/deliveryobaording.jpg',
-      icon: Uicons.lock,
-      title: 'Shop with Confidence',
+      image: 'assets/images/2150627997.jpg',
+      title: 'For Brokers & Agents',
       description:
-          'Your payments are secure and protected. Shop worry-free with buyer protection on every single purchase.',
+          'Connect sellers and buyers with ease. XerinMarket gives you a platform to grow your business and expand your broker network.',
     ),
   ];
 
@@ -56,7 +53,7 @@ class _OnboardingPageState extends State<OnboardingPage>
       duration: const Duration(milliseconds: 700),
     );
     _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.3),
+      begin: const Offset(0, 0.15),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic));
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
@@ -75,30 +72,19 @@ class _OnboardingPageState extends State<OnboardingPage>
     _animCtrl.forward(from: 0);
   }
 
-  void _onNext() {
+  Future<void> _onNext() async {
     if (_currentPage < _pages.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
-    }
-  }
-
-  void _onBack() {
-    if (_currentPage > 0) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
+    } else {
+      await _markOnboardingSeen();
+      if (mounted) context.go(AppConstants.signInRoute);
     }
   }
 
   Future<void> _onSkip() async {
-    await _markOnboardingSeen();
-    if (mounted) context.go(AppConstants.signInRoute);
-  }
-
-  Future<void> _onGetStarted() async {
     await _markOnboardingSeen();
     if (mounted) context.go(AppConstants.signInRoute);
   }
@@ -110,42 +96,81 @@ class _OnboardingPageState extends State<OnboardingPage>
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+    final item = _pages[_currentPage];
+    final isLast = _currentPage == _pages.length - 1;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: scaffoldBg,
       body: Stack(
         children: [
-          Column(
-            children: [
-              Expanded(
-                flex: 6,
-                child: PageView.builder(
-                  controller: _pageController,
-                  onPageChanged: _onPageChanged,
-                  itemCount: _pages.length,
-                  itemBuilder: (context, index) =>
-                      _buildTopSection(_pages[index], colorScheme, isDark),
-                ),
-              ),
-              Transform.translate(
-                offset: const Offset(0, -50),
-                child: _buildBottomSection(colorScheme, isDark),
-              ),
-            ],
-          ),
+          // Image covers top ~50% with smooth fade into scaffold background
           Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            left: 16,
-            child: _buildThemeToggleButton(),
-          ),
-          if (_currentPage < _pages.length - 1)
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 16,
-              right: 16,
-              child: _buildSkipButton(colorScheme),
+            top: 0,
+            left: 0,
+            right: 0,
+            height: MediaQuery.of(context).size.height * 0.50,
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: _onPageChanged,
+              itemCount: _pages.length,
+              itemBuilder: (context, index) => Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset(
+                    _pages[index].image,
+                    fit: BoxFit.cover,
+                  ),
+                  // Smooth gradient fade — transparent at top, scaffold bg at bottom
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: const [0.0, 0.3, 0.6, 0.85, 1.0],
+                        colors: [
+                          Colors.black.withValues(alpha: 0.05),
+                          Colors.black.withValues(alpha: 0.0),
+                          scaffoldBg.withValues(alpha: 0.3),
+                          scaffoldBg.withValues(alpha: 0.8),
+                          scaffoldBg.withValues(alpha: 1.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (isDark)
+                    Container(color: Colors.black.withValues(alpha: 0.12)),
+                ],
+              ),
             ),
+          ),
+          // Top bar — theme toggle + skip
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 12,
+            left: 16,
+            right: 16,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildThemeToggleButton(),
+                if (!isLast) _buildSkipButton(),
+              ],
+            ),
+          ),
+          // Bottom content — text + button on scaffold background
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
+                child: _buildBottomContent(item, isLast, isDark),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -155,265 +180,127 @@ class _OnboardingPageState extends State<OnboardingPage>
     return BlocBuilder<AppThemeCubit, AppThemeState>(
       bloc: sl<AppThemeCubit>(),
       builder: (context, state) {
-        final isDark = state.isDark ||
+        final dark = state.isDark ||
             (state.isSystem &&
                 MediaQuery.of(context).platformBrightness == Brightness.dark);
 
-        return GestureDetector(
-          onTap: () => sl<AppThemeCubit>().toggleTheme(),
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isDark ? Colors.grey[850] : Colors.white,
-              shape: BoxShape.circle,
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.2),
+              width: 1,
             ),
-            child: Icon(
-              isDark ? Uicons.darkMode : Uicons.sun,
-              color: isDark ? Colors.amber : Colors.orange,
-              size: 22,
+          ),
+          child: IconButton(
+            onPressed: () => sl<AppThemeCubit>().toggleTheme(),
+            icon: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              transitionBuilder: (child, animation) {
+                return RotationTransition(
+                  turns: Tween<double>(begin: 0.5, end: 1.0).animate(animation),
+                  child: ScaleTransition(
+                    scale: animation,
+                    child: child,
+                  ),
+                );
+              },
+              child: Icon(
+                dark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                key: ValueKey<bool>(dark),
+                size: 22,
+                color: Colors.white,
+              ),
             ),
+            tooltip: dark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+            splashRadius: 22,
           ),
         );
       },
     );
   }
 
-  Widget _buildTopSection(_OnboardingItem item, ColorScheme colorScheme, bool isDark) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Image.asset(
-          item.image,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
-        ),
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                isDark
-                    ? Colors.black.withValues(alpha: 0.25)
-                    : Colors.black.withValues(alpha: 0.05),
-                Colors.transparent,
-                isDark
-                    ? Colors.black.withValues(alpha: 0.45)
-                    : Colors.black.withValues(alpha: 0.15),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSkipButton(ColorScheme colorScheme) {
+  Widget _buildSkipButton() {
+    final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: _onSkip,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Skip',
-              style: TextStyle(
-                color: colorScheme.onSurface.withValues(alpha: 0.6),
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Icon(
-              Uicons.forward,
-              color: colorScheme.onSurface.withValues(alpha: 0.4),
-              size: 16,
-            ),
-          ],
+        child: Text(
+          'Skip',
+          style: GoogleFonts.nunito(
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildBottomSection(ColorScheme colorScheme, bool isDark) {
-    final isLast = _currentPage == _pages.length - 1;
-    final item = _pages[_currentPage];
+  Widget _buildBottomContent(_OnboardingItem item, bool isLast, bool isDark) {
+    final colorScheme = Theme.of(context).colorScheme;
 
-    return ClipPath(
-      clipper: _UpwardCurveClipper(),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-        ),
-        padding: const EdgeInsets.fromLTRB(32, 56, 32, 32),
+    return SlideTransition(
+      position: _slideAnim,
+      child: FadeTransition(
+        opacity: _fadeAnim,
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SlideTransition(
-              position: _slideAnim,
-              child: FadeTransition(
-                opacity: _fadeAnim,
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'Step ${_currentPage + 1} of ${_pages.length}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: colorScheme.primary,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      item.title,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w900,
-                        color: colorScheme.onSurface,
-                        height: 1.3,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        item.description,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: colorScheme.onSurface.withValues(alpha: 0.55),
-                          height: 1.6,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ),
-                  ],
+            // Title
+            Text(
+              item.title,
+              style: GoogleFonts.nunito(
+                fontSize: 30,
+                fontWeight: FontWeight.w900,
+                color: colorScheme.onSurface,
+                height: 1.2,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Description
+            Text(
+              item.description,
+              style: GoogleFonts.nunito(
+                fontSize: 15,
+                color: colorScheme.onSurface.withValues(alpha: 0.55),
+                height: 1.6,
+              ),
+            ),
+            const SizedBox(height: 32),
+            // Single button
+            SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: ElevatedButton(
+                onPressed: _onNext,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  isLast ? 'Get Started' : 'Next',
+                  style: GoogleFonts.nunito(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 28),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _pages.length,
-                (index) => _buildDot(index, colorScheme, item),
-              ),
-            ),
-            const SizedBox(height: 28),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                if (_currentPage > 0)
-                  GestureDetector(
-                    onTap: _onBack,
-                    child: Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: colorScheme.surface,
-                        border: Border.all(
-                          color: colorScheme.primary.withValues(alpha: 0.25),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Uicons.arrowBack,
-                        color: colorScheme.primary,
-                        size: 22,
-                      ),
-                    ),
-                  )
-                else
-                  const SizedBox(width: 52),
-                if (!isLast)
-                  GestureDetector(
-                    onTap: _onNext,
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: AnimatedArrow(color: Colors.white),
-                    ),
-                  )
-                else
-                  GestureDetector(
-                    onTap: _onGetStarted,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 36,
-                        vertical: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Get Started',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          AnimatedArrow(color: Colors.white),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildDot(int index, ColorScheme colorScheme, _OnboardingItem item) {
-    final isActive = index == _currentPage;
-
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 350),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: isActive ? 28 : 8,
-      height: 8,
-      decoration: BoxDecoration(
-        color: isActive
-            ? colorScheme.primary
-            : colorScheme.onSurface.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(4),
       ),
     );
   }
@@ -421,80 +308,12 @@ class _OnboardingPageState extends State<OnboardingPage>
 
 class _OnboardingItem {
   final String image;
-  final IconData icon;
   final String title;
   final String description;
 
   const _OnboardingItem({
     required this.image,
-    required this.icon,
     required this.title,
     required this.description,
   });
-}
-
-class _UpwardCurveClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path()
-      ..lineTo(0, 40)
-      ..quadraticBezierTo(size.width * 0.5, 0, size.width, 40)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
-}
-
-class AnimatedArrow extends StatefulWidget {
-  final Color color;
-  const AnimatedArrow({super.key, required this.color});
-
-  @override
-  State<AnimatedArrow> createState() => _AnimatedArrowState();
-}
-
-class _AnimatedArrowState extends State<AnimatedArrow>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0, end: 6).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(_animation.value, 0),
-          child: child,
-        );
-      },
-      child: Icon(
-        Uicons.arrowForward,
-        color: widget.color,
-        size: 24,
-      ),
-    );
-  }
 }

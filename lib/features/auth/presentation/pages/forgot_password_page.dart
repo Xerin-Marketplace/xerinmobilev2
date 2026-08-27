@@ -9,6 +9,8 @@ import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
 import '../widgets/auth_text_field.dart';
+import '../widgets/auth_background.dart';
+import '../widgets/theme_toggle_button.dart';
 import '../../../../core/theme/uicons.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -78,17 +80,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
     return BlocListener<AuthCubit, AuthState>(
       listener: _onStateChange,
       child: Scaffold(
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Form(
-              key: _formKey,
-              child: FadeTransition(
-                opacity: _fadeAnim,
-                child: SlideTransition(
-                  position: _slideAnim,
-                  child: BlocBuilder<AuthCubit, AuthState>(
-                    builder: (context, state) {
+        body: AuthBackground(
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Form(
+                key: _formKey,
+                child: FadeTransition(
+                  opacity: _fadeAnim,
+                  child: SlideTransition(
+                    position: _slideAnim,
+                    child: BlocBuilder<AuthCubit, AuthState>(
+                      builder: (context, state) {
                       final isLoading = state is AuthLoading;
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,7 +108,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
                             color: colorScheme.primary,
                           ),
                           const SizedBox(height: 20),
-                          const AuthLogo(width: 140, height: 80),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const AuthLogo(width: 140, height: 80),
+                              const ThemeToggleButton(),
+                            ],
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             'Forgot password?',
@@ -159,6 +169,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
             ),
           ),
         ),
+      ),
       ),
     );
   }

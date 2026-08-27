@@ -6,6 +6,7 @@ import 'package:get_it/get_it.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/connectivity/connectivity_cubit.dart';
 import '../../core/network/api_client.dart';
 import '../../core/notifications/notification_service.dart';
 import '../../core/security/security_service.dart';
@@ -89,6 +90,7 @@ Future<void> initServiceLocator({bool reset = false}) async {
 
   sl.registerLazySingleton<AppThemeCubit>(
       () => AppThemeCubit(sharedPreferences));
+  sl.registerLazySingleton<ConnectivityCubit>(() => ConnectivityCubit());
 
   sl.registerLazySingleton<Dio>(
     () {

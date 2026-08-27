@@ -49,6 +49,9 @@ dependencies:
   # Networking
   dio: ^5.7.0
 
+  # Connectivity monitoring
+  connectivity_plus: ^6.1.0
+
   # Local storage
   shared_preferences: ^2.3.2
   flutter_secure_storage: ^9.2.2

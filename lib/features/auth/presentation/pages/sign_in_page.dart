@@ -8,6 +8,8 @@ import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
 import '../widgets/auth_text_field.dart';
+import '../widgets/auth_background.dart';
+import '../widgets/theme_toggle_button.dart';
 import '../../../../core/theme/uicons.dart';
 import '../../../../core/theme/country_data.dart';
 import '../../../../core/widgets/country_picker_field.dart';
@@ -190,7 +192,8 @@ class _SignInPageState extends State<SignInPage>
         final isLoading = state is AuthLoading;
         final errorMessage = state is AuthError ? state.message : null;
         return Scaffold(
-      body: GestureDetector(
+      body: AuthBackground(
+        child: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: SafeArea(
         child: SingleChildScrollView(
@@ -205,7 +208,14 @@ class _SignInPageState extends State<SignInPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 24),
-                    const AuthLogo(width: 160, height: 100),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const AuthLogo(width: 160, height: 100),
+                        const ThemeToggleButton(),
+                      ],
+                    ),
                     const SizedBox(height: 20),
                     Text(
                       'Welcome Back',
@@ -358,6 +368,7 @@ class _SignInPageState extends State<SignInPage>
             ),
           ),
         ),
+      ),
       ),
       ),
     );

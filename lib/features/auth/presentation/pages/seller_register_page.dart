@@ -12,6 +12,8 @@ import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
 import '../widgets/auth_text_field.dart';
+import '../widgets/auth_background.dart';
+import '../widgets/theme_toggle_button.dart';
 
 class SellerRegisterPage extends StatefulWidget {
   const SellerRegisterPage({super.key});
@@ -179,13 +181,14 @@ class _SellerRegisterPageState extends State<SellerRegisterPage>
           ),
           title: const Text('Seller Registration'),
         ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: Form(
-              key: _formKey,
-              child: FadeTransition(
-                opacity: _fadeAnim,
+        body: AuthBackground(
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Form(
+                key: _formKey,
+                child: FadeTransition(
+                  opacity: _fadeAnim,
                 child: SlideTransition(
                   position: _slideAnim,
                   child: BlocBuilder<AuthCubit, AuthState>(
@@ -202,7 +205,14 @@ class _SellerRegisterPageState extends State<SellerRegisterPage>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 4),
-                          const Center(child: AuthLogo(width: 140, height: 80)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const AuthLogo(width: 140, height: 80),
+                              const ThemeToggleButton(),
+                            ],
+                          ),
                           const SizedBox(height: 12),
                           _sectionTitle(context, 'Account Information',
                               'Create your seller account'),
@@ -620,6 +630,7 @@ class _SellerRegisterPageState extends State<SellerRegisterPage>
             ),
           ),
         ),
+      ),
       ),
     );
   }
