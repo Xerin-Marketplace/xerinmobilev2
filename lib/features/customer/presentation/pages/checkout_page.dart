@@ -48,8 +48,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
   static const _mobileMoneyProviders = [
     {'value': 'M-Pesa', 'label': 'M-Pesa', 'color': Color(0xFF22C55E)},
     {'value': 'Airtel Money', 'label': 'Airtel Money', 'color': Color(0xFFE53935)},
-    {'value': 'Halopesa', 'label': 'HaloPesa', 'color': Color(0xFF3B82F6)},
-    {'value': 'Tigo Pesa', 'label': 'Tigo Pesa', 'color': Color(0xFF8B5CF6)},
+    {'value': 'Mixx by Yas', 'label': 'Mixx by Yas', 'color': Color(0xFF3B82F6)},
+    {'value': 'HaloPesa', 'label': 'HaloPesa', 'color': Color(0xFF8B5CF6)},
   ];
 
   @override

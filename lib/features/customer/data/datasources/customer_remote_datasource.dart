@@ -173,60 +173,7 @@ class CustomerRemoteDataSource {
   }
 
   Future<List<PaymentMethodModel>> getPaymentMethods() async {
-    try {
-      final response = await _client.get(ApiConstants.paymentMethods);
-      final data = response.data;
-      List<dynamic> list;
-      if (data is List) {
-        list = data;
-      } else if (data is Map && data['items'] != null) {
-        list = data['items'] as List;
-      } else if (data is Map && data['data'] != null) {
-        list = data['data'] as List;
-      } else {
-        list = [];
-      }
-      return list
-          .map((e) => PaymentMethodModel.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 404) return [];
-      throw ServerException(_client.getErrorMessage(e));
-    }
-  }
-
-  Future<PaymentMethodModel> createPaymentMethod({
-    required String type,
-    required String provider,
-    required String accountName,
-    required String accountNumber,
-    String? expiryDate,
-    bool isDefault = false,
-  }) async {
-    try {
-      final response = await _client.post(
-        ApiConstants.paymentMethods,
-        data: {
-          'type': type,
-          'provider': provider,
-          'account_name': accountName,
-          'account_number': accountNumber,
-          'expiry_date': ?expiryDate,
-          'is_default': isDefault,
-        },
-      );
-      return PaymentMethodModel.fromJson(response.data as Map<String, dynamic>);
-    } on DioException catch (e) {
-      throw ServerException(_client.getErrorMessage(e));
-    }
-  }
-
-  Future<void> deletePaymentMethod(String paymentMethodId) async {
-    try {
-      await _client.delete(ApiConstants.paymentMethodById(paymentMethodId));
-    } on DioException catch (e) {
-      throw ServerException(_client.getErrorMessage(e));
-    }
+    return [];
   }
 
   Future<OrderModel> createOrder({

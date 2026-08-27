@@ -233,48 +233,6 @@ class CustomerCubit extends Cubit<CustomerState> {
     }
   }
 
-  Future<void> addPaymentMethod({
-    required String type,
-    required String provider,
-    required String accountName,
-    required String accountNumber,
-    String? expiryDate,
-    bool isDefault = false,
-  }) async {
-    emit(const CustomerActionInProgress());
-    try {
-      await _dataSource.createPaymentMethod(
-        type: type,
-        provider: provider,
-        accountName: accountName,
-        accountNumber: accountNumber,
-        expiryDate: expiryDate,
-        isDefault: isDefault,
-      );
-      _logger.i('✅ Payment method added: $provider');
-      await refreshPaymentMethods();
-      emit(const CustomerActionSuccess('Payment method added successfully'));
-    } on ServerException catch (e) {
-      emit(CustomerActionError(e.message));
-    } catch (e) {
-      emit(CustomerActionError('Failed to add payment method: $e'));
-    }
-  }
-
-  Future<void> deletePaymentMethod(String paymentMethodId) async {
-    emit(const CustomerActionInProgress());
-    try {
-      await _dataSource.deletePaymentMethod(paymentMethodId);
-      _logger.i('✅ Payment method deleted: $paymentMethodId');
-      await refreshPaymentMethods();
-      emit(const CustomerActionSuccess('Payment method removed successfully'));
-    } on ServerException catch (e) {
-      emit(CustomerActionError(e.message));
-    } catch (e) {
-      emit(CustomerActionError('Failed to remove payment method: $e'));
-    }
-  }
-
   Future<void> markNotificationRead(String notificationId) async {
     final current = state;
     if (current is! CustomerLoaded) return;
