@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
-import '../../../../core/security/admin_access.dart';
+import '../../../../config/di/service_locator.dart';
 import '../../../../core/storage/token_storage.dart';
+import '../../../../core/theme/app_theme_cubit.dart';
 import '../../../../core/theme/uicons.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../../common/presentation/widgets/modern_bottom_nav.dart';
 import '../cubit/admin_cubit.dart';
-import '../../data/models/admin_models.dart';
+import 'tabs/admin_home_tab.dart';
+import 'tabs/admin_more_tab.dart';
+import 'tabs/admin_orders_tab.dart';
+import 'tabs/admin_products_tab.dart';
+import 'tabs/admin_sellers_tab.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -18,26 +25,60 @@ class AdminDashboardPage extends StatefulWidget {
 }
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
+  int _selectedIndex = 0;
+  late final AdminCubit _cubit;
+  bool _isReloading = false;
+
   @override
   void initState() {
     super.initState();
-    context.read<AdminCubit>().loadDashboard();
+    _cubit = sl<AdminCubit>();
+    _cubit.loadDashboard();
+  }
+
+  @override
+  void dispose() {
+    _cubit.close();
+    super.dispose();
+  }
+
+  void _onNavTap(int index) {
+    setState(() => _selectedIndex = index);
+  }
+
+  void _refresh() {
+    switch (_selectedIndex) {
+      case 0:
+        _cubit.loadDashboard(refresh: true);
+        break;
+      case 1:
+        _cubit.loadOrders();
+        break;
+      case 2:
+        _cubit.loadSellers();
+        break;
+      case 3:
+        _cubit.loadPendingProducts();
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Uicons.refresh),
-            onPressed: () =>
-                context.read<AdminCubit>().loadDashboard(refresh: true),
-          ),
-        ],
-      ),
-      body: BlocConsumer<AdminCubit, AdminState>(
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final navItems = [
+      const NavItem(icon: Uicons.dashboard, activeIcon: Uicons.dashboard, label: 'Home'),
+      const NavItem(icon: Uicons.shoppingBag, activeIcon: Uicons.shoppingBag, label: 'Orders'),
+      const NavItem(icon: Uicons.storeAlt, activeIcon: Uicons.storeAlt, label: 'Sellers'),
+      const NavItem(icon: Uicons.boxOpen, activeIcon: Uicons.boxOpen, label: 'Products'),
+      const NavItem(icon: Uicons.grid, activeIcon: Uicons.grid, label: 'More'),
+    ];
+
+    return BlocProvider.value(
+      value: _cubit,
+      child: BlocConsumer<AdminCubit, AdminState>(
         listener: (context, state) {
           if (state is AdminError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -46,288 +87,314 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           }
         },
         builder: (context, state) {
-          if (state is AdminLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state is AdminDashboardLoaded) {
-            return RefreshIndicator(
-              onRefresh: () =>
-                  context.read<AdminCubit>().loadDashboard(refresh: true),
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _buildSummaryGrid(context, state),
-                  const SizedBox(height: 16),
-                  _buildOrdersBreakdown(context, state),
-                  const SizedBox(height: 16),
-                  _buildAlertsSection(context, state),
-                  const SizedBox(height: 16),
-                  _buildQuickActions(context),
-                ],
-              ),
-            );
-          }
-          if (state is AdminError) {
-            return Center(
+          return Scaffold(
+            backgroundColor: colorScheme.surface,
+            body: SafeArea(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Uicons.triangleWarning, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(state.message, textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context.read<AdminCubit>().loadDashboard(),
-                    child: const Text('Retry'),
+                  _buildHeader(colorScheme, isDark),
+                  Expanded(
+                    child: _buildTabContent(context, state),
                   ),
                 ],
               ),
-            );
-          }
-          return const Center(child: Text('Loading...'));
+            ),
+            bottomNavigationBar: ModernBottomNav(
+              selectedIndex: _selectedIndex,
+              onTap: _onNavTap,
+              items: navItems,
+            ),
+          );
         },
       ),
     );
   }
 
-  Widget _buildSummaryGrid(BuildContext context, AdminDashboardLoaded state) {
-    final s = state.summary;
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.5,
-      children: [
-        _metricCard('Total Orders', s.totalOrders.toString(), Uicons.shoppingBag, Colors.blue),
-        _metricCard('GMV', '${s.currency} ${_fmt(s.gmv)}', Uicons.dollar, Colors.green),
-        _metricCard('Total Users', s.totalUsers.toString(), Uicons.users, Colors.purple),
-        _metricCard('Sellers', s.totalSellers.toString(), Uicons.storeAlt, Colors.orange),
-        _metricCard('Products', s.totalProducts.toString(), Uicons.boxOpen, Colors.teal),
-        _metricCard('Discounts', '${s.currency} ${_fmt(s.totalDiscounts)}', Uicons.tags, Colors.red),
-      ],
-    );
-  }
+  Widget _buildHeader(ColorScheme cs, bool isDark) {
+    final user = GetIt.instance<TokenStorage>().currentUser;
+    final isAdmin = user?.isAdmin ?? false;
 
-  Widget _metricCard(String label, String value, IconData icon, Color color) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => _showAccountSheet(context, cs, isDark),
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                Uicons.userShield,
+                color: cs.primary,
+                size: 22,
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, size: 20, color: color),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(label,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(
+                  isAdmin ? 'Admin Panel' : 'Dashboard',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: cs.onSurface,
+                  ),
+                ),
+                Text(
+                  user?.fullName ?? 'Administrator',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: cs.onSurface.withValues(alpha: 0.4),
+                  ),
                 ),
               ],
             ),
-            Text(value,
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          ],
-        ),
+          ),
+          GestureDetector(
+            onTap: () => sl<AppThemeCubit>().toggleTheme(),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: cs.onSurface.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                isDark ? Uicons.sun : Uicons.darkMode,
+                color: cs.onSurface.withValues(alpha: 0.7),
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: _refresh,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Uicons.refresh,
+                color: cs.primary,
+                size: 20,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildOrdersBreakdown(BuildContext context, AdminDashboardLoaded state) {
-    final orders = state.orders;
-    if (orders == null) return const SizedBox.shrink();
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Orders by Status',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            ...orders.byStatus.entries.map((e) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(_humanize(e.key)),
-                      Text('${e.value}',
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ],
+  void _showAccountSheet(BuildContext context, ColorScheme cs, bool isDark) {
+    final user = GetIt.instance<TokenStorage>().currentUser;
+    final name = user?.fullName ?? 'Administrator';
+    final email = user?.email ?? '';
+    final initials = name.isNotEmpty
+        ? name.split(' ').take(2).map((e) => e[0].toUpperCase()).join()
+        : '?';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: cs.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: cs.onSurface.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [cs.primary, cs.primary.withValues(alpha: 0.4)],
                   ),
-                )),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAlertsSection(BuildContext context, AdminDashboardLoaded state) {
-    if (state.alerts.isEmpty) return const SizedBox.shrink();
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('System Alerts',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                TextButton(
-                  onPressed: () =>
-                      context.read<AdminCubit>().loadAlerts(),
-                  child: const Text('View All'),
+                  shape: BoxShape.circle,
+                ),
+                child: CircleAvatar(
+                  radius: 32,
+                  backgroundColor: cs.surface,
+                  child: Text(initials,
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: cs.primary),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(name,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface),
+              ),
+              if (email.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(email,
+                  style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4)),
                 ),
               ],
+              const SizedBox(height: 20),
+              Divider(color: cs.onSurface.withValues(alpha: 0.06), height: 1),
+              const SizedBox(height: 16),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  width: 38, height: 38,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE53935).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Uicons.rightFromBracket, color: Color(0xFFE53935), size: 18),
+                ),
+                title: const Text('Logout',
+                  style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFE53935)),
+                ),
+                trailing: const Icon(Uicons.angleRight, size: 14, color: Color(0xFFE53935)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showLogoutConfirmation(context);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLogoutConfirmation(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72, height: 72,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE53935).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Uicons.rightFromBracket, color: Color(0xFFE53935), size: 32),
+            ),
+            const SizedBox(height: 20),
+            Text('Logout?',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: cs.onSurface),
             ),
             const SizedBox(height: 8),
-            ...state.alerts.take(5).map((alert) => _alertTile(context, alert)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _alertTile(BuildContext context, AdminSystemAlertModel alert) {
-    final color = alert.severity == 'critical'
-        ? Colors.red
-        : alert.severity == 'warning'
-            ? Colors.orange
-            : Colors.blue;
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(Uicons.bell, size: 20, color: color),
-      title: Text(alert.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-      subtitle: Text(alert.alertType, style: const TextStyle(fontSize: 12)),
-      trailing: alert.isResolved
-          ? const Icon(Uicons.checkCircle, size: 18, color: Colors.green)
-          : AdminAccess.canAccessItem(
-                  GetIt.instance<TokenStorage>().currentUser,
-                  'alerts.resolve')
-              ? TextButton(
-                  onPressed: () =>
-                      context.read<AdminCubit>().resolveAlert(alert.id),
-                  child: const Text('Resolve'),
-                )
-              : const SizedBox.shrink(),
-    );
-  }
-
-  Widget _buildQuickActions(BuildContext context) {
-    final user = GetIt.instance<TokenStorage>().currentUser;
-    final actions = <_QuickAction>[];
-
-    if (AdminAccess.canAccessSection(user, 'Sellers')) {
-      actions.add(_QuickAction('Sellers', Uicons.storeAlt, Colors.orange, AppConstants.adminSellersRoute));
-    }
-    if (AdminAccess.canAccessSection(user, 'Products')) {
-      actions.add(_QuickAction('Products', Uicons.boxOpen, Colors.teal, AppConstants.adminProductsRoute));
-    }
-    if (AdminAccess.canAccessSection(user, 'Orders')) {
-      actions.add(_QuickAction('Orders', Uicons.shoppingBag, Colors.blue, AppConstants.adminOrdersRoute));
-    }
-    if (AdminAccess.canAccessSection(user, 'Users')) {
-      actions.add(_QuickAction('Users', Uicons.users, Colors.purple, AppConstants.adminUsersRoute));
-    }
-    if (AdminAccess.canAccessSection(user, 'Wallets')) {
-      actions.add(_QuickAction('Wallets', Uicons.wallet, Colors.green, AppConstants.adminWalletsRoute));
-    }
-    if (AdminAccess.canAccessSection(user, 'Refunds')) {
-      actions.add(_QuickAction('Refunds', Uicons.rotateLeft, Colors.red, AppConstants.adminRefundsRoute));
-    }
-    if (AdminAccess.canAccessSection(user, 'Reviews')) {
-      actions.add(_QuickAction('Reviews', Uicons.star, Colors.amber, AppConstants.adminReviewsRoute));
-    }
-    if (AdminAccess.canAccessSection(user, 'Analytics')) {
-      actions.add(_QuickAction('Analytics', Uicons.barChart, Colors.indigo, AppConstants.adminAnalyticsRoute));
-    }
-    if (AdminAccess.canAccessSection(user, 'Alerts')) {
-      actions.add(_QuickAction('Alerts', Uicons.bell, Colors.pink, AppConstants.adminAlertsRoute));
-    }
-    if (AdminAccess.canAccessSection(user, 'ActivityLogs')) {
-      actions.add(_QuickAction('Logs', Uicons.clock, Colors.grey, AppConstants.adminActivityLogsRoute));
-    }
-    if (AdminAccess.canAccessSection(user, 'Roles')) {
-      actions.add(_QuickAction('Roles', Uicons.userShield, Colors.brown, AppConstants.adminRolesRoute));
-    }
-    if (AdminAccess.canAccessSection(user, 'Catalog')) {
-      actions.add(_QuickAction('Catalog', Uicons.category, Colors.cyan, AppConstants.adminCatalogRoute));
-    }
-    if (AdminAccess.canAccessSection(user, 'Payments')) {
-      actions.add(_QuickAction('Payments', Uicons.creditCard, Colors.lime, AppConstants.adminPaymentsRoute));
-    }
-    if (AdminAccess.canAccessSection(user, 'Orders')) {
-      actions.add(_QuickAction('All Orders', Uicons.truckBox, Colors.lightBlue, AppConstants.adminAllOrdersRoute));
-    }
-
-    if (actions.isEmpty) return const SizedBox.shrink();
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Quick Actions',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 3,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1,
-              children: actions
-                  .map((a) => _actionTile(a.label, a.icon, a.color, () => context.push(a.route)))
-                  .toList(),
+            Text('Are you sure you want to log out of your admin account?',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.6)),
             ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text('Cancel',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await context.read<AuthCubit>().logout();
+              if (context.mounted) {
+                context.go(AppConstants.signInRoute);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE53935),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
+            ),
+            child: const Text('Logout', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          ),
+        ],
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       ),
     );
   }
 
-  Widget _actionTile(String label, IconData icon, Color color, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 24, color: color),
-            const SizedBox(height: 4),
-            Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
-          ],
-        ),
+  Widget _buildTabContent(BuildContext context, AdminState state) {
+    final dashState = state is AdminDashboardLoaded ? state : null;
+
+    switch (_selectedIndex) {
+      case 0:
+        if (state is AdminLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is AdminError) {
+          return _errorView(context, state.message);
+        }
+        if (state is AdminDashboardLoaded) {
+          return AdminHomeTab(
+            state: state,
+            onRefresh: () => _cubit.loadDashboard(refresh: true),
+          );
+        }
+        if (!_isReloading) {
+          _isReloading = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _cubit.loadDashboard();
+            _isReloading = false;
+          });
+        }
+        return const Center(child: CircularProgressIndicator());
+      case 1:
+        return AdminOrdersTab(dashboardState: dashState);
+      case 2:
+        return AdminSellersTab(dashboardState: dashState);
+      case 3:
+        return AdminProductsTab(dashboardState: dashState);
+      case 4:
+        return const AdminMoreTab();
+      default:
+        return const Center(child: CircularProgressIndicator());
+    }
+  }
+
+  Widget _errorView(BuildContext context, String message) {
+    final cs = Theme.of(context).colorScheme;
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Uicons.triangleWarning, size: 48, color: cs.onSurface.withValues(alpha: 0.2)),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.5)),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () => _cubit.loadDashboard(),
+            child: const Text('Retry'),
+          ),
+        ],
       ),
     );
   }
-
-  String _fmt(double v) => v.toStringAsFixed(0).replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (m) => '${m[1]},',
-      );
-
-  String _humanize(String s) => s.replaceAll('_', ' ').split(' ')
-      .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1)}')
-      .join(' ');
-}
-
-class _QuickAction {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final String route;
-  const _QuickAction(this.label, this.icon, this.color, this.route);
 }

@@ -16,6 +16,7 @@ class AdminFinancePage extends StatefulWidget {
 class _AdminFinancePageState extends State<AdminFinancePage>
     with SingleTickerProviderStateMixin {
   late final TabController _tabCtrl;
+  bool _isReloading = false;
 
   @override
   void initState() {
@@ -74,10 +75,14 @@ class _AdminFinancePageState extends State<AdminFinancePage>
                 ],
               );
             }
-            return Center(
-              child: Text('Loading...',
-                  style: TextStyle(color: cs.onSurface.withValues(alpha: 0.5))),
-            );
+            if (!_isReloading) {
+              _isReloading = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                context.read<AdminCubit>().loadFinanceData();
+                _isReloading = false;
+              });
+            }
+            return const Center(child: CircularProgressIndicator());
           },
         ),
       ),

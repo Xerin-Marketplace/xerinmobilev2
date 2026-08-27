@@ -13,6 +13,7 @@ class AdminOrdersPage extends StatefulWidget {
 
 class _AdminOrdersPageState extends State<AdminOrdersPage> {
   String? _statusFilter;
+  bool _isReloading = false;
 
   @override
   void initState() {
@@ -136,7 +137,14 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
             ),
           );
         }
-        return const Center(child: Text('Loading...'));
+        if (!_isReloading) {
+          _isReloading = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.read<AdminCubit>().loadOrders(status: _statusFilter);
+            _isReloading = false;
+          });
+        }
+        return const Center(child: CircularProgressIndicator());
       },
     );
   }

@@ -20,23 +20,45 @@ class CustomerExplorePage extends StatefulWidget {
 class _CustomerExplorePageState extends State<CustomerExplorePage> {
   String? _selectedCategoryId;
   String? _selectedCategoryName;
+  late final ProductsCubit _cubit;
+
+  @override
+  void initState() {
+    super.initState();
+    _cubit = sl<ProductsCubit>()..loadAll();
+  }
+
+  @override
+  void dispose() {
+    _cubit.close();
+    super.dispose();
+  }
+
+  void _selectCategory(String? id, String? name) {
+    setState(() {
+      _selectedCategoryId = id;
+      _selectedCategoryName = name;
+    });
+    if (id != null) {
+      _cubit.loadProducts(categoryId: id, limit: 100);
+    } else {
+      _cubit.loadProducts(limit: 50);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return BlocProvider(
-      create: (_) => sl<ProductsCubit>()..loadAll(),
+    return BlocProvider.value(
+      value: _cubit,
       child: BlocBuilder<ProductsCubit, ProductsState>(
         builder: (context, state) {
           final categories = state is ProductsLoaded ? state.categories : <CategoryModel>[];
-          final allProducts = state is ProductsLoaded ? state.products : <ProductModel>[];
           final isLoading = state is ProductsLoading;
 
-          final products = _selectedCategoryId != null
-              ? allProducts.where((p) => p.categoryId == _selectedCategoryId).toList()
-              : allProducts;
+          final products = state is ProductsLoaded ? state.products : <ProductModel>[];
 
           return SafeArea(
             child: Column(
@@ -89,12 +111,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
                       const SizedBox(height: 16),
                       if (_selectedCategoryId != null)
                         GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedCategoryId = null;
-                              _selectedCategoryName = null;
-                            });
-                          },
+                          onTap: () => _selectCategory(null, null),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
@@ -204,10 +221,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        setState(() {
-                          _selectedCategoryId = null;
-                          _selectedCategoryName = null;
-                        });
+                        _selectCategory(null, null);
                         Navigator.pop(context);
                       },
                       child: Container(
@@ -252,10 +266,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
                     ),
                     ...categories.map((cat) => GestureDetector(
                       onTap: () {
-                        setState(() {
-                          _selectedCategoryId = cat.id;
-                          _selectedCategoryName = cat.name;
-                        });
+                        _selectCategory(cat.id, cat.name);
                         Navigator.pop(context);
                       },
                       child: Container(

@@ -1,6 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logger/logger.dart';
 
+import '../../../../core/errors/exceptions.dart';
+import '../../../../core/network/api_client.dart';
 import '../../data/datasources/admin_remote_datasource.dart';
 import '../../data/models/admin_models.dart';
 
@@ -306,6 +309,7 @@ class AdminOrderDetailLoaded extends AdminState {
 class AdminCubit extends Cubit<AdminState> {
   final AdminRemoteDataSource _dataSource;
   final Logger _logger;
+  final ApiClient _apiClient;
 
   int _usersPage = 1;
   int _ordersPage = 1;
@@ -315,8 +319,10 @@ class AdminCubit extends Cubit<AdminState> {
   AdminCubit({
     required AdminRemoteDataSource dataSource,
     required Logger logger,
+    required ApiClient apiClient,
   })  : _dataSource = dataSource,
         _logger = logger,
+        _apiClient = apiClient,
         super(const AdminInitial());
 
   Future<T?> _safeCall<T>(Future<T> Function() fn) async {
@@ -431,6 +437,13 @@ class AdminCubit extends Cubit<AdminState> {
       await _dataSource.approveProduct(productId);
       emit(const AdminActionSuccess('Product approved'));
       await loadPendingProducts();
+    } on ServerException catch (e) {
+      _logger.e('AdminCubit.approveProduct error: ${e.message}');
+      emit(AdminError(e.message));
+    } on DioException catch (e) {
+      final msg = _apiClient.getErrorMessage(e);
+      _logger.e('AdminCubit.approveProduct error: $msg');
+      emit(AdminError(msg));
     } catch (e) {
       _logger.e('AdminCubit.approveProduct error: $e');
       emit(AdminError(e.toString()));
@@ -442,6 +455,13 @@ class AdminCubit extends Cubit<AdminState> {
       await _dataSource.rejectProduct(productId, reason);
       emit(const AdminActionSuccess('Product rejected'));
       await loadPendingProducts();
+    } on ServerException catch (e) {
+      _logger.e('AdminCubit.rejectProduct error: ${e.message}');
+      emit(AdminError(e.message));
+    } on DioException catch (e) {
+      final msg = _apiClient.getErrorMessage(e);
+      _logger.e('AdminCubit.rejectProduct error: $msg');
+      emit(AdminError(msg));
     } catch (e) {
       _logger.e('AdminCubit.rejectProduct error: $e');
       emit(AdminError(e.toString()));

@@ -13,6 +13,7 @@ class AdminActivityLogsPage extends StatefulWidget {
 }
 
 class _AdminActivityLogsPageState extends State<AdminActivityLogsPage> {
+  bool _isReloading = false;
   @override
   void initState() {
     super.initState();
@@ -64,7 +65,14 @@ class _AdminActivityLogsPageState extends State<AdminActivityLogsPage> {
               ),
             );
           }
-          return const Center(child: Text('Loading...'));
+          if (!_isReloading) {
+            _isReloading = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.read<AdminCubit>().loadActivityLogs();
+              _isReloading = false;
+            });
+          }
+          return const Center(child: CircularProgressIndicator());
         },
       ),
     );

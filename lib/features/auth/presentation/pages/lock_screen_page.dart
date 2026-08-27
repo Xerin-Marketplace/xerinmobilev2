@@ -6,6 +6,7 @@ import '../../../../config/constants/app_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/security/security_service.dart';
 import '../../../../core/theme/uicons.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../widgets/auth_logo.dart';
 
 class LockScreenPage extends StatefulWidget {
@@ -67,7 +68,8 @@ class _LockScreenPageState extends State<LockScreenPage>
       if (!mounted) return;
       if (_security.verifyPin(_enteredPin)) {
         NotificationService().success('Welcome back!');
-        context.go(AppConstants.homeRoute);
+        final user = GetIt.instance<TokenStorage>().currentUser;
+        context.go(AppConstants.dashboardRouteForUser(user));
       } else {
         _attempts++;
         setState(() {

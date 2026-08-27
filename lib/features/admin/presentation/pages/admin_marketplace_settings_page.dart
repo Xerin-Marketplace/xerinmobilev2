@@ -16,6 +16,7 @@ class AdminMarketplaceSettingsPage extends StatefulWidget {
 
 class _AdminMarketplaceSettingsPageState
     extends State<AdminMarketplaceSettingsPage> {
+  bool _isReloading = false;
   @override
   void initState() {
     super.initState();
@@ -51,10 +52,14 @@ class _AdminMarketplaceSettingsPageState
             if (state is AdminMarketplaceSettingsLoaded) {
               return _SettingsForm(settings: state.settings);
             }
-            return Center(
-              child: Text('Loading...',
-                  style: TextStyle(color: cs.onSurface.withValues(alpha: 0.5))),
-            );
+            if (!_isReloading) {
+              _isReloading = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                context.read<AdminCubit>().loadMarketplaceSettings();
+                _isReloading = false;
+              });
+            }
+            return const Center(child: CircularProgressIndicator());
           },
         ),
       ),

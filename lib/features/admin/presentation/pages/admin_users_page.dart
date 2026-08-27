@@ -18,6 +18,7 @@ class AdminUsersPage extends StatefulWidget {
 class _AdminUsersPageState extends State<AdminUsersPage> {
   final _searchController = TextEditingController();
   String? _statusFilter;
+  bool _isReloading = false;
 
   @override
   void initState() {
@@ -158,7 +159,16 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
             ),
           );
         }
-        return const Center(child: Text('Loading...'));
+        if (!_isReloading) {
+          _isReloading = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.read<AdminCubit>().loadUsers(
+                search: _searchController.text.isEmpty ? null : _searchController.text,
+                statusFilter: _statusFilter);
+            _isReloading = false;
+          });
+        }
+        return const Center(child: CircularProgressIndicator());
       },
     );
   }

@@ -152,4 +152,15 @@ abstract class AppConstants {
   static const double defaultPadding = 16.0;
   static const double defaultRadius = 12.0;
   static const double buttonHeight = 48.0;
+
+  /// Returns the dashboard route based on the user's role.
+  /// Admin → admin dashboard, Seller → seller dashboard,
+  /// Broker → broker dashboard, default → customer home.
+  static String dashboardRouteForUser(user) {
+    if (user == null) return homeRoute;
+    if (user.isAdmin) return adminDashboardRoute;
+    if (user.isSeller) return sellerDashboardRoute;
+    if (user.isBroker) return brokerDashboardRoute;
+    return homeRoute;
+  }
 }

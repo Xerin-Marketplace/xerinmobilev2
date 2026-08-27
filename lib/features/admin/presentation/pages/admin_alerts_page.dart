@@ -17,6 +17,7 @@ class AdminAlertsPage extends StatefulWidget {
 
 class _AdminAlertsPageState extends State<AdminAlertsPage> {
   String _filter = 'all'; // all, unresolved, resolved
+  bool _isReloading = false;
 
   @override
   void initState() {
@@ -126,7 +127,14 @@ class _AdminAlertsPageState extends State<AdminAlertsPage> {
             ),
           );
         }
-        return const Center(child: Text('Loading...'));
+        if (!_isReloading) {
+          _isReloading = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.read<AdminCubit>().loadAlerts();
+            _isReloading = false;
+          });
+        }
+        return const Center(child: CircularProgressIndicator());
       },
     );
   }

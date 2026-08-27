@@ -15,6 +15,7 @@ class AdminAdvertisementsPage extends StatefulWidget {
 }
 
 class _AdminAdvertisementsPageState extends State<AdminAdvertisementsPage> {
+  bool _isReloading = false;
   @override
   void initState() {
     super.initState();
@@ -63,7 +64,14 @@ class _AdminAdvertisementsPageState extends State<AdminAdvertisementsPage> {
                 ),
               );
             }
-            return _buildEmpty(cs);
+            if (!_isReloading) {
+              _isReloading = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                context.read<AdminCubit>().loadAdvertisements();
+                _isReloading = false;
+              });
+            }
+            return const Center(child: CircularProgressIndicator());
           },
         ),
       ),

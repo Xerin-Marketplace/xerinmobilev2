@@ -15,6 +15,7 @@ class AdminAllOrdersPage extends StatefulWidget {
 
 class _AdminAllOrdersPageState extends State<AdminAllOrdersPage> {
   String? _statusFilter;
+  bool _isReloading = false;
   final _searchController = TextEditingController();
 
   static const _statusOptions = [
@@ -104,7 +105,16 @@ class _AdminAllOrdersPageState extends State<AdminAllOrdersPage> {
                       ),
                     );
                   }
-                  return _buildEmpty(cs);
+                  if (!_isReloading) {
+                    _isReloading = true;
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      context.read<AdminCubit>().loadAllOrders(
+                          status: _statusFilter,
+                          search: _searchController.text);
+                      _isReloading = false;
+                    });
+                  }
+                  return const Center(child: CircularProgressIndicator());
                 },
               ),
             ),

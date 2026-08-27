@@ -16,6 +16,7 @@ class AdminCatalogPage extends StatefulWidget {
 class _AdminCatalogPageState extends State<AdminCatalogPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _isReloading = false;
 
   @override
   void initState() {
@@ -74,11 +75,14 @@ class _AdminCatalogPageState extends State<AdminCatalogPage>
                 ],
               );
             }
-            return Center(
-              child: Text('Loading...',
-                  style:
-                      TextStyle(color: cs.onSurface.withValues(alpha: 0.5))),
-            );
+            if (!_isReloading) {
+              _isReloading = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                context.read<AdminCubit>().loadCatalog();
+                _isReloading = false;
+              });
+            }
+            return const Center(child: CircularProgressIndicator());
           },
         ),
       ),

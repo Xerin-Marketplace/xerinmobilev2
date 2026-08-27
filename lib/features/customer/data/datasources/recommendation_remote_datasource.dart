@@ -182,11 +182,14 @@ class RecommendationRemoteDataSource {
 
   Future<List<CouponModel>> getAvailableCoupons() async {
     try {
-      final response = await _client.get(ApiConstants.coupons);
+      final response = await _client.get(
+        ApiConstants.coupons,
+        queryParameters: {'active_only': true},
+      );
       return _parseList(response.data, CouponModel.fromJson);
     } on DioException catch (e) {
       _logger.e('❌ getAvailableCoupons: ${e.message}');
-      throw ServerException(_client.getErrorMessage(e));
+      return [];
     }
   }
 

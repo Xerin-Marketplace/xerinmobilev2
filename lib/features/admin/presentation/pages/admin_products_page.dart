@@ -15,6 +15,7 @@ class AdminProductsPage extends StatefulWidget {
 }
 
 class _AdminProductsPageState extends State<AdminProductsPage> {
+  bool _isReloading = false;
   @override
   void initState() {
     super.initState();
@@ -87,7 +88,14 @@ class _AdminProductsPageState extends State<AdminProductsPage> {
               ),
             );
           }
-          return const Center(child: Text('Loading...'));
+          if (!_isReloading) {
+            _isReloading = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.read<AdminCubit>().loadPendingProducts();
+              _isReloading = false;
+            });
+          }
+          return const Center(child: CircularProgressIndicator());
         },
       ),
     );
@@ -153,6 +161,24 @@ class _AdminProductsPageState extends State<AdminProductsPage> {
               ],
             ),
             const SizedBox(height: 12),
+            if (images.isEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Uicons.triangleWarning, size: 14, color: Colors.orange),
+                    const SizedBox(width: 4),
+                    Text('No images — cannot approve',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.orange)),
+                  ],
+                ),
+              )
+            else
             Row(
               children: [
                 if (AdminAccess.canAccessItem(

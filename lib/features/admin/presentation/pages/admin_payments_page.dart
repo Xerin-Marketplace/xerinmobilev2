@@ -15,6 +15,7 @@ class AdminPaymentsPage extends StatefulWidget {
 
 class _AdminPaymentsPageState extends State<AdminPaymentsPage> {
   String? _statusFilter;
+  bool _isReloading = false;
 
   static const _statusOptions = [
     {'value': null, 'label': 'All'},
@@ -60,11 +61,14 @@ class _AdminPaymentsPageState extends State<AdminPaymentsPage> {
                   if (state is AdminPaymentsLoaded) {
                     return _buildContent(state, cs);
                   }
-                  return Center(
-                    child: Text('Loading...',
-                        style: TextStyle(
-                            color: cs.onSurface.withValues(alpha: 0.5))),
-                  );
+                  if (!_isReloading) {
+                    _isReloading = true;
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      context.read<AdminCubit>().loadPayments(status: _statusFilter);
+                      _isReloading = false;
+                    });
+                  }
+                  return const Center(child: CircularProgressIndicator());
                 },
               ),
             ),

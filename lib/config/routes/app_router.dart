@@ -146,7 +146,8 @@ class AppRouter {
         return AppConstants.signInRoute;
       }
       if (isPublic && isAuthenticated && path != '/splash' && path != '/onboarding') {
-        return AppConstants.homeRoute;
+        final user = tokenStorage.currentUser;
+        return AppConstants.dashboardRouteForUser(user);
       }
 
       // Admin route protection — check role-based permissions
@@ -230,6 +231,7 @@ class AppRouter {
           final extra = state.extra as Map<String, dynamic>?;
           return CategoryProductsPage(
             category: extra?['category'] as String? ?? 'All',
+            categoryId: extra?['categoryId'] as String?,
           );
         },
       ),

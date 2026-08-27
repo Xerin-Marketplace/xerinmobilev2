@@ -78,7 +78,8 @@ class _SignInPageState extends State<SignInPage>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         NotificationService().success('Signed in successfully!');
       });
-      context.go(AppConstants.homeRoute);
+      final route = AppConstants.dashboardRouteForUser(state.user);
+      context.go(route);
     } else if (state is AuthNeedsVerification) {
       _showVerifyDialog(context, state.email);
     } else if (state is AuthError) {

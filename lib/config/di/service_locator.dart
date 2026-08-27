@@ -287,6 +287,7 @@ Future<void> initServiceLocator({bool reset = false}) async {
     () => AdminCubit(
       dataSource: sl(),
       logger: sl(),
+      apiClient: sl(),
     ),
   );
 

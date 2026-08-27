@@ -11,6 +11,9 @@ class UserModel {
   final List<String> permissions;
   final bool isSeller;
   final String? sellerStatus;
+  final bool isBroker;
+  final String? brokerStatus;
+  final String? brokerCode;
 
   const UserModel({
     required this.id,
@@ -25,6 +28,9 @@ class UserModel {
     this.permissions = const [],
     this.isSeller = false,
     this.sellerStatus,
+    this.isBroker = false,
+    this.brokerStatus,
+    this.brokerCode,
   });
 
   String get fullName => '$firstName $lastName';
@@ -44,7 +50,7 @@ class UserModel {
         isSuperAdmin) {
       return true;
     }
-    const basicNonStaffRoles = {'buyer', 'customer', 'seller'};
+    const basicNonStaffRoles = {'buyer', 'customer', 'seller', 'broker'};
     return roles.any((r) => !basicNonStaffRoles.contains(r.toLowerCase()));
   }
 
@@ -82,6 +88,9 @@ class UserModel {
             const [],
         isSeller: json['is_seller'] as bool? ?? false,
         sellerStatus: json['seller_status']?.toString(),
+        isBroker: json['is_broker'] as bool? ?? false,
+        brokerStatus: json['broker_status']?.toString(),
+        brokerCode: json['broker_code']?.toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -97,5 +106,8 @@ class UserModel {
         'permissions': permissions,
         'is_seller': isSeller,
         'seller_status': sellerStatus,
+        'is_broker': isBroker,
+        'broker_status': brokerStatus,
+        'broker_code': brokerCode,
       };
 }

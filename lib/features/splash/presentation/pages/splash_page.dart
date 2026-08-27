@@ -105,7 +105,8 @@ class _SplashPageState extends State<SplashPage>
     if (sessionValid && securityService.isPinLockEnabled) {
       context.go(AppConstants.lockRoute);
     } else if (sessionValid) {
-      context.go(AppConstants.homeRoute);
+      final user = tokenStorage.currentUser;
+      context.go(AppConstants.dashboardRouteForUser(user));
     } else {
       // Token is invalid and refresh already failed in the interceptor.
       await tokenStorage.clearTokens();

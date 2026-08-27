@@ -17,6 +17,7 @@ class AdminRefundsPage extends StatefulWidget {
 
 class _AdminRefundsPageState extends State<AdminRefundsPage> {
   String? _statusFilter;
+  bool _isReloading = false;
 
   @override
   void initState() {
@@ -128,7 +129,14 @@ class _AdminRefundsPageState extends State<AdminRefundsPage> {
             ),
           );
         }
-        return const Center(child: Text('Loading...'));
+        if (!_isReloading) {
+          _isReloading = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.read<AdminCubit>().loadRefunds(status: _statusFilter);
+            _isReloading = false;
+          });
+        }
+        return const Center(child: CircularProgressIndicator());
       },
     );
   }

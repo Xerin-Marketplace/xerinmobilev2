@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../../../../core/theme/uicons.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../cubit/seller_cubit.dart';
 import '../../data/models/seller_models.dart';
 
@@ -30,6 +33,24 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
           IconButton(
             icon: const Icon(Uicons.refresh),
             onPressed: () => context.read<SellerCubit>().loadDashboard(refresh: true),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: () => _showAccountSheet(context),
+            child: Container(
+              width: 38,
+              height: 38,
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Uicons.user,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
+            ),
           ),
         ],
       ),
@@ -70,6 +91,149 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
           }
           return const SizedBox.shrink();
         },
+      ),
+    );
+  }
+
+  void _showAccountSheet(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final user = GetIt.instance<TokenStorage>().currentUser;
+    final name = user?.fullName ?? 'Seller';
+    final email = user?.email ?? '';
+    final initials = name.isNotEmpty
+        ? name.split(' ').take(2).map((e) => e[0].toUpperCase()).join()
+        : '?';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: cs.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: cs.onSurface.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [cs.primary, cs.primary.withValues(alpha: 0.4)],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: CircleAvatar(
+                  radius: 32,
+                  backgroundColor: cs.surface,
+                  child: Text(initials,
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: cs.primary),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(name,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface),
+              ),
+              if (email.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(email,
+                  style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4)),
+                ),
+              ],
+              const SizedBox(height: 20),
+              Divider(color: cs.onSurface.withValues(alpha: 0.06), height: 1),
+              const SizedBox(height: 16),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  width: 38, height: 38,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE53935).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Uicons.rightFromBracket, color: Color(0xFFE53935), size: 18),
+                ),
+                title: const Text('Logout',
+                  style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFE53935)),
+                ),
+                trailing: const Icon(Uicons.angleRight, size: 14, color: Color(0xFFE53935)),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showLogoutConfirmation(context);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLogoutConfirmation(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72, height: 72,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE53935).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Uicons.rightFromBracket, color: Color(0xFFE53935), size: 32),
+            ),
+            const SizedBox(height: 20),
+            Text('Logout?',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: cs.onSurface),
+            ),
+            const SizedBox(height: 8),
+            Text('Are you sure you want to log out of your seller account?',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.6)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text('Cancel',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await context.read<AuthCubit>().logout();
+              if (context.mounted) {
+                context.go(AppConstants.signInRoute);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE53935),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
+            ),
+            child: const Text('Logout', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+          ),
+        ],
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       ),
     );
   }

@@ -17,6 +17,7 @@ class AdminSellersPage extends StatefulWidget {
 
 class _AdminSellersPageState extends State<AdminSellersPage> {
   String _statusFilter = 'all';
+  bool _isReloading = false;
 
   @override
   void initState() {
@@ -111,7 +112,14 @@ class _AdminSellersPageState extends State<AdminSellersPage> {
         if (state is AdminSellerDetailLoaded) {
           return _sellerDetail(context, state);
         }
-        return const Center(child: Text('Loading...'));
+        if (!_isReloading) {
+          _isReloading = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.read<AdminCubit>().loadSellers();
+            _isReloading = false;
+          });
+        }
+        return const Center(child: CircularProgressIndicator());
       },
     );
   }

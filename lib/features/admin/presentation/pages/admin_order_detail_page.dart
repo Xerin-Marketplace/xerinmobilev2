@@ -17,6 +17,7 @@ class AdminOrderDetailPage extends StatefulWidget {
 
 class _AdminOrderDetailPageState extends State<AdminOrderDetailPage> {
   String? _selectedStatus;
+  bool _isReloading = false;
 
   static const _statusOptions = [
     'pending',
@@ -62,11 +63,14 @@ class _AdminOrderDetailPageState extends State<AdminOrderDetailPage> {
             if (state is AdminOrderDetailLoaded) {
               return _buildContent(state.order, cs);
             }
-            return Center(
-              child: Text('Loading...',
-                  style:
-                      TextStyle(color: cs.onSurface.withValues(alpha: 0.5))),
-            );
+            if (!_isReloading) {
+              _isReloading = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                context.read<AdminCubit>().loadOrderDetail(widget.orderId);
+                _isReloading = false;
+              });
+            }
+            return const Center(child: CircularProgressIndicator());
           },
         ),
       ),

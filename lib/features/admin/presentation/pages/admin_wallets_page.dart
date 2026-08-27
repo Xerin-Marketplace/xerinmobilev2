@@ -18,6 +18,7 @@ class AdminWalletsPage extends StatefulWidget {
 class _AdminWalletsPageState extends State<AdminWalletsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _isReloading = false;
 
   @override
   void initState() {
@@ -94,7 +95,14 @@ class _AdminWalletsPageState extends State<AdminWalletsPage>
               ),
             );
           }
-          return const Center(child: Text('Loading...'));
+          if (!_isReloading) {
+            _isReloading = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.read<AdminCubit>().loadWallets();
+              _isReloading = false;
+            });
+          }
+          return const Center(child: CircularProgressIndicator());
         },
       ),
     );

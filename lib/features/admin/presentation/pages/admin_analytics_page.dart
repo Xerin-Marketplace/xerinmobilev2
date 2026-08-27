@@ -14,6 +14,7 @@ class AdminAnalyticsPage extends StatefulWidget {
 }
 
 class _AdminAnalyticsPageState extends State<AdminAnalyticsPage> {
+  bool _isReloading = false;
   @override
   void initState() {
     super.initState();
@@ -83,7 +84,14 @@ class _AdminAnalyticsPageState extends State<AdminAnalyticsPage> {
               ),
             );
           }
-          return const Center(child: Text('Loading...'));
+          if (!_isReloading) {
+            _isReloading = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.read<AdminCubit>().loadAnalytics();
+              _isReloading = false;
+            });
+          }
+          return const Center(child: CircularProgressIndicator());
         },
       ),
     );

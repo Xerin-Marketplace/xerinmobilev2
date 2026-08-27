@@ -190,6 +190,7 @@ class CustomerRemoteDataSource {
           .map((e) => PaymentMethodModel.fromJson(e as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return [];
       throw ServerException(_client.getErrorMessage(e));
     }
   }
