@@ -6,6 +6,7 @@ import '../../../../config/constants/app_constants.dart';
 import '../../../../config/constants/api_constants.dart';
 import '../../../../config/di/service_locator.dart';
 import '../../../../core/notifications/notification_service.dart';
+import '../../../../shared/widgets/guest_auth_gate.dart';
 import '../../data/models/product_model.dart';
 import '../../data/models/review_model.dart';
 import '../cubit/cart_cubit.dart';
@@ -543,6 +544,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         height: 54,
                         child: ElevatedButton.icon(
                           onPressed: () {
+                            if (GuestAuthGate.isGuest) {
+                              GuestAuthGate.showPrompt(context,
+                                title: 'Sign In to Add to Cart',
+                                message: 'Create an account or sign in to add items to your cart and place orders.');
+                              return;
+                            }
                             context.read<CartCubit>().addToCart(
                               productId: widget.product.id,
                               quantity: 1,
@@ -582,6 +589,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         height: 54,
                         child: ElevatedButton(
                           onPressed: () {
+                            if (GuestAuthGate.isGuest) {
+                              GuestAuthGate.showPrompt(context,
+                                title: 'Sign In to Buy Now',
+                                message: 'Sign in to complete your purchase securely.');
+                              return;
+                            }
                             context.read<CartCubit>().addToCart(
                               productId: widget.product.id,
                               quantity: 1,

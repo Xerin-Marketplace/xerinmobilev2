@@ -30,63 +30,70 @@ class ProfileInfoPage extends StatelessWidget {
             _buildAppBar(context, colorScheme),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.only(bottom: 40),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildAvatarSection(user, colorScheme),
+                    _buildBannerWithAvatar(user, colorScheme, isDark),
                     const SizedBox(height: 28),
-                    _buildSectionLabel('Personal Information', colorScheme),
-                    const SizedBox(height: 12),
-                    _buildCard(colorScheme, isDark, child: Column(
-                      children: [
-                        _buildInfoTile(Uicons.user, 'First Name', user?.firstName ?? '—', colorScheme),
-                        _buildDivider(colorScheme),
-                        _buildInfoTile(Uicons.user, 'Last Name', user?.lastName ?? '—', colorScheme),
-                        _buildDivider(colorScheme),
-                        _buildInfoTile(Uicons.envelope, 'Email', user?.email ?? '—', colorScheme),
-                        _buildDivider(colorScheme),
-                        _buildInfoTile(Uicons.phone, 'Phone', user?.phone ?? '—', colorScheme),
-                      ],
-                    )),
-                    const SizedBox(height: 24),
-                    _buildSectionLabel('Account Status', colorScheme),
-                    const SizedBox(height: 12),
-                    _buildCard(colorScheme, isDark, child: Column(
-                      children: [
-                        _buildStatusRow(Uicons.circleUser, 'Account Type', _capitalize(user?.accountType ?? 'Customer'), colorScheme),
-                        _buildDivider(colorScheme),
-                        _buildStatusRow(
-                          user?.isVerified == true ? Uicons.badgeCheck : Uicons.clock,
-                          'Verification',
-                          user?.isVerified == true ? 'Verified' : 'Pending',
-                          colorScheme,
-                          valueColor: user?.isVerified == true ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
-                        ),
-                        _buildDivider(colorScheme),
-                        _buildStatusRow(Uicons.shield, 'Status', _capitalize(user?.status ?? 'Active'), colorScheme),
-                        if (user?.isSeller == true) ...[
-                          _buildDivider(colorScheme),
-                          _buildStatusRow(Uicons.shop, 'Seller Account', _capitalize(user?.sellerStatus ?? 'Active'), colorScheme),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSectionLabel('Personal Information', colorScheme),
+                          const SizedBox(height: 12),
+                          _buildCard(colorScheme, isDark, child: Column(
+                            children: [
+                              _buildInfoTile(Uicons.user, 'First Name', user?.firstName ?? '—', colorScheme),
+                              _buildDivider(colorScheme),
+                              _buildInfoTile(Uicons.user, 'Last Name', user?.lastName ?? '—', colorScheme),
+                              _buildDivider(colorScheme),
+                              _buildInfoTile(Uicons.envelope, 'Email', user?.email ?? '—', colorScheme),
+                              _buildDivider(colorScheme),
+                              _buildInfoTile(Uicons.phone, 'Phone', user?.phone ?? '—', colorScheme),
+                            ],
+                          )),
+                          const SizedBox(height: 24),
+                          _buildSectionLabel('Account Status', colorScheme),
+                          const SizedBox(height: 12),
+                          _buildCard(colorScheme, isDark, child: Column(
+                            children: [
+                              _buildStatusRow(Uicons.circleUser, 'Account Type', _capitalize(user?.accountType ?? 'Customer'), colorScheme),
+                              _buildDivider(colorScheme),
+                              _buildStatusRow(
+                                user?.isVerified == true ? Uicons.badgeCheck : Uicons.clock,
+                                'Verification',
+                                user?.isVerified == true ? 'Verified' : 'Pending',
+                                colorScheme,
+                                valueColor: user?.isVerified == true ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
+                              ),
+                              _buildDivider(colorScheme),
+                              _buildStatusRow(Uicons.shield, 'Status', _capitalize(user?.status ?? 'Active'), colorScheme),
+                              if (user?.isSeller == true) ...[
+                                _buildDivider(colorScheme),
+                                _buildStatusRow(Uicons.shop, 'Seller Account', _capitalize(user?.sellerStatus ?? 'Active'), colorScheme),
+                              ],
+                            ],
+                          )),
+                          const SizedBox(height: 28),
+                          SizedBox(
+                            width: double.infinity, height: 52,
+                            child: ElevatedButton.icon(
+                              onPressed: () => _showEditDrawer(context, user),
+                              icon: const Icon(Uicons.userPen, size: 18),
+                              label: const Text('Edit Profile', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: colorScheme.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                elevation: 0,
+                              ),
+                            ),
+                          ),
                         ],
-                      ],
-                    )),
-                    const SizedBox(height: 28),
-                    SizedBox(
-                      width: double.infinity, height: 52,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showEditDrawer(context, user),
-                        icon: const Icon(Uicons.userPen, size: 18),
-                        label: const Text('Edit Profile', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          elevation: 0,
-                        ),
                       ),
                     ),
-                    const SizedBox(height: 28),
                   ],
                 ),
               ),
@@ -115,79 +122,124 @@ class ProfileInfoPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatarSection(UserModel? user, ColorScheme cs) {
+  Widget _buildBannerWithAvatar(UserModel? user, ColorScheme cs, bool isDark) {
     final isVerified = user?.isVerified == true;
     final initials = user?.fullName.isNotEmpty == true
         ? user!.fullName.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
         : '?';
 
-    return Center(
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [cs.primary, cs.primary.withValues(alpha: 0.5)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(color: cs.surface, shape: BoxShape.circle),
-              child: CircleAvatar(
-                radius: 48,
-                backgroundColor: cs.primary.withValues(alpha: 0.08),
-                child: Text(initials,
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: cs.primary),
-                ),
-              ),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Gradient banner header
+        Container(
+          height: 160,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [cs.primary, cs.primary.withValues(alpha: 0.6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
-          const SizedBox(height: 14),
-          Text(user?.fullName ?? 'Guest',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: cs.onSurface),
-          ),
-          if (user?.email.isNotEmpty == true) ...[
-            const SizedBox(height: 4),
-            Text(user!.email,
-              style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4)),
-            ),
-          ],
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-            decoration: BoxDecoration(
-              color: (isVerified ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)).withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: (isVerified ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)).withValues(alpha: 0.2),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isVerified ? Uicons.badgeCheck : Uicons.clock,
-                  size: 13,
-                  color: isVerified ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  isVerified ? 'Verified Account' : 'Not Verified',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: isVerified ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Subtle pattern overlay
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.black.withValues(alpha: 0.15), Colors.transparent],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
                   ),
                 ),
+              ),
+              // Verified badge top right
+              Positioned(
+                top: 12,
+                right: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: (isVerified ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)).withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isVerified ? Uicons.badgeCheck : Uicons.clock,
+                        size: 12,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        isVerified ? 'Verified' : 'Pending',
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Avatar overlapping the banner
+        Positioned(
+          top: 110,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cs.primary, cs.primary.withValues(alpha: 0.5)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 12, offset: const Offset(0, 4))],
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(color: cs.surface, shape: BoxShape.circle),
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: cs.primary.withValues(alpha: 0.08),
+                  backgroundImage: const AssetImage('assets/images/avatar.png'),
+                  child: initials.isNotEmpty
+                      ? Text(initials,
+                          style: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, color: cs.primary))
+                      : null,
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Name and email below avatar
+        Positioned(
+          top: 218,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Column(
+              children: [
+                Text(user?.fullName ?? 'Guest',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: cs.onSurface),
+                ),
+                if (user?.email.isNotEmpty == true) ...[
+                  const SizedBox(height: 4),
+                  Text(user!.email,
+                    style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4)),
+                  ),
+                ],
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

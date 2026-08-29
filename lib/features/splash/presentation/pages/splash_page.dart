@@ -82,7 +82,9 @@ class _SplashPageState extends State<SplashPage>
     final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
 
     if (!tokenStorage.hasTokens) {
-      if (hasSeenOnboarding) {
+      if (tokenStorage.isGuest) {
+        context.go(AppConstants.homeRoute);
+      } else if (hasSeenOnboarding) {
         context.go(AppConstants.signInRoute);
       } else {
         context.go(AppConstants.onboardingRoute);

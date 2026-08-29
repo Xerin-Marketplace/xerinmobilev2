@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../config/constants/api_constants.dart';
+import '../../../../shared/widgets/app_network_image.dart';
 import '../cubit/recommendation_cubit.dart';
 import '../cubit/recommendation_state.dart';
 import '../../data/models/recommendation_model.dart';
@@ -136,10 +138,14 @@ class _StoresPageState extends State<StoresPage> {
             if (store.bannerUrl != null)
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Image.network(store.bannerUrl!,
-                    width: double.infinity, height: 120, fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                        height: 120, color: cs.primary.withValues(alpha: 0.06))),
+                child: AppNetworkImage(
+                  imageUrl: ApiConstants.resolveImageUrl(store.bannerUrl),
+                  width: double.infinity,
+                  height: 120,
+                  fit: BoxFit.cover,
+                  borderRadius: 0,
+                  placeholderIcon: Uicons.storeAlt,
+                ),
               )
             else
               Container(
@@ -166,9 +172,14 @@ class _StoresPageState extends State<StoresPage> {
                     ),
                     child: store.logoUrl != null
                         ? ClipOval(
-                            child: Image.network(store.logoUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Icon(Uicons.shop, color: cs.primary)),
+                            child: AppNetworkImage(
+                              imageUrl: ApiConstants.resolveImageUrl(store.logoUrl),
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                              borderRadius: 0,
+                              placeholderIcon: Uicons.shop,
+                            ),
                           )
                         : Icon(Uicons.shop, color: cs.primary),
                   ),

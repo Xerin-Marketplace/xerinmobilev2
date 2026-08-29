@@ -7,6 +7,7 @@ import 'config/routes/app_router.dart';
 import 'config/theme/app_theme.dart';
 import 'core/connectivity/connectivity_cubit.dart';
 import 'core/connectivity/no_internet_page.dart';
+import 'core/currency/currency_cubit.dart';
 import 'core/network/api_client.dart';
 import 'core/theme/app_theme_cubit.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
@@ -48,6 +49,7 @@ class _XerinAppState extends State<XerinApp> {
       providers: [
         BlocProvider.value(value: sl<AppThemeCubit>()),
         BlocProvider.value(value: sl<ConnectivityCubit>()),
+        BlocProvider.value(value: sl<CurrencyCubit>()..loadCurrencies()),
         BlocProvider(create: (_) => sl<AuthCubit>()),
         BlocProvider(create: (_) => sl<HomeCubit>()..loadHome()),
         BlocProvider(create: (_) => sl<CustomerCubit>()..loadAll()),

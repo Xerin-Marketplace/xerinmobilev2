@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../../config/di/service_locator.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../../../../core/theme/app_theme_cubit.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -87,6 +89,12 @@ class _OnboardingPageState extends State<OnboardingPage>
   Future<void> _onSkip() async {
     await _markOnboardingSeen();
     if (mounted) context.go(AppConstants.signInRoute);
+  }
+
+  Future<void> _onContinueAsGuest() async {
+    await _markOnboardingSeen();
+    await GetIt.instance<TokenStorage>().setGuest();
+    if (mounted) context.go(AppConstants.homeRoute);
   }
 
   Future<void> _markOnboardingSeen() async {
@@ -276,7 +284,7 @@ class _OnboardingPageState extends State<OnboardingPage>
               ),
             ),
             const SizedBox(height: 32),
-            // Single button
+            // Primary button
             SizedBox(
               width: double.infinity,
               height: 54,
@@ -299,6 +307,26 @@ class _OnboardingPageState extends State<OnboardingPage>
                 ),
               ),
             ),
+            if (isLast) ...[
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: TextButton(
+                  onPressed: _onContinueAsGuest,
+                  style: TextButton.styleFrom(
+                    foregroundColor: colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                  child: Text(
+                    'Continue as Guest',
+                    style: GoogleFonts.nunito(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

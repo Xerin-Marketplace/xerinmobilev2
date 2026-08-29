@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 
 import '../../../common/presentation/widgets/modern_bottom_nav.dart';
+import '../../../../core/storage/token_storage.dart';
+import '../../../../core/theme/uicons.dart';
+import '../../../../shared/widgets/guest_auth_gate.dart';
 import '../cubit/cart_cubit.dart';
 import '../cubit/cart_state.dart';
 import 'tabs/customer_cart_page.dart';
@@ -9,7 +13,6 @@ import 'tabs/customer_explore_page.dart';
 import 'tabs/customer_home_page.dart';
 import 'tabs/customer_profile_page.dart';
 import 'tabs/customer_wishlist_page.dart';
-import '../../../../core/theme/uicons.dart';
 
 class CustomerDashboard extends StatefulWidget {
   const CustomerDashboard({super.key});
@@ -28,6 +31,25 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     CustomerWishlistPage(),
     CustomerProfilePage(),
   ];
+
+  bool get _isGuest {
+    final tokenStorage = GetIt.instance<TokenStorage>();
+    return !tokenStorage.isAuthenticated && tokenStorage.isGuest;
+  }
+
+  void _onNavTap(int index) {
+    if (_isGuest && (index == 2 || index == 3 || index == 4)) {
+      GuestAuthGate.showPrompt(
+        context,
+        title: index == 4 ? 'Sign In to View Profile' : 'Sign In to Continue',
+        message: index == 4
+            ? 'Sign in to view your profile, orders, and settings.'
+            : 'Sign in to access your cart, wishlist, and checkout.',
+      );
+      return;
+    }
+    setState(() => _selectedIndex = index);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +92,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
           ),
           bottomNavigationBar: ModernBottomNav(
             selectedIndex: _selectedIndex,
-            onTap: (index) => setState(() => _selectedIndex = index),
+            onTap: _onNavTap,
             items: navItems,
           ),
         );

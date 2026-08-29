@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 
-import '../../../../config/constants/api_constants.dart';
-import '../../../../config/di/service_locator.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../core/theme/uicons.dart';
-import '../../../customer/data/models/product_model.dart';
-import '../../../../shared/widgets/app_network_image.dart';
-import '../widgets/seller_product_drawer.dart';
+import '../../../../../config/constants/api_constants.dart';
+import '../../../../../config/di/service_locator.dart';
+import '../../../../../core/network/api_client.dart';
+import '../../../../../core/theme/uicons.dart';
+import '../../../../customer/data/models/product_model.dart';
+import '../../../../../shared/widgets/app_network_image.dart';
+import '../../widgets/seller_product_drawer.dart';
 
-class SellerProductsPage extends StatefulWidget {
-  const SellerProductsPage({super.key});
+class SellerProductsTab extends StatefulWidget {
+  const SellerProductsTab({super.key});
 
   @override
-  State<SellerProductsPage> createState() => _SellerProductsPageState();
+  State<SellerProductsTab> createState() => _SellerProductsTabState();
 }
 
-class _SellerProductsPageState extends State<SellerProductsPage> {
+class _SellerProductsTabState extends State<SellerProductsTab> {
   final _searchController = TextEditingController();
   List<ProductModel> _products = [];
   bool _isLoading = true;
@@ -78,91 +78,95 @@ class _SellerProductsPageState extends State<SellerProductsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Products'),
-        actions: [
-          IconButton(
-            icon: const Icon(Uicons.plus),
-            onPressed: () => _showAddProductDialog(context),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search products...',
-                prefixIcon: const Icon(Uicons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Uicons.crossSmall),
-                        onPressed: () {
-                          _searchController.clear();
-                          _loadProducts();
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onSubmitted: (_) => _loadProducts(),
-            ),
-          ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Uicons.circleExclamation, size: 48, color: Colors.red),
-                            const SizedBox(height: 16),
-                            Text(_error!, textAlign: TextAlign.center),
-                            const SizedBox(height: 16),
-                            ElevatedButton(onPressed: _loadProducts, child: const Text('Retry')),
-                          ],
-                        ),
-                      )
-                    : _products.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Uicons.tags, size: 48, color: Colors.grey),
-                                const SizedBox(height: 16),
-                                Text('No products yet', style: Theme.of(context).textTheme.titleMedium),
-                                const SizedBox(height: 8),
-                                ElevatedButton.icon(
-                                  onPressed: () => _showAddProductDialog(context),
-                                  icon: const Icon(Uicons.plus),
-                                  label: const Text('Add Product'),
-                                ),
-                              ],
-                            ),
-                          )
-                        : NotificationListener<ScrollNotification>(
-                            onNotification: (notification) {
-                              if (notification is ScrollEndNotification &&
-                                  notification.metrics.pixels >= notification.metrics.maxScrollExtent - 200 &&
-                                  _hasMore) {
-                                _page++;
-                                _loadProducts(reset: false);
-                              }
-                              return false;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search products...',
+                    prefixIcon: const Icon(Uicons.search),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Uicons.crossSmall),
+                            onPressed: () {
+                              _searchController.clear();
+                              _loadProducts();
                             },
-                            child: ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              itemCount: _products.length,
-                              itemBuilder: (context, index) => _buildProductCard(context, _products[index]),
-                            ),
-                          ),
+                          )
+                        : null,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onSubmitted: (_) => _loadProducts(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Uicons.plus),
+                onPressed: () => _showAddProductDrawer(context),
+                style: IconButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Uicons.circleExclamation, size: 48, color: Colors.red),
+                          const SizedBox(height: 16),
+                          Text(_error!, textAlign: TextAlign.center),
+                          const SizedBox(height: 16),
+                          ElevatedButton(onPressed: _loadProducts, child: const Text('Retry')),
+                        ],
+                      ),
+                    )
+                  : _products.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Uicons.tags, size: 48, color: Colors.grey),
+                              const SizedBox(height: 16),
+                              Text('No products yet', style: Theme.of(context).textTheme.titleMedium),
+                              const SizedBox(height: 8),
+                              ElevatedButton.icon(
+                                onPressed: () => _showAddProductDrawer(context),
+                                icon: const Icon(Uicons.plus),
+                                label: const Text('Add Product'),
+                              ),
+                            ],
+                          ),
+                        )
+                      : NotificationListener<ScrollNotification>(
+                          onNotification: (notification) {
+                            if (notification is ScrollEndNotification &&
+                                notification.metrics.pixels >= notification.metrics.maxScrollExtent - 200 &&
+                                _hasMore) {
+                              _page++;
+                              _loadProducts(reset: false);
+                            }
+                            return false;
+                          },
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: _products.length,
+                            itemBuilder: (context, index) => _buildProductCard(context, _products[index]),
+                          ),
+                        ),
+        ),
+      ],
     );
   }
 
@@ -226,7 +230,7 @@ class _SellerProductsPageState extends State<SellerProductsPage> {
             ),
             IconButton(
               icon: const Icon(Uicons.edit, size: 18),
-              onPressed: () => _showEditProductDialog(context, product),
+              onPressed: () => _showEditProductDrawer(context, product),
             ),
           ],
         ),
@@ -234,11 +238,11 @@ class _SellerProductsPageState extends State<SellerProductsPage> {
     );
   }
 
-  void _showAddProductDialog(BuildContext context) {
+  void _showAddProductDrawer(BuildContext context) {
     _showProductDrawer(context, null);
   }
 
-  void _showEditProductDialog(BuildContext context, ProductModel product) {
+  void _showEditProductDrawer(BuildContext context, ProductModel product) {
     _showProductDrawer(context, product);
   }
 

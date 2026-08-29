@@ -130,6 +130,7 @@ abstract class ApiConstants {
   static String productTags(String id) => '/products/$id/tags';
   static String productTagById(String productId, String tagId) =>
       '/products/$productId/tags/$tagId';
+  static const String displayCurrencies = '/products/display-currencies';
   static String categoryById(String id) => '/products/categories/$id';
   static String brandById(String id) => '/products/brands/$id';
 

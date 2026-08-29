@@ -1059,3 +1059,145 @@ class SellerPricingPreviewModel {
     );
   }
 }
+
+// ─── Refunds / Returns ───
+class RefundItemModel {
+  final String id;
+  final String orderItemId;
+  final String sellerId;
+  final int quantity;
+  final double unitAmount;
+  final double refundAmount;
+  final double commissionReversal;
+  final double sellerReversal;
+  final double sellerDebtAmount;
+  final bool restock;
+  final String? processedAt;
+
+  const RefundItemModel({
+    required this.id,
+    required this.orderItemId,
+    required this.sellerId,
+    required this.quantity,
+    required this.unitAmount,
+    required this.refundAmount,
+    required this.commissionReversal,
+    required this.sellerReversal,
+    required this.sellerDebtAmount,
+    required this.restock,
+    this.processedAt,
+  });
+
+  factory RefundItemModel.fromJson(Map<String, dynamic> json) {
+    return RefundItemModel(
+      id: _ps(json['id']),
+      orderItemId: _ps(json['order_item_id']),
+      sellerId: _ps(json['seller_id']),
+      quantity: _pi(json['quantity']),
+      unitAmount: _pd(json['unit_amount']),
+      refundAmount: _pd(json['refund_amount']),
+      commissionReversal: _pd(json['commission_reversal']),
+      sellerReversal: _pd(json['seller_reversal']),
+      sellerDebtAmount: _pd(json['seller_debt_amount']),
+      restock: json['restock'] as bool? ?? true,
+      processedAt: json['processed_at'] as String?,
+    );
+  }
+}
+
+class RefundEventModel {
+  final String id;
+  final String status;
+  final String? note;
+  final String? createdById;
+  final String createdAt;
+
+  const RefundEventModel({
+    required this.id,
+    required this.status,
+    this.note,
+    this.createdById,
+    required this.createdAt,
+  });
+
+  factory RefundEventModel.fromJson(Map<String, dynamic> json) {
+    return RefundEventModel(
+      id: _ps(json['id']),
+      status: _ps(json['status']),
+      note: json['note'] as String?,
+      createdById: json['created_by_id'] as String?,
+      createdAt: _ps(json['created_at']),
+    );
+  }
+}
+
+class RefundModel {
+  final String id;
+  final String orderId;
+  final String requestedById;
+  final String status;
+  final String reason;
+  final String? reasonDetails;
+  final String currency;
+  final double itemsAmount;
+  final double shippingAmount;
+  final double taxAmount;
+  final double totalAmount;
+  final String? providerReference;
+  final String idempotencyKey;
+  final String? adminNote;
+  final String requestedAt;
+  final String? reviewedAt;
+  final String? processedAt;
+  final String? completedAt;
+  final List<RefundItemModel> items;
+  final List<RefundEventModel> events;
+
+  const RefundModel({
+    required this.id,
+    required this.orderId,
+    required this.requestedById,
+    required this.status,
+    required this.reason,
+    this.reasonDetails,
+    required this.currency,
+    required this.itemsAmount,
+    required this.shippingAmount,
+    required this.taxAmount,
+    required this.totalAmount,
+    this.providerReference,
+    required this.idempotencyKey,
+    this.adminNote,
+    required this.requestedAt,
+    this.reviewedAt,
+    this.processedAt,
+    this.completedAt,
+    this.items = const [],
+    this.events = const [],
+  });
+
+  factory RefundModel.fromJson(Map<String, dynamic> json) {
+    return RefundModel(
+      id: _ps(json['id']),
+      orderId: _ps(json['order_id']),
+      requestedById: _ps(json['requested_by_id']),
+      status: _ps(json['status']),
+      reason: _ps(json['reason']),
+      reasonDetails: json['reason_details'] as String?,
+      currency: _ps(json['currency']),
+      itemsAmount: _pd(json['items_amount']),
+      shippingAmount: _pd(json['shipping_amount']),
+      taxAmount: _pd(json['tax_amount']),
+      totalAmount: _pd(json['total_amount']),
+      providerReference: json['provider_reference'] as String?,
+      idempotencyKey: _ps(json['idempotency_key']),
+      adminNote: json['admin_note'] as String?,
+      requestedAt: _ps(json['requested_at']),
+      reviewedAt: json['reviewed_at'] as String?,
+      processedAt: json['processed_at'] as String?,
+      completedAt: json['completed_at'] as String?,
+      items: (json['items'] as List?)?.map((e) => RefundItemModel.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      events: (json['events'] as List?)?.map((e) => RefundEventModel.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+    );
+  }
+}

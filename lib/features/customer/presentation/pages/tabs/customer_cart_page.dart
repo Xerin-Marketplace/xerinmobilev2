@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../config/constants/app_constants.dart';
+import '../../../../../shared/widgets/guest_auth_gate.dart';
 import '../../cubit/cart_cubit.dart';
 import '../../cubit/cart_state.dart';
 import '../../../data/models/cart_model.dart';
@@ -27,6 +28,14 @@ class _CustomerCartPageState extends State<CustomerCartPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+
+    if (GuestAuthGate.isGuest) {
+      return GuestAuthGate(
+        title: 'Sign In to View Cart',
+        message: 'Your cart is waiting. Sign in to review items and proceed to checkout.',
+        child: const SizedBox.shrink(),
+      );
+    }
 
     return BlocBuilder<CartCubit, CartState>(
       builder: (context, state) {

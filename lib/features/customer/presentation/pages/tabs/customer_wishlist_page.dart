@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../../config/constants/app_constants.dart';
 import '../../../../../config/di/service_locator.dart';
+import '../../../../../shared/widgets/guest_auth_gate.dart';
 import '../../../data/models/wishlist_item_model.dart';
 import '../../cubit/wishlist_cubit.dart';
 import '../../cubit/wishlist_state.dart';
@@ -35,6 +36,14 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (GuestAuthGate.isGuest) {
+      return GuestAuthGate(
+        title: 'Sign In to View Wishlist',
+        message: 'Save items you love. Sign in to access your wishlist and never lose track of your favorites.',
+        child: const SizedBox.shrink(),
+      );
+    }
 
     return BlocProvider.value(
       value: _wishlistCubit,

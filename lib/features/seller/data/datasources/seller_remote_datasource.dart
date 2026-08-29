@@ -526,7 +526,7 @@ class SellerRemoteDataSource {
   Future<Map<String, dynamic>> uploadStoreLogo(String filePath) async {
     try {
       final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(filePath),
+        'logo': await MultipartFile.fromFile(filePath),
       });
       final response = await _client.post(
         ApiConstants.sellerStoreLogo,
@@ -542,7 +542,7 @@ class SellerRemoteDataSource {
   Future<Map<String, dynamic>> uploadStoreBanner(String filePath) async {
     try {
       final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(filePath),
+        'banner': await MultipartFile.fromFile(filePath),
       });
       final response = await _client.post(
         ApiConstants.sellerStoreBanner,
@@ -722,6 +722,78 @@ class SellerRemoteDataSource {
           .map((e) => FulfillmentTrackingEvent.fromJson(
               e as Map<String, dynamic>))
           .toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // ─── Refunds / Returns ───
+  Future<List<RefundModel>> getRefunds({String? status}) async {
+    try {
+      final params = <String, dynamic>{};
+      if (status != null && status.isNotEmpty) params['refund_status'] = status;
+      final response = await _client.get(ApiConstants.adminRefunds, queryParameters: params);
+      final data = response.data;
+      List<dynamic> list;
+      if (data is List) {
+        list = data;
+      } else if (data is Map && data['results'] != null) {
+        list = data['results'] as List;
+      } else {
+        list = [];
+      }
+      return list.map((e) => RefundModel.fromJson(e as Map<String, dynamic>)).toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<RefundModel> reviewRefund(String refundId, {String? note}) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.reviewRefund(refundId),
+        data: {'note': note},
+      );
+      return RefundModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<RefundModel> approveRefund(String refundId, {String? note}) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.approveRefund(refundId),
+        data: {'note': note},
+      );
+      return RefundModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<RefundModel> rejectRefund(String refundId, {String? note}) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.rejectRefund(refundId),
+        data: {'note': note},
+      );
+      return RefundModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<RefundModel> processRefund(String refundId, {String? providerReference, String? note}) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.processRefund(refundId),
+        data: {
+          if (providerReference != null) 'provider_reference': providerReference,
+          if (note != null) 'note': note,
+        },
+      );
+      return RefundModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw ServerException(_client.getErrorMessage(e));
     }

@@ -141,20 +141,31 @@ class AppRouter {
       final isPublic = _publicRoutes.contains(path);
       final tokenStorage = GetIt.instance<TokenStorage>();
       final isAuthenticated = tokenStorage.isAuthenticated;
+      final isGuest = tokenStorage.isGuest;
 
-      if (!isPublic && !isAuthenticated) {
-        return AppConstants.signInRoute;
-      }
+      // Authenticated users skip splash/onboarding/sign-in
       if (isPublic && isAuthenticated && path != '/splash' && path != '/onboarding') {
         final user = tokenStorage.currentUser;
         return AppConstants.dashboardRouteForUser(user);
+      }
+
+      // Guests can browse guest-allowed routes
+      if (!isPublic && !isAuthenticated && isGuest) {
+        if (AppConstants.authRequiredRoutes.contains(path)) {
+          return AppConstants.signInRoute;
+        }
+        return null;
+      }
+
+      // Non-authenticated, non-guest users must sign in
+      if (!isPublic && !isAuthenticated) {
+        return AppConstants.signInRoute;
       }
 
       // Admin route protection — check role-based permissions
       if (isAuthenticated && AdminAccess.routeToSection.containsKey(path)) {
         final UserModel? user = tokenStorage.currentUser;
         if (!AdminAccess.canAccessRoute(user, path)) {
- // Not authorised — send to customer home
           return AppConstants.homeRoute;
         }
       }

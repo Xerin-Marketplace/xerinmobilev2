@@ -13,7 +13,9 @@ class SellerWalletPage extends StatefulWidget {
 }
 
 class _SellerWalletPageState extends State<SellerWalletPage> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   int _tabIndex = 0;
+  List<PayoutAccountModel> _payoutAccounts = [];
 
   @override
   void initState() {
@@ -21,77 +23,128 @@ class _SellerWalletPageState extends State<SellerWalletPage> {
     context.read<SellerCubit>().loadWallet();
   }
 
+  void _openPayoutDrawer() {
+    if (_payoutAccounts.isEmpty) return;
+    _scaffoldKey.currentState?.openEndDrawer();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Wallet & Payouts')),
-      body: BlocConsumer<SellerCubit, SellerState>(
-        listener: (context, state) {
-          if (state is SellerError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-            );
-          }
-          if (state is SellerActionSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.green),
-            );
-          }
+      key: _scaffoldKey,
+      backgroundColor: cs.surface,
+      endDrawer: _PayoutRequestDrawer(
+        accounts: _payoutAccounts,
+        onSubmit: ({
+          required String payoutAccountId,
+          required double amount,
+          String? note,
+        }) {
+          Navigator.of(context).pop();
+          context.read<SellerCubit>().requestPayout(
+                payoutAccountId: payoutAccountId,
+                amount: amount,
+                note: note,
+              );
         },
-        builder: (context, state) {
-          if (state is SellerLoading || state is SellerInitial) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state is SellerWalletLoaded) {
-            return RefreshIndicator(
-              onRefresh: () => context.read<SellerCubit>().loadWallet(),
-              child: ListView(
-                padding: const EdgeInsets.all(16),
+      ),
+      drawerScrimColor: Colors.black54,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+              child: Row(
                 children: [
-                  _buildBalanceCard(context, state.wallet),
-                  if (state.earnings != null) ...[
-                    const SizedBox(height: 16),
-                    _buildEarningsCard(context, state.earnings!),
-                  ],
-                  const SizedBox(height: 16),
-                  _buildRequestPayoutButton(context, state.payoutAccounts),
-                  const SizedBox(height: 24),
-                  // Tabs
-                  Row(
-                    children: [
-                      _buildTab('Transactions', 0),
-                      _buildTab('Payouts', 1),
-                    ],
+                  Container(
+                    width: 40, height: 40,
+                    decoration: BoxDecoration(
+                      color: cs.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Uicons.sackDollar, size: 20, color: cs.primary),
                   ),
-                  const SizedBox(height: 12),
-                  if (_tabIndex == 0)
-                    _buildTransactions(context, state.transactions)
-                  else
-                    _buildPayouts(context, state.payouts),
-                  const SizedBox(height: 32),
-                ],
-              ),
-            );
-          }
-          if (state is SellerError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Uicons.circleExclamation, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(state.message, textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context.read<SellerCubit>().loadWallet(),
-                    child: const Text('Retry'),
+                  const SizedBox(width: 12),
+                  Text('Wallet & Payouts',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: cs.onSurface),
                   ),
                 ],
               ),
-            );
-          }
-          return const SizedBox.shrink();
-        },
+            ),
+            Expanded(
+              child: BlocConsumer<SellerCubit, SellerState>(
+                listener: (context, state) {
+                  if (state is SellerError) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+                    );
+                  }
+                  if (state is SellerActionSuccess) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+                    );
+                  }
+                },
+                builder: (context, state) {
+                  if (state is SellerLoading || state is SellerInitial) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (state is SellerWalletLoaded) {
+                    _payoutAccounts = state.payoutAccounts;
+                    return RefreshIndicator(
+                      onRefresh: () => context.read<SellerCubit>().loadWallet(),
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                        children: [
+                          _buildBalanceCard(context, state.wallet),
+                          if (state.earnings != null) ...[
+                            const SizedBox(height: 16),
+                            _buildEarningsCard(context, state.earnings!),
+                          ],
+                          const SizedBox(height: 16),
+                          _buildRequestPayoutButton(context, state.payoutAccounts),
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              _buildTab('Transactions', 0),
+                              _buildTab('Payouts', 1),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          if (_tabIndex == 0)
+                            _buildTransactions(context, state.transactions)
+                          else
+                            _buildPayouts(context, state.payouts),
+                        ],
+                      ),
+                    );
+                  }
+                  if (state is SellerError) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Uicons.circleExclamation, size: 48, color: Colors.red),
+                          const SizedBox(height: 16),
+                          Text(state.message, textAlign: TextAlign.center),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () => context.read<SellerCubit>().loadWallet(),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -191,14 +244,20 @@ class _SellerWalletPageState extends State<SellerWalletPage> {
   }
 
   Widget _buildRequestPayoutButton(BuildContext context, List<PayoutAccountModel> accounts) {
+    final cs = Theme.of(context).colorScheme;
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: accounts.isEmpty
-            ? null
-            : () => _showRequestPayoutDialog(context, accounts),
-        icon: const Icon(Uicons.sackDollar),
-        label: const Text('Request Payout'),
+        onPressed: accounts.isEmpty ? null : _openPayoutDrawer,
+        icon: const Icon(Uicons.sackDollar, size: 20),
+        label: const Text('Request Payout', style: TextStyle(fontWeight: FontWeight.w700)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: cs.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 0,
+        ),
       ),
     );
   }
@@ -313,70 +372,6 @@ class _SellerWalletPageState extends State<SellerWalletPage> {
     );
   }
 
-  void _showRequestPayoutDialog(BuildContext context, List<PayoutAccountModel> accounts) {
-    final amountController = TextEditingController();
-    final noteController = TextEditingController();
-    String? selectedAccountId = accounts.firstWhere((a) => a.isDefault, orElse: () => accounts.first).id;
-    final formKey = GlobalKey<FormState>();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Request Payout'),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<String>(
-                  value: selectedAccountId,
-                  decoration: const InputDecoration(labelText: 'Payout Account', border: OutlineInputBorder()),
-                  items: accounts.map((a) {
-                    return DropdownMenuItem(
-                      value: a.id,
-                      child: Text('${a.provider} - ${a.accountNumber}'),
-                    );
-                  }).toList(),
-                  onChanged: (v) => selectedAccountId = v,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: amountController,
-                  decoration: const InputDecoration(labelText: 'Amount *', border: OutlineInputBorder()),
-                  keyboardType: TextInputType.number,
-                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: noteController,
-                  decoration: const InputDecoration(labelText: 'Note (optional)', border: OutlineInputBorder()),
-                  maxLines: 2,
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState!.validate() && selectedAccountId != null) {
-                Navigator.pop(ctx);
-                context.read<SellerCubit>().requestPayout(
-                      payoutAccountId: selectedAccountId!,
-                      amount: double.tryParse(amountController.text.trim()) ?? 0,
-                      note: noteController.text.trim().isNotEmpty ? noteController.text.trim() : null,
-                    );
-              }
-            },
-            child: const Text('Request'),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _confirmCancelPayout(BuildContext context, String id) {
     showDialog(
       context: context,
@@ -443,5 +438,207 @@ class _SellerWalletPageState extends State<SellerWalletPage> {
     } catch (_) {
       return dateStr;
     }
+  }
+}
+
+class _PayoutRequestDrawer extends StatefulWidget {
+  final List<PayoutAccountModel> accounts;
+  final void Function({
+    required String payoutAccountId,
+    required double amount,
+    String? note,
+  }) onSubmit;
+
+  const _PayoutRequestDrawer({
+    required this.accounts,
+    required this.onSubmit,
+  });
+
+  @override
+  State<_PayoutRequestDrawer> createState() => _PayoutRequestDrawerState();
+}
+
+class _PayoutRequestDrawerState extends State<_PayoutRequestDrawer> {
+  late final TextEditingController _amountController;
+  late final TextEditingController _noteController;
+  late String _selectedAccountId;
+  bool _isSubmitting = false;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController();
+    _noteController = TextEditingController();
+    _selectedAccountId = widget.accounts.firstWhere(
+      (a) => a.isDefault,
+      orElse: () => widget.accounts.first,
+    ).id;
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  InputDecoration _fieldDecoration(String label, String hint, ColorScheme cs, {String? suffixText, String? helper}) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      helperText: helper,
+      suffixText: suffixText,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: cs.primary, width: 1.5),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+    );
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSubmitting = true);
+    widget.onSubmit(
+      payoutAccountId: _selectedAccountId,
+      amount: double.tryParse(_amountController.text.trim()) ?? 0,
+      note: _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null,
+    );
+    if (mounted) setState(() => _isSubmitting = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Drawer(
+      width: 360,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40, height: 40,
+                      decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(Uicons.sackDollar, size: 20, color: cs.primary),
+                    ),
+                    const SizedBox(width: 12),
+                    Text('Request Payout',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Uicons.xmark, size: 18),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      initialValue: _selectedAccountId,
+                      decoration: _fieldDecoration(
+                        'Payout Account',
+                        'Select account',
+                        cs,
+                        helper: 'Where to send the money',
+                      ),
+                      items: widget.accounts.map((a) {
+                        return DropdownMenuItem(
+                          value: a.id,
+                          child: Text('${a.provider} - ${a.accountNumber}'),
+                        );
+                      }).toList(),
+                      onChanged: (v) => setState(() => _selectedAccountId = v!),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _amountController,
+                      decoration: _fieldDecoration(
+                        'Amount',
+                        'e.g. 50000',
+                        cs,
+                        suffixText: 'TZS',
+                        helper: 'Amount to withdraw from your balance',
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _noteController,
+                      decoration: _fieldDecoration(
+                        'Note',
+                        'Optional',
+                        cs,
+                        helper: 'Add a note for your records',
+                      ),
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isSubmitting ? null : _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: cs.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                      ),
+                      child: _isSubmitting
+                          ? const SizedBox(width: 18, height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : const Text('Request'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

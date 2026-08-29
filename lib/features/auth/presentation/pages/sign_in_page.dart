@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
@@ -360,6 +362,56 @@ class _SignInPageState extends State<SignInPage>
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: colorScheme.onSurface.withValues(alpha: 0.08),
+                            height: 1,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            'or',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: colorScheme.onSurface.withValues(alpha: 0.4),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            color: colorScheme.onSurface.withValues(alpha: 0.08),
+                            height: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () async {
+                          await GetIt.instance<TokenStorage>().setGuest();
+                          if (context.mounted) {
+                            context.go(AppConstants.homeRoute);
+                          }
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          foregroundColor: colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                        child: const Text(
+                          'Continue as Guest',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
                   ],

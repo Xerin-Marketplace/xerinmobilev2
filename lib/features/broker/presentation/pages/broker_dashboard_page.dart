@@ -4,12 +4,16 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
+import '../../../../config/di/service_locator.dart';
 import '../../../../core/storage/token_storage.dart';
+import '../../../../core/theme/app_theme_cubit.dart';
 import '../../../../core/theme/uicons.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
-import '../../data/models/broker_models.dart';
-import '../../data/models/mawinga_models.dart';
+import '../../../common/presentation/widgets/modern_bottom_nav.dart';
 import '../cubit/broker_cubit.dart';
+import 'tabs/broker_home_tab.dart';
+import 'tabs/broker_products_tab.dart';
+import 'tabs/broker_more_tab.dart';
 
 class BrokerDashboardPage extends StatefulWidget {
   const BrokerDashboardPage({super.key});
@@ -19,46 +23,52 @@ class BrokerDashboardPage extends StatefulWidget {
 }
 
 class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
+  int _selectedIndex = 0;
+  late final BrokerCubit _cubit;
+  bool _isReloading = false;
+
   @override
   void initState() {
     super.initState();
-    context.read<BrokerCubit>().loadDashboard();
+    _cubit = sl<BrokerCubit>();
+    _cubit.loadDashboard();
+  }
+
+  @override
+  void dispose() {
+    _cubit.close();
+    super.dispose();
+  }
+
+  void _onNavTap(int index) {
+    setState(() => _selectedIndex = index);
+  }
+
+  void _refresh() {
+    switch (_selectedIndex) {
+      case 0:
+        _cubit.loadDashboard(refresh: true);
+        break;
+      case 1:
+        _cubit.loadProducts();
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mawinga Hub'),
-        actions: [
-          IconButton(
-            icon: const Icon(Uicons.refresh),
-            onPressed: () =>
-                context.read<BrokerCubit>().loadDashboard(refresh: true),
-          ),
-          const SizedBox(width: 4),
-          GestureDetector(
-            onTap: () => _showAccountSheet(context),
-            child: Container(
-              width: 38,
-              height: 38,
-              margin: const EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Uicons.user,
-                color: colorScheme.primary,
-                size: 20,
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: BlocConsumer<BrokerCubit, BrokerState>(
+    final navItems = [
+      const NavItem(icon: Uicons.home, activeIcon: Uicons.home, label: 'Home'),
+      const NavItem(icon: Uicons.box, activeIcon: Uicons.box, label: 'Products'),
+      const NavItem(icon: Uicons.grid, activeIcon: Uicons.grid, label: 'More'),
+    ];
+
+    return BlocProvider.value(
+      value: _cubit,
+      child: BlocConsumer<BrokerCubit, BrokerState>(
         listener: (context, state) {
           if (state is BrokerError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -67,41 +77,169 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
           }
         },
         builder: (context, state) {
-          if (state is BrokerLoading || state is BrokerInitial) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state is BrokerDashboardLoaded) {
-            return RefreshIndicator(
-              onRefresh: () =>
-                  context.read<BrokerCubit>().loadDashboard(refresh: true),
-              child: _buildDashboard(context, state, colorScheme),
-            );
-          }
-          if (state is BrokerError) {
-            return Center(
+          return Scaffold(
+            backgroundColor: colorScheme.surface,
+            body: SafeArea(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Uicons.circleExclamation, size: 48, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(state.message, textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context.read<BrokerCubit>().loadDashboard(),
-                    child: const Text('Retry'),
+                  _buildHeader(colorScheme, isDark),
+                  Expanded(
+                    child: _buildTabContent(context, state),
                   ),
                 ],
               ),
-            );
-          }
-          return const SizedBox.shrink();
+            ),
+            bottomNavigationBar: ModernBottomNav(
+              selectedIndex: _selectedIndex,
+              onTap: _onNavTap,
+              items: navItems,
+            ),
+          );
         },
       ),
     );
   }
 
-  void _showAccountSheet(BuildContext context) {
+  Widget _buildHeader(ColorScheme cs, bool isDark) {
+    final user = GetIt.instance<TokenStorage>().currentUser;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => _showAccountSheet(context, cs, isDark),
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                Uicons.user,
+                color: cs.primary,
+                size: 22,
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Mawinga Hub',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: cs.onSurface,
+                  ),
+                ),
+                Text(
+                  user?.fullName ?? 'Mawinga',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: cs.onSurface.withValues(alpha: 0.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () => sl<AppThemeCubit>().toggleTheme(),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: cs.onSurface.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                isDark ? Uicons.sun : Uicons.darkMode,
+                color: cs.onSurface.withValues(alpha: 0.7),
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: _refresh,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Uicons.refresh,
+                color: cs.primary,
+                size: 20,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabContent(BuildContext context, BrokerState state) {
+    switch (_selectedIndex) {
+      case 0:
+        if (state is BrokerLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is BrokerError) {
+          return _errorView(context, state.message);
+        }
+        if (state is BrokerDashboardLoaded) {
+          return BrokerHomeTab(
+            state: state,
+            onRefresh: () => _cubit.loadDashboard(refresh: true),
+          );
+        }
+        if (!_isReloading) {
+          _isReloading = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _cubit.loadDashboard();
+            _isReloading = false;
+          });
+        }
+        return const Center(child: CircularProgressIndicator());
+      case 1:
+        return const BrokerProductsTab();
+      case 2:
+        return const BrokerMoreTab();
+      default:
+        return const Center(child: CircularProgressIndicator());
+    }
+  }
+
+  Widget _errorView(BuildContext context, String message) {
     final cs = Theme.of(context).colorScheme;
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Uicons.triangleWarning, size: 48, color: cs.onSurface.withValues(alpha: 0.2)),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.5)),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () => _cubit.loadDashboard(),
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAccountSheet(BuildContext context, ColorScheme cs, bool isDark) {
     final user = GetIt.instance<TokenStorage>().currentUser;
     final name = user?.fullName ?? 'Mawinga';
     final email = user?.email ?? '';
@@ -239,446 +377,6 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
           ),
         ],
         actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      ),
-    );
-  }
-
-  Widget _buildDashboard(
-    BuildContext context,
-    BrokerDashboardLoaded state,
-    ColorScheme colorScheme,
-  ) {
-    final broker = state.broker;
-    final analytics = state.analytics;
-    final approved = broker.isApproved;
-
-    final statusLabels = {
-      'pending_kyc': 'Complete KYC',
-      'kyc_submitted': 'KYC Submitted',
-      'under_review': 'Under Review',
-      'approved': 'Approved',
-      'rejected': 'Action Required',
-      'suspended': 'Suspended',
-    };
-
-    final quickActions = [
-      {'title': 'KYC', 'desc': approved ? 'Verified' : 'Complete verification', 'icon': Uicons.shieldCheck, 'route': AppConstants.brokerKycRoute},
-      {'title': 'Wallet', 'desc': approved ? 'Balance & payouts' : 'Locked', 'icon': Uicons.wallet, 'route': AppConstants.brokerWalletRoute},
-      {'title': 'Find Products', 'desc': approved ? 'Browse & sell' : 'Locked', 'icon': Uicons.search, 'route': AppConstants.mawingaFindProductsRoute},
-      {'title': 'Share & Earn', 'desc': approved ? 'Share products' : 'Locked', 'icon': Uicons.share, 'route': AppConstants.mawingaShareEarnRoute},
-      {'title': 'My Products', 'desc': approved ? 'Your listings' : 'Locked', 'icon': Uicons.box, 'route': AppConstants.brokerProductsRoute},
-      {'title': 'Opportunities', 'desc': approved ? 'Browse campaigns' : 'Locked', 'icon': Uicons.barChart, 'route': AppConstants.brokerOpportunitiesRoute},
-      {'title': 'Earnings', 'desc': approved ? 'Commission history' : 'Locked', 'icon': Uicons.sackDollar, 'route': AppConstants.brokerEarningsRoute},
-      {'title': 'Analytics', 'desc': approved ? 'Performance' : 'Locked', 'icon': Uicons.chartPie, 'route': AppConstants.brokerAnalyticsRoute},
-      {'title': 'Leaderboard', 'desc': approved ? 'Top Mawinga' : 'Locked', 'icon': Uicons.trophy, 'route': AppConstants.mawingaLeaderboardRoute},
-      {'title': 'Academy', 'desc': 'Learn & grow', 'icon': Uicons.book, 'route': AppConstants.mawingaAcademyRoute},
-      {'title': 'My Store', 'desc': approved ? 'Digital store' : 'Locked', 'icon': Uicons.shop, 'route': AppConstants.mawingaStoreRoute},
-      {'title': 'Invite', 'desc': 'Refer & earn', 'icon': Uicons.user, 'route': AppConstants.mawingaReferralRoute},
-    ];
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'XERIN MAWINGA',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 2,
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Welcome, ${broker.firstName ?? 'Mawinga'}',
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Mawinga ID: ${broker.brokerCode}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    statusLabels[broker.status] ?? broker.status,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (approved && analytics != null) ...[
-            const SizedBox(height: 16),
-            _buildLevelCard(context, analytics, colorScheme),
-          ],
-          if (!approved) ...[
-            const SizedBox(height: 20),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Uicons.shieldCheck, color: colorScheme.primary, size: 24),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Complete identity verification to activate your Broker account.',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Products, promotion opportunities, earnings and wallet access stay locked until an administrator approves your KYC.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colorScheme.onSurface.withValues(alpha: 0.5),
-                      height: 1.5,
-                    ),
-                  ),
-                  if (broker.statusReason != null) ...[
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        broker.statusReason!,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.red.shade700,
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 14),
-                  ElevatedButton(
-                    onPressed: () => context.push(AppConstants.brokerKycRoute),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('Open KYC Verification'),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          if (approved && analytics != null) ...[
-            const SizedBox(height: 20),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.4,
-              children: [
-                _metricCard(context, 'Referral Clicks',
-                    analytics.totalClicks.toString(),
-                    '${analytics.uniqueVisitors} unique', colorScheme),
-                _metricCard(context, 'Attributed Orders',
-                    analytics.attributedOrders.toString(),
-                    '${analytics.conversionRate}% conversion', colorScheme),
-                _metricCard(context, 'Available Earnings',
-                    analytics.availableEarnings,
-                    '${analytics.pendingEarnings} pending', colorScheme),
-                _metricCard(context, 'Wallet',
-                    analytics.walletAvailable,
-                    '${analytics.walletPaidOut} paid out', colorScheme),
-              ],
-            ),
-          ],
-          const SizedBox(height: 20),
-          Text(
-            'Quick Actions',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 12),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 1.1,
-            children: quickActions.map((action) {
-              final isLocked = !approved && action['title'] != 'KYC';
-              return GestureDetector(
-                onTap: isLocked
-                    ? null
-                    : () => context.push(action['route'] as String),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isLocked
-                        ? colorScheme.onSurface.withValues(alpha: 0.03)
-                        : colorScheme.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isLocked
-                          ? colorScheme.onSurface.withValues(alpha: 0.08)
-                          : colorScheme.primary.withValues(alpha: 0.15),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            action['icon'] as IconData,
-                            size: 22,
-                            color: isLocked
-                                ? colorScheme.onSurface.withValues(alpha: 0.3)
-                                : colorScheme.primary,
-                          ),
-                          if (isLocked) ...[
-                            const SizedBox(width: 6),
-                            Icon(Uicons.lock, size: 14,
-                                color: colorScheme.onSurface.withValues(alpha: 0.3)),
-                          ],
-                        ],
-                      ),
-                      const Spacer(),
-                      Text(
-                        action['title'] as String,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: isLocked
-                              ? colorScheme.onSurface.withValues(alpha: 0.4)
-                              : colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        action['desc'] as String,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.onSurface.withValues(alpha: 0.4),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLevelCard(BuildContext context, BrokerAnalyticsOverviewModel analytics, ColorScheme cs) {
-    final totalSales = analytics.successfulSales;
-    final currentLevel = MawingaLevel.getLevelForSales(totalSales);
-    final nextLevel = MawingaLevel.getNextLevel(currentLevel);
-    final isMaxLevel = currentLevel.name == nextLevel.name;
-    final salesInLevel = totalSales - currentLevel.minSales;
-    final salesNeeded = isMaxLevel ? 0 : nextLevel.minSales - totalSales;
-    final levelRange = currentLevel.maxSales - currentLevel.minSales + 1;
-    final progress = isMaxLevel ? 1.0 : (salesInLevel / levelRange).clamp(0.0, 1.0);
-
-    final levelColors = {
-      'Starter': Colors.grey,
-      'Bronze': const Color(0xFFB45309),
-      'Silver': const Color(0xFF64748B),
-      'Gold': const Color(0xFFD97706),
-      'Platinum': const Color(0xFF7C3AED),
-    };
-    final levelColor = levelColors[currentLevel.name] ?? cs.primary;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: levelColor.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: levelColor.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: levelColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  currentLevel.name == 'Platinum' ? Uicons.star :
-                  currentLevel.name == 'Gold' ? Uicons.crown :
-                  currentLevel.name == 'Silver' ? Uicons.trophy :
-                  currentLevel.name == 'Bronze' ? Uicons.medal :
-                  Uicons.seedling,
-                  size: 24,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${currentLevel.name} Mawinga',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: cs.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$totalSales total sales',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: cs.onSurface.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: cs.onSurface.withValues(alpha: 0.08),
-              valueColor: AlwaysStoppedAnimation(levelColor),
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (!isMaxLevel)
-            Text(
-              'You need $salesNeeded more sales to reach ${nextLevel.name}',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: cs.onSurface.withValues(alpha: 0.5),
-              ),
-            )
-          else
-            Text(
-              'Maximum level reached! You are a top Mawinga.',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: levelColor,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _metricCard(BuildContext context, String title, String value,
-      String subtitle, ColorScheme colorScheme) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.08)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: colorScheme.onSurface.withValues(alpha: 0.5),
-            ),
-          ),
-          const SizedBox(height: 6),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                color: colorScheme.onSurface,
-              ),
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: colorScheme.onSurface.withValues(alpha: 0.4),
-            ),
-          ),
-        ],
       ),
     );
   }

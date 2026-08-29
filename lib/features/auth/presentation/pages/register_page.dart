@@ -1,10 +1,12 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
+import '../../../../core/storage/token_storage.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../widgets/auth_logo.dart';
@@ -431,6 +433,30 @@ class _RegisterPageState extends State<RegisterPage>
                                     Icon(Uicons.angleRight,
                                         size: 14, color: colorScheme.primary),
                                   ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Center(
+                            child: TextButton.icon(
+                              onPressed: () async {
+                                await GetIt.instance<TokenStorage>().setGuest();
+                                if (context.mounted) {
+                                  context.go(AppConstants.homeRoute);
+                                }
+                              },
+                              icon: Icon(Uicons.user,
+                                  size: 18,
+                                  color: colorScheme.onSurface
+                                      .withValues(alpha: 0.6)),
+                              label: Text(
+                                'Continue as Guest',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSurface
+                                      .withValues(alpha: 0.6),
                                 ),
                               ),
                             ),

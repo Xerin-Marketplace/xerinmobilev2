@@ -1,3 +1,5 @@
+import '../../features/auth/data/models/user_model.dart';
+
 /// General app constants.
 abstract class AppConstants {
   static const String appName = 'XerinMarket';
@@ -156,11 +158,64 @@ abstract class AppConstants {
   /// Returns the dashboard route based on the user's role.
   /// Admin → admin dashboard, Seller → seller dashboard,
   /// Broker → broker dashboard, default → customer home.
-  static String dashboardRouteForUser(user) {
+  static String dashboardRouteForUser(UserModel? user) {
     if (user == null) return homeRoute;
     if (user.isAdmin) return adminDashboardRoute;
     if (user.isSeller) return sellerDashboardRoute;
     if (user.isBroker) return brokerDashboardRoute;
     return homeRoute;
   }
+
+  /// Routes that require authentication (guests are blocked).
+  static const authRequiredRoutes = [
+    checkoutRoute,
+    paymentProcessingRoute,
+    orderHistoryRoute,
+    orderDetailRoute,
+    invoiceRoute,
+    orderTrackingRoute,
+    profileInfoRoute,
+    addressesRoute,
+    paymentMethodsRoute,
+    notificationsRoute,
+    notificationPreferencesRoute,
+    settingsRoute,
+    helpSupportRoute,
+    supportTicketsRoute,
+    supportTicketDetailRoute,
+    supportTicketCreateRoute,
+    deliveryVerificationRoute,
+    customerSecurityRoute,
+    customerReviewsRoute,
+    sellerDashboardRoute,
+    brokerDashboardRoute,
+    adminDashboardRoute,
+  ];
+
+  /// Routes that guests are allowed to browse.
+  static const guestAllowedRoutes = [
+    homeRoute,
+    categoriesRoute,
+    categoryProductsRoute,
+    exploreProductsRoute,
+    productDetailRoute,
+    searchRoute,
+    storesRoute,
+    promotionsRoute,
+    trendingRoute,
+    forYouRoute,
+    flashDealsRoute,
+    recentlyViewedRoute,
+    newArrivalsRoute,
+    topRatedRoute,
+    bestSellersRoute,
+    buyFromAbroadRoute,
+    shopTanzaniaRoute,
+    wholesaleRoute,
+    productReviewsRoute,
+    productQaRoute,
+    couponsRoute,
+    termsRoute,
+    privacyRoute,
+  ];
 }

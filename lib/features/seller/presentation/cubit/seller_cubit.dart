@@ -24,6 +24,7 @@ class SellerDashboardLoaded extends SellerState {
   final SellerOrderSummaryModel? orderSummary;
   final SellerInventorySummaryModel? inventorySummary;
   final SellerWalletModel? wallet;
+  final String? storeLogoUrl;
   final bool refreshing;
 
   const SellerDashboardLoaded({
@@ -32,6 +33,7 @@ class SellerDashboardLoaded extends SellerState {
     this.orderSummary,
     this.inventorySummary,
     this.wallet,
+    this.storeLogoUrl,
     this.refreshing = false,
   });
 
@@ -41,6 +43,7 @@ class SellerDashboardLoaded extends SellerState {
     SellerOrderSummaryModel? orderSummary,
     SellerInventorySummaryModel? inventorySummary,
     SellerWalletModel? wallet,
+    String? storeLogoUrl,
     bool? refreshing,
   }) {
     return SellerDashboardLoaded(
@@ -49,6 +52,7 @@ class SellerDashboardLoaded extends SellerState {
       orderSummary: orderSummary ?? this.orderSummary,
       inventorySummary: inventorySummary ?? this.inventorySummary,
       wallet: wallet ?? this.wallet,
+      storeLogoUrl: storeLogoUrl ?? this.storeLogoUrl,
       refreshing: refreshing ?? this.refreshing,
     );
   }
@@ -185,6 +189,13 @@ class SellerFulfillmentDetailLoaded extends SellerState {
   const SellerFulfillmentDetailLoaded(this.fulfillment, this.tracking);
 }
 
+class SellerReturnsLoaded extends SellerState {
+  final List<RefundModel> refunds;
+  final String? filterStatus;
+
+  const SellerReturnsLoaded(this.refunds, [this.filterStatus]);
+}
+
 // ─── Cubit ───
 class SellerCubit extends Cubit<SellerState> {
   final SellerRemoteDataSource _dataSource;
@@ -219,6 +230,7 @@ class SellerCubit extends Cubit<SellerState> {
       final orderSummary = await _safeCall(() => _dataSource.getOrderSummary());
       final inventorySummary = await _safeCall(() => _dataSource.getInventorySummary());
       final wallet = await _safeCall(() => _dataSource.getWallet());
+      final store = await _safeCall(() => _dataSource.getStore());
 
       emit(SellerDashboardLoaded(
         seller: seller,
@@ -226,6 +238,7 @@ class SellerCubit extends Cubit<SellerState> {
         orderSummary: orderSummary,
         inventorySummary: inventorySummary,
         wallet: wallet,
+        storeLogoUrl: store?['logo_url'] as String?,
         refreshing: refresh,
       ));
     } catch (e) {
@@ -809,5 +822,68 @@ class SellerCubit extends Cubit<SellerState> {
       _logger.e('SellerCubit.loadFulfillmentDetail error: $e');
       emit(SellerError(e.toString()));
     }
+  }
+
+  // ─── Returns / Refunds ───
+  Future<void> loadReturns({String? status}) async {
+    emit(const SellerLoading());
+    try {
+      final refunds = await _dataSource.getRefunds(status: status);
+      emit(SellerReturnsLoaded(refunds, status));
+    } catch (e) {
+      _logger.e('SellerCubit.loadReturns error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> reviewReturn(String refundId, {String? note}) async {
+    try {
+      await _dataSource.reviewRefund(refundId, note: note);
+      emit(const SellerActionSuccess('Return request reviewed'));
+      _reloadReturns();
+    } catch (e) {
+      _logger.e('SellerCubit.reviewReturn error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> approveReturn(String refundId, {String? note}) async {
+    try {
+      await _dataSource.approveRefund(refundId, note: note);
+      emit(const SellerActionSuccess('Return approved'));
+      _reloadReturns();
+    } catch (e) {
+      _logger.e('SellerCubit.approveReturn error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> rejectReturn(String refundId, {String? note}) async {
+    try {
+      await _dataSource.rejectRefund(refundId, note: note);
+      emit(const SellerActionSuccess('Return rejected'));
+      _reloadReturns();
+    } catch (e) {
+      _logger.e('SellerCubit.rejectReturn error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> processReturn(String refundId, {String? providerReference, String? note}) async {
+    try {
+      await _dataSource.processRefund(refundId, providerReference: providerReference, note: note);
+      emit(const SellerActionSuccess('Return processed'));
+      _reloadReturns();
+    } catch (e) {
+      _logger.e('SellerCubit.processReturn error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  void _reloadReturns() {
+    final current = state;
+    String? status;
+    if (current is SellerReturnsLoaded) status = current.filterStatus;
+    loadReturns(status: status);
   }
 }

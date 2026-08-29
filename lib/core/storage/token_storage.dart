@@ -9,6 +9,7 @@ class TokenStorage {
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userDataKey = 'user_data';
+  static const String _isGuestKey = 'is_guest';
 
   final SharedPreferences _prefs;
   final FlutterSecureStorage _secureStorage;
@@ -16,12 +17,14 @@ class TokenStorage {
   String? _accessToken;
   String? _refreshToken;
   UserModel? _currentUser;
+  bool _isGuest = false;
 
   TokenStorage(this._prefs, this._secureStorage);
 
   Future<void> initialize() async {
     _accessToken = await _secureStorage.read(key: _accessTokenKey);
     _refreshToken = await _secureStorage.read(key: _refreshTokenKey);
+    _isGuest = _prefs.getBool(_isGuestKey) ?? false;
     await _loadUserData();
 
     // One-time migration path from legacy shared preferences token storage.
@@ -54,7 +57,18 @@ class TokenStorage {
   String? get refreshToken => _refreshToken;
   bool get hasTokens => accessToken != null;
   bool get isAuthenticated => accessToken != null;
+  bool get isGuest => _isGuest;
   UserModel? get currentUser => _currentUser;
+
+  Future<void> setGuest() async {
+    _isGuest = true;
+    await _prefs.setBool(_isGuestKey, true);
+  }
+
+  Future<void> clearGuest() async {
+    _isGuest = false;
+    await _prefs.remove(_isGuestKey);
+  }
 
   Future<void> saveTokens({
     required String accessToken,
@@ -94,6 +108,7 @@ class TokenStorage {
     _accessToken = null;
     _refreshToken = null;
     _currentUser = null;
+    _isGuest = false;
 
     await _secureStorage.delete(key: _accessTokenKey);
     await _secureStorage.delete(key: _refreshTokenKey);
@@ -102,5 +117,6 @@ class TokenStorage {
     await _prefs.remove(_accessTokenKey);
     await _prefs.remove(_refreshTokenKey);
     await _prefs.remove(_userDataKey);
+    await _prefs.remove(_isGuestKey);
   }
 }
