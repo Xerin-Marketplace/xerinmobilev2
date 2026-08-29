@@ -1,11 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../shared/widgets/app_icon.dart';
 import '../../../../core/theme/uicons.dart';
+import '../cubit/customer_cubit.dart';
+import '../cubit/customer_state.dart';
+import '../../data/models/payment_method_model.dart';
 
-class PaymentMethodsPage extends StatelessWidget {
+class PaymentMethodsPage extends StatefulWidget {
   const PaymentMethodsPage({super.key});
+
+  @override
+  State<PaymentMethodsPage> createState() => _PaymentMethodsPageState();
+}
+
+class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CustomerCubit>().refreshPaymentMethods();
+    });
+  }
 
   static const _paymentOptions = [
     _PaymentOption(
@@ -24,14 +41,6 @@ class PaymentMethodsPage extends StatelessWidget {
       color: Color(0xFFF59E0B),
       providers: ['azampay'],
     ),
-    _PaymentOption(
-      id: 'cash_on_delivery',
-      label: 'Cash on Delivery',
-      subtitle: 'Pay when the logistics company delivers your local order.',
-      icon: Uicons.shippingFast,
-      color: Color(0xFF3B82F6),
-      providers: [],
-    ),
   ];
 
   @override
@@ -46,13 +55,24 @@ class PaymentMethodsPage extends StatelessWidget {
           children: [
             _buildHeader(context, colorScheme),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 80),
-                itemCount: _paymentOptions.length,
-                itemBuilder: (context, index) {
-                  final option = _paymentOptions[index];
-                  return _buildOptionCard(option, colorScheme, isDark);
-                },
+              child: RefreshIndicator(
+                onRefresh: () => context.read<CustomerCubit>().refreshPaymentMethods(),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 80),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSavedMethodsSection(colorScheme, isDark),
+                      const SizedBox(height: 28),
+                      Text('Available Payment Options',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colorScheme.onSurface.withValues(alpha: 0.4)),
+                      ),
+                      const SizedBox(height: 14),
+                      ..._paymentOptions.map((option) => _buildOptionCard(option, colorScheme, isDark)),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
@@ -77,6 +97,166 @@ class PaymentMethodsPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildSavedMethodsSection(ColorScheme cs, bool isDark) {
+    return BlocBuilder<CustomerCubit, CustomerState>(
+      builder: (context, state) {
+        if (state is CustomerLoading) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(40),
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            ),
+          );
+        }
+
+        final methods = state is CustomerLoaded ? state.paymentMethods : <PaymentMethodModel>[];
+
+        if (methods.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: cs.primary.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: cs.primary.withValues(alpha: 0.12)),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 56, height: 56,
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(Uicons.creditCard, color: cs.primary, size: 26),
+                ),
+                const SizedBox(height: 16),
+                Text('No saved payment methods',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: cs.onSurface),
+                ),
+                const SizedBox(height: 6),
+                Text('Your saved payment methods will appear here.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Saved Methods',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: cs.onSurface.withValues(alpha: 0.4)),
+                ),
+                Text('${methods.length}',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: cs.primary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ...methods.map((m) => _buildSavedMethodCard(m, cs, isDark)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSavedMethodCard(PaymentMethodModel method, ColorScheme cs, bool isDark) {
+    final color = _typeColor(method.type);
+    final icon = _typeIcon(method.type);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF252525) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 3))],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(method.typeLabel,
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: cs.onSurface),
+                      ),
+                      if (method.isDefault) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: cs.primary.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text('Default',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: cs.primary),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(method.provider,
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(method.maskedNumber,
+                    style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4), fontFamily: 'monospace'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _typeColor(String type) {
+    switch (type) {
+      case 'mobile_money':
+        return const Color(0xFF22C55E);
+      case 'card':
+        return const Color(0xFFF59E0B);
+      case 'bank':
+        return const Color(0xFF3B82F6);
+      default:
+        return const Color(0xFF8B5CF6);
+    }
+  }
+
+  IconData _typeIcon(String type) {
+    switch (type) {
+      case 'mobile_money':
+        return Uicons.mobile;
+      case 'card':
+        return Uicons.creditCard;
+      case 'bank':
+        return Uicons.accountBalanceWallet;
+      default:
+        return Uicons.creditCard;
+    }
   }
 
   Widget _buildOptionCard(_PaymentOption option, ColorScheme cs, bool isDark) {

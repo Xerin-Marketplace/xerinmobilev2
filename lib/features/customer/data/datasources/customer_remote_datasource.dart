@@ -173,12 +173,21 @@ class CustomerRemoteDataSource {
   }
 
   Future<List<PaymentMethodModel>> getPaymentMethods() async {
-    return [];
+    try {
+      final response = await _client.get(ApiConstants.paymentMethods);
+      final data = response.data;
+      final list = data is List ? data : (data is Map ? (data['results'] as List? ?? data['payment_methods'] as List? ?? []) : []);
+      return list.map((e) => PaymentMethodModel.fromJson(e as Map<String, dynamic>)).toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
   }
 
   Future<OrderModel> createOrder({
     required String shippingAddressId,
-    required String shippingRateId,
+    String? shippingRateId,
+    String? deliveryQuoteId,
+    String deliveryMode = 'local',
     String? couponCode,
     String? promotionCode,
     String? notes,
@@ -188,7 +197,9 @@ class CustomerRemoteDataSource {
         ApiConstants.orders,
         data: {
           'shipping_address_id': shippingAddressId,
-          'shipping_rate_id': shippingRateId,
+          if (shippingRateId != null) 'shipping_rate_id': shippingRateId,
+          if (deliveryQuoteId != null) 'delivery_quote_id': deliveryQuoteId,
+          'delivery_mode': deliveryMode,
           if (couponCode != null) 'coupon_code': couponCode,
           if (promotionCode != null) 'promotion_code': promotionCode,
           if (notes != null) 'notes': notes,
@@ -342,6 +353,81 @@ class CustomerRemoteDataSource {
         list = [];
       }
       return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> detectDeliveryMode(String addressId) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.shippingDetectDeliveryMode,
+        data: {'address_id': addressId},
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> getEligibleLogistics({
+    required String addressId,
+    required String deliveryMode,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.shippingEligibleLogistics,
+        data: {
+          'address_id': addressId,
+          'delivery_mode': deliveryMode,
+        },
+        queryParameters: {'page': 1, 'page_size': 100},
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> getMultiSellerPricing({
+    required String addressId,
+    required String logisticsCompanyId,
+    required String deliveryMode,
+    String? methodId,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.shippingMultiSellerPricing,
+        data: {
+          'address_id': addressId,
+          'logistics_company_id': logisticsCompanyId,
+          'delivery_mode': deliveryMode,
+          if (methodId != null) 'method_id': methodId,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> freezeDeliveryQuote({
+    required String addressId,
+    required String logisticsCompanyId,
+    required String rateId,
+    required String deliveryMode,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.shippingCheckoutDeliveryQuote,
+        data: {
+          'address_id': addressId,
+          'logistics_company_id': logisticsCompanyId,
+          'rate_id': rateId,
+          'delivery_mode': deliveryMode,
+        },
+      );
+      return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       throw ServerException(_client.getErrorMessage(e));
     }

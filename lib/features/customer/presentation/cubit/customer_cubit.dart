@@ -285,7 +285,9 @@ class CustomerCubit extends Cubit<CustomerState> {
 
   Future<bool> placeOrder({
     required String shippingAddressId,
-    required String shippingRateId,
+    String? shippingRateId,
+    String? deliveryQuoteId,
+    String deliveryMode = 'local',
     String? couponCode,
     String? promotionCode,
     String? notes,
@@ -295,6 +297,8 @@ class CustomerCubit extends Cubit<CustomerState> {
       final order = await _dataSource.createOrder(
         shippingAddressId: shippingAddressId,
         shippingRateId: shippingRateId,
+        deliveryQuoteId: deliveryQuoteId,
+        deliveryMode: deliveryMode,
         couponCode: couponCode,
         promotionCode: promotionCode,
         notes: notes,
@@ -318,7 +322,9 @@ class CustomerCubit extends Cubit<CustomerState> {
 
   Future<PaymentModel?> placeOrderAndPay({
     required String shippingAddressId,
-    required String shippingRateId,
+    String? shippingRateId,
+    String? deliveryQuoteId,
+    String deliveryMode = 'local',
     String? couponCode,
     String? promotionCode,
     String? notes,
@@ -333,6 +339,8 @@ class CustomerCubit extends Cubit<CustomerState> {
       final order = await _dataSource.createOrder(
         shippingAddressId: shippingAddressId,
         shippingRateId: shippingRateId,
+        deliveryQuoteId: deliveryQuoteId,
+        deliveryMode: deliveryMode,
         couponCode: couponCode,
         promotionCode: promotionCode,
         notes: notes,
@@ -571,6 +579,80 @@ class CustomerCubit extends Cubit<CustomerState> {
     } catch (e) {
       _logger.e('❌ Shipping quotes error: $e');
       return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> detectDeliveryMode(String addressId) async {
+    try {
+      return await _dataSource.detectDeliveryMode(addressId);
+    } on ServerException catch (e) {
+      _logger.e('❌ Detect delivery mode failed: ${e.message}');
+      return null;
+    } catch (e) {
+      _logger.e('❌ Detect delivery mode error: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getEligibleLogistics({
+    required String addressId,
+    required String deliveryMode,
+  }) async {
+    try {
+      return await _dataSource.getEligibleLogistics(
+        addressId: addressId,
+        deliveryMode: deliveryMode,
+      );
+    } on ServerException catch (e) {
+      _logger.e('❌ Eligible logistics failed: ${e.message}');
+      return null;
+    } catch (e) {
+      _logger.e('❌ Eligible logistics error: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getMultiSellerPricing({
+    required String addressId,
+    required String logisticsCompanyId,
+    required String deliveryMode,
+    String? methodId,
+  }) async {
+    try {
+      return await _dataSource.getMultiSellerPricing(
+        addressId: addressId,
+        logisticsCompanyId: logisticsCompanyId,
+        deliveryMode: deliveryMode,
+        methodId: methodId,
+      );
+    } on ServerException catch (e) {
+      _logger.e('❌ Multi-seller pricing failed: ${e.message}');
+      return null;
+    } catch (e) {
+      _logger.e('❌ Multi-seller pricing error: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> freezeDeliveryQuote({
+    required String addressId,
+    required String logisticsCompanyId,
+    required String rateId,
+    required String deliveryMode,
+  }) async {
+    try {
+      return await _dataSource.freezeDeliveryQuote(
+        addressId: addressId,
+        logisticsCompanyId: logisticsCompanyId,
+        rateId: rateId,
+        deliveryMode: deliveryMode,
+      );
+    } on ServerException catch (e) {
+      _logger.e('❌ Freeze delivery quote failed: ${e.message}');
+      return null;
+    } catch (e) {
+      _logger.e('❌ Freeze delivery quote error: $e');
+      return null;
     }
   }
 
