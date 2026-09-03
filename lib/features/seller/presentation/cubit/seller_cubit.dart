@@ -196,6 +196,31 @@ class SellerReturnsLoaded extends SellerState {
   const SellerReturnsLoaded(this.refunds, [this.filterStatus]);
 }
 
+class SellerOrderPackageLoaded extends SellerState {
+  final SellerOrderPackageModel package;
+  const SellerOrderPackageLoaded(this.package);
+}
+
+class SellerOrderPackageSaved extends SellerState {
+  final SellerOrderPackageModel package;
+  const SellerOrderPackageSaved(this.package);
+}
+
+class SellerFulfillmentReadinessLoaded extends SellerState {
+  final SellerFulfillmentReadinessModel readiness;
+  const SellerFulfillmentReadinessLoaded(this.readiness);
+}
+
+class SellerHandoverLoaded extends SellerState {
+  final ShipmentHandoverModel handover;
+  const SellerHandoverLoaded(this.handover);
+}
+
+class SellerHandoverConfirmed extends SellerState {
+  final ShipmentHandoverModel handover;
+  const SellerHandoverConfirmed(this.handover);
+}
+
 // ─── Cubit ───
 class SellerCubit extends Cubit<SellerState> {
   final SellerRemoteDataSource _dataSource;
@@ -885,5 +910,111 @@ class SellerCubit extends Cubit<SellerState> {
     String? status;
     if (current is SellerReturnsLoaded) status = current.filterStatus;
     loadReturns(status: status);
+  }
+
+  // ─── Seller Order Package ───
+
+  Future<void> loadOrderPackage(String sellerOrderId) async {
+    emit(const SellerLoading());
+    try {
+      final package = await _dataSource.getOrderPackage(sellerOrderId);
+      emit(SellerOrderPackageLoaded(package));
+    } catch (e) {
+      _logger.e('SellerCubit.loadOrderPackage error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> saveOrderPackage(
+    String sellerOrderId, {
+    required int packageCount,
+    required bool isReady,
+    double? weightKg,
+    double? lengthCm,
+    double? widthCm,
+    double? heightCm,
+    String? notes,
+    List<String>? attachmentUrls,
+  }) async {
+    emit(const SellerLoading());
+    try {
+      final package = await _dataSource.saveOrderPackage(
+        sellerOrderId,
+        packageCount: packageCount,
+        isReady: isReady,
+        weightKg: weightKg,
+        lengthCm: lengthCm,
+        widthCm: widthCm,
+        heightCm: heightCm,
+        notes: notes,
+        attachmentUrls: attachmentUrls,
+      );
+      emit(SellerOrderPackageSaved(package));
+    } catch (e) {
+      _logger.e('SellerCubit.saveOrderPackage error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> uploadPackageEvidence(
+    String sellerOrderId,
+    String filePath, {
+    String? fileName,
+  }) async {
+    try {
+      await _dataSource.uploadPackageEvidence(
+        sellerOrderId,
+        filePath,
+        fileName: fileName,
+      );
+      emit(const SellerActionSuccess('Evidence uploaded'));
+    } catch (e) {
+      _logger.e('SellerCubit.uploadPackageEvidence error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  // ─── Fulfillment Readiness ───
+
+  Future<void> loadFulfillmentReadiness(String sellerOrderId) async {
+    emit(const SellerLoading());
+    try {
+      final readiness =
+          await _dataSource.getFulfillmentReadiness(sellerOrderId);
+      emit(SellerFulfillmentReadinessLoaded(readiness));
+    } catch (e) {
+      _logger.e('SellerCubit.loadFulfillmentReadiness error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  // ─── Shipment Handover ───
+
+  Future<void> loadHandover(String sellerOrderId) async {
+    emit(const SellerLoading());
+    try {
+      final handover = await _dataSource.getHandover(sellerOrderId);
+      emit(SellerHandoverLoaded(handover));
+    } catch (e) {
+      _logger.e('SellerCubit.loadHandover error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> confirmHandover(
+    String sellerOrderId, {
+    String? notes,
+  }) async {
+    emit(const SellerLoading());
+    try {
+      final handover = await _dataSource.confirmHandover(
+        sellerOrderId,
+        notes: notes,
+      );
+      emit(SellerHandoverConfirmed(handover));
+    } catch (e) {
+      _logger.e('SellerCubit.confirmHandover error: $e');
+      emit(SellerError(e.toString()));
+    }
   }
 }

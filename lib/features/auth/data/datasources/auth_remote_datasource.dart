@@ -253,4 +253,116 @@ class AuthRemoteDataSource {
       throw ServerException(_client.getErrorMessage(e));
     }
   }
+
+  // ─── Role Selection & Onboarding ───
+
+  Future<Map<String, dynamic>> selectInitialRole({
+    required String role,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.selectInitialRole,
+        data: {'selected_role': role},
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> onboardSeller({
+    required String businessName,
+    required List<String> businessCategoryIds,
+    String? businessDescription,
+    String? businessCountry,
+    String? businessRegion,
+    String? businessCity,
+    String? businessDistrict,
+    String? businessWard,
+    String? businessAddress,
+    String? productDescription,
+    String? yearsInBusiness,
+    String? websiteUrl,
+    String? contactEmail,
+    String? contactPhone,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.onboardSeller,
+        data: {
+          'business_name': businessName,
+          'business_category_ids': businessCategoryIds,
+          'agreement_accepted': true,
+          if (businessDescription != null) 'business_description': businessDescription,
+          if (businessCountry != null) 'business_country': businessCountry,
+          if (businessRegion != null) 'business_region': businessRegion,
+          if (businessCity != null) 'business_city': businessCity,
+          if (businessDistrict != null) 'business_district': businessDistrict,
+          if (businessWard != null) 'business_ward': businessWard,
+          if (businessAddress != null) 'business_address': businessAddress,
+          if (productDescription != null) 'product_description': productDescription,
+          if (yearsInBusiness != null) 'years_in_business': yearsInBusiness,
+          if (websiteUrl != null) 'website_url': websiteUrl,
+          if (contactEmail != null) 'contact_email': contactEmail,
+          if (contactPhone != null) 'contact_phone': contactPhone,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> onboardBroker({
+    required String country,
+    required String region,
+    required String city,
+    String? district,
+    String? ward,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.onboardBroker,
+        data: {
+          'country': country,
+          'region': region,
+          'city': city,
+          if (district != null) 'district': district,
+          if (ward != null) 'ward': ward,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<void> resendVerification({required String identifier}) async {
+    try {
+      await _client.post(
+        ApiConstants.resendVerification,
+        data: {'identifier': identifier},
+      );
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyAccountOtp({
+    required String identifier,
+    required String otpCode,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.verifyAccountOtp,
+        data: {
+          'identifier': identifier,
+          'otp_code': otpCode,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
 }

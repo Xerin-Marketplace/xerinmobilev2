@@ -1,9 +1,12 @@
 import 'package:equatable/equatable.dart';
 
 import '../../data/models/address_model.dart';
+import '../../data/models/escrow_model.dart';
 import '../../data/models/notification_model.dart';
 import '../../data/models/order_model.dart';
 import '../../data/models/payment_method_model.dart';
+import '../../data/models/protection_claim_model.dart';
+import '../../data/models/xerin_express_option_model.dart';
 
 abstract class CustomerState extends Equatable {
   const CustomerState();
@@ -133,4 +136,69 @@ class PaymentStatusUpdated extends CustomerState {
   const PaymentStatusUpdated({required this.paymentId, required this.status});
   @override
   List<Object?> get props => [paymentId, status];
+}
+
+// =========================
+// ESCROW & PROTECTION STATES
+// =========================
+
+class EscrowLoaded extends CustomerState {
+  final EscrowSummary escrow;
+  const EscrowLoaded({required this.escrow});
+  @override
+  List<Object?> get props => [escrow];
+}
+
+class EscrowItemAccepted extends CustomerState {
+  final EscrowSummary escrow;
+  final String orderItemId;
+  const EscrowItemAccepted({required this.escrow, required this.orderItemId});
+  @override
+  List<Object?> get props => [escrow, orderItemId];
+}
+
+class ProtectionClaimsLoaded extends CustomerState {
+  final List<ProtectionClaim> claims;
+  const ProtectionClaimsLoaded({required this.claims});
+  @override
+  List<Object?> get props => [claims];
+}
+
+class ProtectionClaimCreated extends CustomerState {
+  final ProtectionClaim claim;
+  const ProtectionClaimCreated({required this.claim});
+  @override
+  List<Object?> get props => [claim];
+}
+
+class OrderSellerMessagesLoaded extends CustomerState {
+  final List<Map<String, dynamic>> messages;
+  const OrderSellerMessagesLoaded({required this.messages});
+  @override
+  List<Object?> get props => [messages];
+}
+
+class OrderSellerMessageSent extends CustomerState {
+  final Map<String, dynamic> message;
+  const OrderSellerMessageSent({required this.message});
+  @override
+  List<Object?> get props => [message];
+}
+
+// =========================
+// XERIN EXPRESS CHECKOUT STATES
+// =========================
+
+class XerinExpressOptionsLoaded extends CustomerState {
+  final List<XerinExpressOption> options;
+  const XerinExpressOptionsLoaded({required this.options});
+  @override
+  List<Object?> get props => [options];
+}
+
+class CheckoutConfigLoaded extends CustomerState {
+  final Map<String, dynamic> config;
+  const CheckoutConfigLoaded({required this.config});
+  @override
+  List<Object?> get props => [config];
 }

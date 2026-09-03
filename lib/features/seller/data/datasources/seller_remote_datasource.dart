@@ -798,4 +798,101 @@ class SellerRemoteDataSource {
       throw ServerException(_client.getErrorMessage(e));
     }
   }
+
+  // ─── Seller Order Package ───
+  Future<SellerOrderPackageModel> getOrderPackage(String id) async {
+    try {
+      final response = await _client.get(ApiConstants.sellerOrderPackage(id));
+      return SellerOrderPackageModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<SellerOrderPackageModel> saveOrderPackage(
+    String id, {
+    required int packageCount,
+    required bool isReady,
+    double? weightKg,
+    double? lengthCm,
+    double? widthCm,
+    double? heightCm,
+    String? notes,
+    List<String>? attachmentUrls,
+  }) async {
+    try {
+      final response = await _client.put(
+        ApiConstants.sellerOrderPackage(id),
+        data: {
+          'package_count': packageCount,
+          'is_ready': isReady,
+          if (weightKg != null) 'weight_kg': weightKg,
+          if (lengthCm != null) 'length_cm': lengthCm,
+          if (widthCm != null) 'width_cm': widthCm,
+          if (heightCm != null) 'height_cm': heightCm,
+          if (notes != null) 'notes': notes,
+          if (attachmentUrls != null) 'attachment_urls': attachmentUrls,
+        },
+      );
+      return SellerOrderPackageModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> uploadPackageEvidence(
+    String id,
+    String filePath, {
+    String? fileName,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath, filename: fileName),
+      });
+      final response = await _client.post(
+        ApiConstants.sellerOrderPackageEvidenceUpload(id),
+        data: formData,
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // ─── Fulfillment Readiness ───
+  Future<SellerFulfillmentReadinessModel> getFulfillmentReadiness(String id) async {
+    try {
+      final response = await _client.get(ApiConstants.sellerOrderReadiness(id));
+      return SellerFulfillmentReadinessModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // ─── Shipment Handover ───
+  Future<ShipmentHandoverModel> getHandover(String id) async {
+    try {
+      final response = await _client.get(ApiConstants.sellerOrderHandover(id));
+      return ShipmentHandoverModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<ShipmentHandoverModel> confirmHandover(
+    String id, {
+    String? notes,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.sellerOrderHandoverConfirm(id),
+        data: {if (notes != null) 'notes': notes},
+      );
+      return ShipmentHandoverModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
 }

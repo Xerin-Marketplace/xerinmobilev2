@@ -117,3 +117,63 @@ class AuthNeedsVerification extends AuthState {
 class AuthLoggedOut extends AuthState {
   const AuthLoggedOut();
 }
+
+class RoleSelectionSuccess extends AuthState {
+  final String selectedRole;
+  final bool completed;
+  final UserModel? user;
+
+  const RoleSelectionSuccess({
+    required this.selectedRole,
+    required this.completed,
+    this.user,
+  });
+
+  @override
+  List<Object?> get props => [selectedRole, completed, user];
+}
+
+class SellerOnboardingSuccess extends AuthState {
+  final String? sellerId;
+  final String? sellerStatus;
+  final UserModel? user;
+
+  const SellerOnboardingSuccess({
+    this.sellerId,
+    this.sellerStatus,
+    this.user,
+  });
+
+  @override
+  List<Object?> get props => [sellerId, sellerStatus, user];
+}
+
+class BrokerOnboardingSuccess extends AuthState {
+  final String? brokerId;
+  final String? brokerCode;
+  final String? brokerStatus;
+  final UserModel? user;
+
+  const BrokerOnboardingSuccess({
+    this.brokerId,
+    this.brokerCode,
+    this.brokerStatus,
+    this.user,
+  });
+
+  @override
+  List<Object?> get props => [brokerId, brokerCode, brokerStatus, user];
+}
+
+class AccountVerificationSent extends AuthState {
+  final String identifier;
+
+  const AccountVerificationSent({required this.identifier});
+
+  @override
+  List<Object?> get props => [identifier];
+}
+
+class AccountVerified extends AuthState {
+  const AccountVerified();
+}

@@ -28,6 +28,11 @@ abstract class ApiConstants {
   static const String forgotPassword = '/auth/forgot-password';
   static const String resetPassword = '/auth/reset-password';
   static const String changePassword = '/auth/change-password';
+  static const String onboardSeller = '/auth/onboard-seller';
+  static const String onboardBroker = '/auth/onboard-broker';
+  static const String selectInitialRole = '/auth/select-initial-role';
+  static const String resendVerification = '/auth/resend-verification';
+  static const String verifyAccountOtp = '/auth/verify-account-otp';
 
   // User endpoints
   static const String myProfile = '/users/me';
@@ -159,6 +164,13 @@ abstract class ApiConstants {
   static String orderInvoice(String id) => '/orders/$id/invoice.pdf';
   static String orderReceipt(String id) => '/orders/$id/receipt.pdf';
   static String orderRef(String orderNumber) => '/orders/ref/$orderNumber';
+  static String orderAcceptEscrowItem(String orderId, String orderItemId) =>
+      '/orders/$orderId/accept-items/$orderItemId';
+  static String orderProtectionClaims(String orderId) =>
+      '/orders/$orderId/protection-claims';
+  static String orderSellerOrderMessages(
+          String orderId, String sellerOrderId) =>
+      '/orders/$orderId/seller-orders/$sellerOrderId/messages';
 
   // Payment endpoints
   static const String paymentsInitiate = '/payments/initiate';
@@ -284,6 +296,11 @@ abstract class ApiConstants {
   static String sellerOrderMessages(String id) => '/seller/orders/$id/messages';
   static String sellerOrderPackage(String id) => '/seller/orders/$id/package';
   static String sellerOrderReadiness(String id) => '/seller/orders/$id/fulfillment-readiness';
+  static String sellerOrderPackageEvidenceUpload(String id) =>
+      '/seller/orders/$id/package/evidence-upload';
+  static String sellerOrderHandover(String id) => '/seller/orders/$id/handover';
+  static String sellerOrderHandoverConfirm(String id) =>
+      '/seller/orders/$id/handover/confirm';
 
   // Seller Inventory endpoints (prefix /seller/inventory)
   static const String sellerInventory = '/seller/inventory';
@@ -364,6 +381,7 @@ abstract class ApiConstants {
   static const String shippingEligibleLogistics = '/shipping/eligible-logistics';
   static const String shippingMultiSellerPricing = '/shipping/multi-seller-pricing';
   static const String shippingCheckoutDeliveryQuote = '/shipping/checkout-delivery-quote';
+  static const String shippingXerinExpressOptions = '/shipping/xerin-express-options';
   static const String myShipments = '/shipping/shipments/my';
   static const String sellerShipments = '/shipping/shipments/seller';
   static String shipmentById(String shipmentId) => '/shipping/shipments/$shipmentId';

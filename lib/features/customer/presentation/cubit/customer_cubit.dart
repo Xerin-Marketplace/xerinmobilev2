@@ -5,10 +5,13 @@ import '../../../../core/errors/exceptions.dart';
 import '../../data/datasources/customer_remote_datasource.dart';
 import '../../data/datasources/payment_remote_datasource.dart';
 import '../../data/models/address_model.dart';
+import '../../data/models/escrow_model.dart';
 import '../../data/models/notification_model.dart';
 import '../../data/models/order_model.dart';
 import '../../data/models/payment_method_model.dart';
 import '../../data/models/payment_model.dart';
+import '../../data/models/protection_claim_model.dart';
+import '../../data/models/xerin_express_option_model.dart';
 import 'customer_state.dart';
 
 class CustomerCubit extends Cubit<CustomerState> {
@@ -779,6 +782,163 @@ class CustomerCubit extends Cubit<CustomerState> {
     } catch (e) {
       emit(CustomerActionError('Failed to change password: $e'));
       return false;
+    }
+  }
+
+  // =========================
+  // ESCROW & PROTECTION CLAIMS
+  // =========================
+
+  Future<void> loadEscrowStatus(String orderId) async {
+    emit(const CustomerActionInProgress());
+    try {
+      final escrow = await _dataSource.getEscrowStatus(orderId);
+      final summary = EscrowSummary.fromJson(escrow);
+      _logger.i('✅ Escrow loaded for order $orderId: ${summary.status}');
+      emit(EscrowLoaded(escrow: summary));
+    } on ServerException catch (e) {
+      emit(CustomerActionError(e.message));
+    } catch (e) {
+      emit(CustomerActionError('Failed to load escrow status: $e'));
+    }
+  }
+
+  Future<void> acceptEscrowItem({
+    required String orderId,
+    required String orderItemId,
+    String? note,
+  }) async {
+    emit(const CustomerActionInProgress());
+    try {
+      final escrow = await _dataSource.acceptEscrowItem(
+        orderId: orderId,
+        orderItemId: orderItemId,
+        note: note,
+      );
+      _logger.i('✅ Escrow item accepted: $orderItemId');
+      emit(EscrowItemAccepted(escrow: escrow, orderItemId: orderItemId));
+    } on ServerException catch (e) {
+      emit(CustomerActionError(e.message));
+    } catch (e) {
+      emit(CustomerActionError('Failed to accept item: $e'));
+    }
+  }
+
+  Future<void> loadProtectionClaims(String orderId) async {
+    emit(const CustomerActionInProgress());
+    try {
+      final claims = await _dataSource.getProtectionClaims(orderId);
+      _logger.i('✅ Protection claims loaded: ${claims.length} for order $orderId');
+      emit(ProtectionClaimsLoaded(claims: claims));
+    } on ServerException catch (e) {
+      emit(CustomerActionError(e.message));
+    } catch (e) {
+      emit(CustomerActionError('Failed to load protection claims: $e'));
+    }
+  }
+
+  Future<void> createProtectionClaim({
+    required String orderId,
+    required String scope,
+    required String reason,
+    required String notes,
+    String? orderItemId,
+    String? whenNoticed,
+    bool? packageDamaged,
+    bool? productUsed,
+    List<String>? evidenceUrls,
+  }) async {
+    emit(const CustomerActionInProgress());
+    try {
+      final claim = await _dataSource.createProtectionClaim(
+        orderId: orderId,
+        scope: scope,
+        reason: reason,
+        notes: notes,
+        orderItemId: orderItemId,
+        whenNoticed: whenNoticed,
+        packageDamaged: packageDamaged,
+        productUsed: productUsed,
+        evidenceUrls: evidenceUrls,
+      );
+      _logger.i('✅ Protection claim created for order $orderId');
+      emit(ProtectionClaimCreated(claim: claim));
+    } on ServerException catch (e) {
+      emit(CustomerActionError(e.message));
+    } catch (e) {
+      emit(CustomerActionError('Failed to create protection claim: $e'));
+    }
+  }
+
+  Future<void> loadOrderSellerMessages({
+    required String orderId,
+    required String sellerOrderId,
+  }) async {
+    emit(const CustomerActionInProgress());
+    try {
+      final messages = await _dataSource.getOrderSellerMessages(
+        orderId: orderId,
+        sellerOrderId: sellerOrderId,
+      );
+      _logger.i('✅ Seller order messages loaded: ${messages.length}');
+      emit(OrderSellerMessagesLoaded(messages: messages));
+    } on ServerException catch (e) {
+      emit(CustomerActionError(e.message));
+    } catch (e) {
+      emit(CustomerActionError('Failed to load messages: $e'));
+    }
+  }
+
+  Future<void> sendOrderSellerMessage({
+    required String orderId,
+    required String sellerOrderId,
+    required String message,
+    List<String>? attachmentUrls,
+  }) async {
+    emit(const CustomerActionInProgress());
+    try {
+      final result = await _dataSource.sendOrderSellerMessage(
+        orderId: orderId,
+        sellerOrderId: sellerOrderId,
+        message: message,
+        attachmentUrls: attachmentUrls,
+      );
+      _logger.i('✅ Seller order message sent');
+      emit(OrderSellerMessageSent(message: result));
+    } on ServerException catch (e) {
+      emit(CustomerActionError(e.message));
+    } catch (e) {
+      emit(CustomerActionError('Failed to send message: $e'));
+    }
+  }
+
+  // =========================
+  // XERIN EXPRESS CHECKOUT
+  // =========================
+
+  Future<void> loadXerinExpressOptions(String addressId) async {
+    emit(const CustomerActionInProgress());
+    try {
+      final options = await _dataSource.getXerinExpressOptions(addressId);
+      _logger.i('✅ Xerin Express options loaded: ${options.length}');
+      emit(XerinExpressOptionsLoaded(options: options));
+    } on ServerException catch (e) {
+      emit(CustomerActionError(e.message));
+    } catch (e) {
+      emit(CustomerActionError('Failed to load Xerin Express options: $e'));
+    }
+  }
+
+  Future<void> loadCheckoutConfig() async {
+    emit(const CustomerActionInProgress());
+    try {
+      final config = await _dataSource.getCheckoutConfig();
+      _logger.i('✅ Checkout config loaded');
+      emit(CheckoutConfigLoaded(config: config));
+    } on ServerException catch (e) {
+      emit(CustomerActionError(e.message));
+    } catch (e) {
+      emit(CustomerActionError('Failed to load checkout config: $e'));
     }
   }
 }

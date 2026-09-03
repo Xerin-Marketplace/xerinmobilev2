@@ -333,4 +333,167 @@ class AuthCubit extends Cubit<AuthState> {
   void clearError() {
     if (state is AuthError) emit(const AuthInitial());
   }
+
+  // ─── Role Selection & Onboarding ───
+
+  Future<void> selectInitialRole({required String role}) async {
+    emit(const AuthLoading());
+    try {
+      final result = await _dataSource.selectInitialRole(role: role);
+      final selectedRole = result['selected_role']?.toString() ?? role;
+      final completed = result['completed'] as bool? ?? false;
+      final userJson = result['user'];
+      UserModel? user;
+      if (userJson is Map<String, dynamic>) {
+        user = UserModel.fromJson(userJson);
+        await _tokenStorage.saveUser(user);
+      }
+      _logger.i('✅ Role selected: $selectedRole (completed: $completed)');
+      emit(RoleSelectionSuccess(
+        selectedRole: selectedRole,
+        completed: completed,
+        user: user,
+      ));
+    } on ServerException catch (e) {
+      _logger.e('❌ Role selection error: ${e.message}');
+      emit(AuthError(message: e.message));
+    } catch (e) {
+      _logger.e('❌ Role selection unexpected error: $e');
+      emit(const AuthError(message: 'An unexpected error occurred'));
+    }
+  }
+
+  Future<void> onboardSeller({
+    required String businessName,
+    required List<String> businessCategoryIds,
+    String? businessDescription,
+    String? businessCountry,
+    String? businessRegion,
+    String? businessCity,
+    String? businessDistrict,
+    String? businessWard,
+    String? businessAddress,
+    String? productDescription,
+    String? yearsInBusiness,
+    String? websiteUrl,
+    String? contactEmail,
+    String? contactPhone,
+  }) async {
+    emit(const AuthLoading());
+    try {
+      final result = await _dataSource.onboardSeller(
+        businessName: businessName,
+        businessCategoryIds: businessCategoryIds,
+        businessDescription: businessDescription,
+        businessCountry: businessCountry,
+        businessRegion: businessRegion,
+        businessCity: businessCity,
+        businessDistrict: businessDistrict,
+        businessWard: businessWard,
+        businessAddress: businessAddress,
+        productDescription: productDescription,
+        yearsInBusiness: yearsInBusiness,
+        websiteUrl: websiteUrl,
+        contactEmail: contactEmail,
+        contactPhone: contactPhone,
+      );
+      final sellerId = result['seller_id']?.toString();
+      final sellerStatus = result['seller_status']?.toString();
+      final userJson = result['user'];
+      UserModel? user;
+      if (userJson is Map<String, dynamic>) {
+        user = UserModel.fromJson(userJson);
+        await _tokenStorage.saveUser(user);
+      }
+      _logger.i('✅ Seller onboarded: $sellerId (status: $sellerStatus)');
+      emit(SellerOnboardingSuccess(
+        sellerId: sellerId,
+        sellerStatus: sellerStatus,
+        user: user,
+      ));
+    } on ServerException catch (e) {
+      _logger.e('❌ Seller onboarding error: ${e.message}');
+      emit(AuthError(message: e.message));
+    } catch (e) {
+      _logger.e('❌ Seller onboarding unexpected error: $e');
+      emit(const AuthError(message: 'An unexpected error occurred'));
+    }
+  }
+
+  Future<void> onboardBroker({
+    required String country,
+    required String region,
+    required String city,
+    String? district,
+    String? ward,
+  }) async {
+    emit(const AuthLoading());
+    try {
+      final result = await _dataSource.onboardBroker(
+        country: country,
+        region: region,
+        city: city,
+        district: district,
+        ward: ward,
+      );
+      final brokerId = result['broker_id']?.toString();
+      final brokerCode = result['broker_code']?.toString();
+      final brokerStatus = result['broker_status']?.toString();
+      final userJson = result['user'];
+      UserModel? user;
+      if (userJson is Map<String, dynamic>) {
+        user = UserModel.fromJson(userJson);
+        await _tokenStorage.saveUser(user);
+      }
+      _logger.i('✅ Broker onboarded: $brokerId (code: $brokerCode)');
+      emit(BrokerOnboardingSuccess(
+        brokerId: brokerId,
+        brokerCode: brokerCode,
+        brokerStatus: brokerStatus,
+        user: user,
+      ));
+    } on ServerException catch (e) {
+      _logger.e('❌ Broker onboarding error: ${e.message}');
+      emit(AuthError(message: e.message));
+    } catch (e) {
+      _logger.e('❌ Broker onboarding unexpected error: $e');
+      emit(const AuthError(message: 'An unexpected error occurred'));
+    }
+  }
+
+  Future<void> resendVerification({required String identifier}) async {
+    emit(const AuthLoading());
+    try {
+      await _dataSource.resendVerification(identifier: identifier);
+      _logger.i('✅ Verification resent to $identifier');
+      emit(AccountVerificationSent(identifier: identifier));
+    } on ServerException catch (e) {
+      _logger.e('❌ Resend verification error: ${e.message}');
+      emit(AuthError(message: e.message));
+    } catch (e) {
+      _logger.e('❌ Resend verification unexpected error: $e');
+      emit(const AuthError(message: 'An unexpected error occurred'));
+    }
+  }
+
+  Future<void> verifyAccountOtp({
+    required String identifier,
+    required String otpCode,
+  }) async {
+    emit(const AuthLoading());
+    try {
+      await _dataSource.verifyAccountOtp(
+        identifier: identifier,
+        otpCode: otpCode,
+      );
+      _logger.i('✅ Account verified for $identifier');
+      emit(const AccountVerified());
+    } on ServerException catch (e) {
+      _logger.e('❌ Verify account OTP error: ${e.message}');
+      emit(AuthError(message: e.message));
+    } catch (e) {
+      _logger.e('❌ Verify account OTP unexpected error: $e');
+      emit(const AuthError(message: 'An unexpected error occurred'));
+    }
+  }
 }

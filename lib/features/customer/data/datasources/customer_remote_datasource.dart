@@ -4,9 +4,12 @@ import '../../../../config/constants/api_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/address_model.dart';
+import '../models/escrow_model.dart';
 import '../models/notification_model.dart';
 import '../models/order_model.dart';
 import '../models/payment_method_model.dart';
+import '../models/protection_claim_model.dart';
+import '../models/xerin_express_option_model.dart';
 
 class CustomerRemoteDataSource {
   final ApiClient _client;
@@ -555,6 +558,150 @@ class CustomerRemoteDataSource {
   Future<Map<String, dynamic>> getShipmentById(String shipmentId) async {
     try {
       final response = await _client.get(ApiConstants.shipmentById(shipmentId));
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // XERIN EXPRESS CHECKOUT
+  // =========================
+
+  Future<List<XerinExpressOption>> getXerinExpressOptions(
+      String addressId) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.shippingXerinExpressOptions,
+        data: {
+          'address_id': addressId,
+          'delivery_mode': 'local',
+        },
+      );
+      final data = response.data;
+      final list = data is List ? data : [];
+      return list
+          .map((e) => XerinExpressOption.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> getCheckoutConfig() async {
+    try {
+      final response = await _client.get(ApiConstants.shippingCheckoutConfig);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // ESCROW ITEM ACCEPTANCE
+  // =========================
+
+  Future<EscrowSummary> acceptEscrowItem({
+    required String orderId,
+    required String orderItemId,
+    String? note,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.orderAcceptEscrowItem(orderId, orderItemId),
+        data: {if (note != null) 'note': note},
+      );
+      return EscrowSummary.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // PROTECTION CLAIMS
+  // =========================
+
+  Future<List<ProtectionClaim>> getProtectionClaims(String orderId) async {
+    try {
+      final response = await _client.get(
+        ApiConstants.orderProtectionClaims(orderId),
+      );
+      final data = response.data;
+      final list = data is List ? data : [];
+      return list
+          .map((e) => ProtectionClaim.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<ProtectionClaim> createProtectionClaim({
+    required String orderId,
+    required String scope,
+    required String reason,
+    required String notes,
+    String? orderItemId,
+    String? whenNoticed,
+    bool? packageDamaged,
+    bool? productUsed,
+    List<String>? evidenceUrls,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.orderProtectionClaims(orderId),
+        data: {
+          'scope': scope,
+          'reason': reason,
+          'notes': notes,
+          if (orderItemId != null) 'order_item_id': orderItemId,
+          if (whenNoticed != null) 'when_noticed': whenNoticed,
+          if (packageDamaged != null) 'package_damaged': packageDamaged,
+          if (productUsed != null) 'product_used': productUsed,
+          if (evidenceUrls != null) 'evidence_urls': evidenceUrls,
+        },
+      );
+      return ProtectionClaim.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // =========================
+  // CUSTOMER-SELLER ORDER MESSAGES
+  // =========================
+
+  Future<List<Map<String, dynamic>>> getOrderSellerMessages({
+    required String orderId,
+    required String sellerOrderId,
+  }) async {
+    try {
+      final response = await _client.get(
+        ApiConstants.orderSellerOrderMessages(orderId, sellerOrderId),
+      );
+      final data = response.data;
+      final list = data is List ? data : [];
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> sendOrderSellerMessage({
+    required String orderId,
+    required String sellerOrderId,
+    required String message,
+    List<String>? attachmentUrls,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.orderSellerOrderMessages(orderId, sellerOrderId),
+        data: {
+          'message': message,
+          'is_internal': false,
+          if (attachmentUrls != null) 'attachment_urls': attachmentUrls,
+        },
+      );
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       throw ServerException(_client.getErrorMessage(e));

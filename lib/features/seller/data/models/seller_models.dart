@@ -1201,3 +1201,233 @@ class RefundModel {
     );
   }
 }
+
+// ─── Seller Order Package ───
+class SellerOrderPackageAttachment {
+  final String id;
+  final String fileUrl;
+  final String? fileName;
+  final String? mimeType;
+  final String createdAt;
+
+  const SellerOrderPackageAttachment({
+    required this.id,
+    required this.fileUrl,
+    this.fileName,
+    this.mimeType,
+    required this.createdAt,
+  });
+
+  factory SellerOrderPackageAttachment.fromJson(Map<String, dynamic> json) {
+    return SellerOrderPackageAttachment(
+      id: _ps(json['id']),
+      fileUrl: _ps(json['file_url']),
+      fileName: json['file_name'] as String?,
+      mimeType: json['mime_type'] as String?,
+      createdAt: _ps(json['created_at']),
+    );
+  }
+}
+
+class SellerOrderPackageModel {
+  final String id;
+  final String sellerOrderId;
+  final double? weightKg;
+  final double? lengthCm;
+  final double? widthCm;
+  final double? heightCm;
+  final int packageCount;
+  final String? notes;
+  final bool isReady;
+  final String? preparedAt;
+  final List<SellerOrderPackageAttachment> attachments;
+  final String createdAt;
+  final String? updatedAt;
+
+  const SellerOrderPackageModel({
+    required this.id,
+    required this.sellerOrderId,
+    this.weightKg,
+    this.lengthCm,
+    this.widthCm,
+    this.heightCm,
+    required this.packageCount,
+    this.notes,
+    required this.isReady,
+    this.preparedAt,
+    this.attachments = const [],
+    required this.createdAt,
+    this.updatedAt,
+  });
+
+  factory SellerOrderPackageModel.fromJson(Map<String, dynamic> json) {
+    return SellerOrderPackageModel(
+      id: _ps(json['id']),
+      sellerOrderId: _ps(json['seller_order_id']),
+      weightKg: json['weight_kg'] != null ? _pd(json['weight_kg']) : null,
+      lengthCm: json['length_cm'] != null ? _pd(json['length_cm']) : null,
+      widthCm: json['width_cm'] != null ? _pd(json['width_cm']) : null,
+      heightCm: json['height_cm'] != null ? _pd(json['height_cm']) : null,
+      packageCount: _pi(json['package_count']),
+      notes: json['notes'] as String?,
+      isReady: json['is_ready'] as bool? ?? false,
+      preparedAt: json['prepared_at'] as String?,
+      attachments: (json['attachments'] as List?)
+              ?.map((e) =>
+                  SellerOrderPackageAttachment.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      createdAt: _ps(json['created_at']),
+      updatedAt: json['updated_at'] as String?,
+    );
+  }
+}
+
+// ─── Shipment Handover ───
+class ShipmentHandoverModel {
+  final String id;
+  final String shipmentId;
+  final String sellerOrderId;
+  final String sellerId;
+  final String? logisticsCompanyId;
+  final String status;
+  final String? courierArrivedAt;
+  final String? courierArrivedById;
+  final double? courierArrivalLatitude;
+  final double? courierArrivalLongitude;
+  final String? courierArrivalNotes;
+  final String? sellerConfirmedAt;
+  final String? sellerConfirmedById;
+  final String? sellerConfirmationNotes;
+  final String createdAt;
+  final String? updatedAt;
+
+  const ShipmentHandoverModel({
+    required this.id,
+    required this.shipmentId,
+    required this.sellerOrderId,
+    required this.sellerId,
+    this.logisticsCompanyId,
+    required this.status,
+    this.courierArrivedAt,
+    this.courierArrivedById,
+    this.courierArrivalLatitude,
+    this.courierArrivalLongitude,
+    this.courierArrivalNotes,
+    this.sellerConfirmedAt,
+    this.sellerConfirmedById,
+    this.sellerConfirmationNotes,
+    required this.createdAt,
+    this.updatedAt,
+  });
+
+  factory ShipmentHandoverModel.fromJson(Map<String, dynamic> json) {
+    return ShipmentHandoverModel(
+      id: _ps(json['id']),
+      shipmentId: _ps(json['shipment_id']),
+      sellerOrderId: _ps(json['seller_order_id']),
+      sellerId: _ps(json['seller_id']),
+      logisticsCompanyId: json['logistics_company_id']?.toString(),
+      status: _ps(json['status']),
+      courierArrivedAt: json['courier_arrived_at'] as String?,
+      courierArrivedById: json['courier_arrived_by_id']?.toString(),
+      courierArrivalLatitude:
+          json['courier_arrival_latitude'] != null ? _pd(json['courier_arrival_latitude']) : null,
+      courierArrivalLongitude:
+          json['courier_arrival_longitude'] != null ? _pd(json['courier_arrival_longitude']) : null,
+      courierArrivalNotes: json['courier_arrival_notes'] as String?,
+      sellerConfirmedAt: json['seller_confirmed_at'] as String?,
+      sellerConfirmedById: json['seller_confirmed_by_id']?.toString(),
+      sellerConfirmationNotes: json['seller_confirmation_notes'] as String?,
+      createdAt: _ps(json['created_at']),
+      updatedAt: json['updated_at'] as String?,
+    );
+  }
+}
+
+// ─── Fulfillment Readiness ───
+class FulfillmentReadinessCheck {
+  final String code;
+  final String label;
+  final bool ready;
+  final bool blocking;
+  final String? detail;
+
+  const FulfillmentReadinessCheck({
+    required this.code,
+    required this.label,
+    required this.ready,
+    required this.blocking,
+    this.detail,
+  });
+
+  factory FulfillmentReadinessCheck.fromJson(Map<String, dynamic> json) {
+    return FulfillmentReadinessCheck(
+      code: _ps(json['code']),
+      label: _ps(json['label']),
+      ready: json['ready'] as bool? ?? false,
+      blocking: json['blocking'] as bool? ?? false,
+      detail: json['detail'] as String?,
+    );
+  }
+}
+
+class SellerFulfillmentReadinessModel {
+  final String sellerOrderId;
+  final bool readyToShip;
+  final String? pickupLocationId;
+  final String? packageId;
+  final List<String> packageIds;
+  final int packageGroups;
+  final int physicalPackageCount;
+  final double totalWeightKg;
+  final String? shipmentId;
+  final List<String> blockers;
+  final List<String> warnings;
+  final List<FulfillmentReadinessCheck> checks;
+
+  const SellerFulfillmentReadinessModel({
+    required this.sellerOrderId,
+    required this.readyToShip,
+    this.pickupLocationId,
+    this.packageId,
+    this.packageIds = const [],
+    this.packageGroups = 0,
+    this.physicalPackageCount = 0,
+    this.totalWeightKg = 0.0,
+    this.shipmentId,
+    this.blockers = const [],
+    this.warnings = const [],
+    this.checks = const [],
+  });
+
+  factory SellerFulfillmentReadinessModel.fromJson(Map<String, dynamic> json) {
+    return SellerFulfillmentReadinessModel(
+      sellerOrderId: _ps(json['seller_order_id']),
+      readyToShip: json['ready_to_ship'] as bool? ?? false,
+      pickupLocationId: json['pickup_location_id']?.toString(),
+      packageId: json['package_id']?.toString(),
+      packageIds: (json['package_ids'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      packageGroups: _pi(json['package_groups']),
+      physicalPackageCount: _pi(json['physical_package_count']),
+      totalWeightKg: _pd(json['total_weight_kg']),
+      shipmentId: json['shipment_id']?.toString(),
+      blockers: (json['blockers'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      warnings: (json['warnings'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      checks: (json['checks'] as List?)
+              ?.map((e) =>
+                  FulfillmentReadinessCheck.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+    );
+  }
+}

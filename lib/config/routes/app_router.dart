@@ -15,6 +15,7 @@ import '../../features/auth/presentation/pages/seller_register_page.dart';
 import '../../features/auth/presentation/pages/broker_register_page.dart';
 import '../../features/auth/presentation/pages/registration_success_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
+import '../../features/auth/presentation/pages/role_selection_page.dart';
 import '../../features/auth/presentation/pages/sign_in_page.dart';
 import '../../features/auth/presentation/pages/verify_otp_page.dart';
 import '../../features/customer/presentation/pages/addresses_page.dart';
@@ -127,6 +128,7 @@ class AppRouter {
     '/verify-otp',
     '/forgot-password',
     '/reset-password',
+    '/role-selection',
     '/terms',
     '/privacy',
     '/registration-success',
@@ -219,6 +221,10 @@ class AppRouter {
             email: extra?['email'] as String? ?? '',
           );
         },
+      ),
+      GoRoute(
+        path: AppConstants.roleSelectionRoute,
+        builder: (context, state) => const RoleSelectionPage(),
       ),
       GoRoute(
         path: AppConstants.lockRoute,
