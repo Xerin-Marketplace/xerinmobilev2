@@ -62,7 +62,7 @@ class _InvoicePageState extends State<InvoicePage> {
   Future<pw.Document> _generatePdf() async {
     final pdf = pw.Document();
 
-    final logoBytes = await rootBundle.load('assets/logo/logo.png');
+    final logoBytes = await rootBundle.load('assets/logo/mark.png');
     final logoImage = pw.MemoryImage(logoBytes.buffer.asUint8List());
 
     final bgBytes = await rootBundle.load(
@@ -558,7 +558,7 @@ class _InvoicePageState extends State<InvoicePage> {
                 ],
               ),
               Image.asset(
-                'assets/logo/logo.png',
+                'assets/logo/mark.png',
                 width: 48,
                 height: 48,
                 errorBuilder: (_, __, ___) => Icon(Uicons.shop, color: Colors.white, size: 36),

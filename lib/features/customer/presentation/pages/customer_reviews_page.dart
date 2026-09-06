@@ -15,7 +15,6 @@ class _CustomerReviewsPageState extends State<CustomerReviewsPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fadeAnimation;
-  late final Animation<double> _scaleAnimation;
   late final Animation<Offset> _slideAnimation;
 
   @override
@@ -23,14 +22,11 @@ class _CustomerReviewsPageState extends State<CustomerReviewsPage>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 600),
     );
     _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
+      begin: const Offset(0, 0.2),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.forward();
@@ -54,147 +50,32 @@ class _CustomerReviewsPageState extends State<CustomerReviewsPage>
           children: [
             _buildHeader(cs),
             Expanded(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: FadeTransition(
-                          opacity: _fadeAnimation,
-                          child: Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  const Color(0xFFF59E0B).withValues(alpha: 0.12),
-                                  const Color(0xFFF59E0B).withValues(alpha: 0.04),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(32),
-                              border: Border.all(
-                                color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Icon(Uicons.star, size: 52,
-                                  color: const Color(0xFFF59E0B).withValues(alpha: 0.7),
-                                ),
-                                Positioned(
-                                  bottom: 22,
-                                  right: 22,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF22C55E),
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(color: cs.surface, width: 2),
-                                    ),
-                                    child: const Text('Soon',
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.white,
-                                        height: 1.1,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 8),
+                        _buildStatsCard(cs, isDark),
+                        const SizedBox(height: 24),
+                        Text('Review Highlights',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: cs.onSurface),
                         ),
-                      ),
-                      const SizedBox(height: 28),
-                      SlideTransition(
-                        position: _slideAnimation,
-                        child: FadeTransition(
-                          opacity: _fadeAnimation,
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Uicons.clock, size: 14,
-                                      color: const Color(0xFFF59E0B).withValues(alpha: 0.8),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text('Coming Soon',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w800,
-                                        color: const Color(0xFFF59E0B).withValues(alpha: 0.9),
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              Text('My Reviews',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: cs.onSurface,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'We\'re building a personalized review hub where you can track all your product reviews, ratings, and seller responses in one place.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  height: 1.6,
-                                  color: cs.onSurface.withValues(alpha: 0.5),
-                                ),
-                              ),
-                              const SizedBox(height: 32),
-                              _buildFeaturePreview(cs, isDark),
-                              const SizedBox(height: 32),
-                              SizedBox(
-                                width: double.infinity,
-                                height: 50,
-                                child: OutlinedButton.icon(
-                                  onPressed: () {
-                                    if (context.canPop()) {
-                                      context.pop();
-                                    } else {
-                                      context.go('/');
-                                    }
-                                  },
-                                  icon: const Icon(Uicons.angleLeft, size: 18),
-                                  label: const Text('Back to Profile',
-                                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: cs.primary,
-                                    side: BorderSide(color: cs.primary.withValues(alpha: 0.3), width: 1.5),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                        const SizedBox(height: 4),
+                        Text('Your latest product reviews and ratings',
+                          style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.45)),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        _buildReviewItems(cs, isDark),
+                        const SizedBox(height: 24),
+                        _buildFeaturePreview(cs, isDark),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -223,6 +104,140 @@ class _CustomerReviewsPageState extends State<CustomerReviewsPage>
           const SizedBox(width: 16),
           Text('My Reviews',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: cs.onSurface),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsCard(ColorScheme cs, bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFFF59E0B).withValues(alpha: 0.1),
+            const Color(0xFFF59E0B).withValues(alpha: 0.02),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('5.0',
+                style: TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFFF59E0B),
+                  height: 1.0,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ...List.generate(5, (i) => Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Icon(Uicons.star, size: 14, color: const Color(0xFFF59E0B)),
+                  )),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text('Average Rating',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildStatItem(cs, '0', 'Reviews'),
+              Container(width: 1, height: 30, color: cs.onSurface.withValues(alpha: 0.08)),
+              _buildStatItem(cs, '0', 'Rated 5★'),
+              Container(width: 1, height: 30, color: cs.onSurface.withValues(alpha: 0.08)),
+              _buildStatItem(cs, '0', 'Pending'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(ColorScheme cs, String value, String label) {
+    return Column(
+      children: [
+        Text(value,
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: cs.onSurface),
+        ),
+        const SizedBox(height: 2),
+        Text(label,
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: cs.onSurface.withValues(alpha: 0.45)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReviewItems(ColorScheme cs, bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03), blurRadius: 12, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 64, height: 64,
+            decoration: BoxDecoration(
+              color: cs.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(Uicons.star, size: 28, color: cs.primary.withValues(alpha: 0.4)),
+          ),
+          const SizedBox(height: 16),
+          Text('No Reviews Yet',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface),
+          ),
+          const SizedBox(height: 6),
+          Text('After receiving your orders, you can rate and review products here.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, height: 1.5, color: cs.onSurface.withValues(alpha: 0.45)),
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            height: 46,
+            child: ElevatedButton(
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/');
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: cs.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
+              ),
+              child: const Text('Browse Products to Review',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+            ),
           ),
         ],
       ),

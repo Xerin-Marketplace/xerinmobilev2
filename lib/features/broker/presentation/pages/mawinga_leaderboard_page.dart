@@ -79,11 +79,11 @@ class _MawingaLeaderboardPageState extends State<MawingaLeaderboardPage>
               child: Icon(Uicons.trophy, size: 36, color: cs.primary),
             ),
             const SizedBox(height: 20),
-            Text('Leaderboard Coming Soon',
+            Text('Mawinga Leaderboard',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface)),
             const SizedBox(height: 8),
             Text(
-              'The Mawinga leaderboard will showcase top sellers by period. Compete for bonuses, smartphones, and recognition.',
+              'Compete for bonuses, smartphones, and recognition. Top sellers are showcased here by period.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.5)),
             ),

@@ -49,7 +49,7 @@ class _ShopTanzaniaPageState extends State<ShopTanzaniaPage> {
                   children: [
                     _buildHeroBanner(cs),
                     const SizedBox(height: 24),
-                    _buildComingSoonBanner(cs),
+                    _buildInfoBanner(cs),
                     const SizedBox(height: 24),
                     Text('Product Categories',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: cs.onSurface),
@@ -227,39 +227,39 @@ class _ShopTanzaniaPageState extends State<ShopTanzaniaPage> {
     );
   }
 
-  Widget _buildComingSoonBanner(ColorScheme cs) {
+  Widget _buildInfoBanner(ColorScheme cs) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
+        color: const Color(0xFF1EB53A).withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.2)),
+        border: Border.all(color: const Color(0xFF1EB53A).withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [
           Container(
             width: 40, height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B),
+              color: const Color(0xFF1EB53A),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Uicons.bellRing, color: Colors.white, size: 18),
+            child: const Icon(Uicons.checkCircle, color: Colors.white, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Coming Soon',
+                Text('Export Ready',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFFF59E0B),
+                    color: const Color(0xFF1EB53A),
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text('We\'re onboarding Tanzanian sellers for export. Stay tuned!',
+                Text('Authentic Tanzanian products available for worldwide shipping!',
                   style: TextStyle(
                     fontSize: 12,
                     color: cs.onSurface.withValues(alpha: 0.6),

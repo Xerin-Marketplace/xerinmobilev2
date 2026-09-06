@@ -24,6 +24,7 @@ class ReviewRemoteDataSource {
 
   Future<ReviewModel> createProductReview({
     required String productId,
+    required String orderItemId,
     required int rating,
     String? title,
     String? comment,
@@ -32,6 +33,7 @@ class ReviewRemoteDataSource {
       final response = await _client.post(
         ApiConstants.productReviews(productId),
         data: {
+          'order_item_id': orderItemId,
           'rating': rating,
           if (title != null) 'title': title,
           if (comment != null) 'comment': comment,

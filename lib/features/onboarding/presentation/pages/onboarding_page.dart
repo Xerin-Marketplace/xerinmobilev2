@@ -91,12 +91,6 @@ class _OnboardingPageState extends State<OnboardingPage>
     if (mounted) context.go(AppConstants.signInRoute);
   }
 
-  Future<void> _onContinueAsGuest() async {
-    await _markOnboardingSeen();
-    await GetIt.instance<TokenStorage>().setGuest();
-    if (mounted) context.go(AppConstants.homeRoute);
-  }
-
   Future<void> _markOnboardingSeen() async {
     final prefs = sl<SharedPreferences>();
     await prefs.setBool('has_seen_onboarding', true);
@@ -307,26 +301,6 @@ class _OnboardingPageState extends State<OnboardingPage>
                 ),
               ),
             ),
-            if (isLast) ...[
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: TextButton(
-                  onPressed: _onContinueAsGuest,
-                  style: TextButton.styleFrom(
-                    foregroundColor: colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                  child: Text(
-                    'Continue as Guest',
-                    style: GoogleFonts.nunito(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
       ),

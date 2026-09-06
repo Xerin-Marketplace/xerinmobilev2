@@ -155,10 +155,10 @@ class ComingSoonPage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B),
+                      color: const Color(0xFF22C55E),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Text('COMING SOON',
+                    child: const Text('AVAILABLE NOW',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -182,7 +182,7 @@ class ComingSoonPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('What to Expect',
+        Text('Feature Highlights',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: cs.onSurface),
         ),
         const SizedBox(height: 16),
@@ -235,8 +235,8 @@ class ComingSoonPage extends StatelessWidget {
       height: 52,
       child: ElevatedButton.icon(
         onPressed: () {},
-        icon: const Icon(Uicons.bell, size: 20),
-        label: const Text('Notify Me When Available',
+        icon: const Icon(Uicons.arrowRight, size: 20),
+        label: const Text('Explore Now',
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
         style: ElevatedButton.styleFrom(

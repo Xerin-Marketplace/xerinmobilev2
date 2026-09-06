@@ -391,29 +391,6 @@ class _SignInPageState extends State<SignInPage>
                       ],
                     ),
                     const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: TextButton(
-                        onPressed: () async {
-                          await GetIt.instance<TokenStorage>().setGuest();
-                          if (context.mounted) {
-                            context.go(AppConstants.homeRoute);
-                          }
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          foregroundColor: colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
-                        child: const Text(
-                          'Continue as Guest',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
                   ],
                 ),
               ),

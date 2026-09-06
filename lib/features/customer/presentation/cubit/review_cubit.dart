@@ -86,6 +86,7 @@ class ReviewCubit extends Cubit<ReviewState> {
 
   Future<void> submitProductReview({
     required String productId,
+    required String orderItemId,
     required int rating,
     String? title,
     String? comment,
@@ -94,6 +95,7 @@ class ReviewCubit extends Cubit<ReviewState> {
     try {
       final review = await _dataSource.createProductReview(
         productId: productId,
+        orderItemId: orderItemId,
         rating: rating,
         title: title,
         comment: comment,

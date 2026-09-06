@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../../config/constants/app_constants.dart';
 import '../../../../../config/di/service_locator.dart';
 import '../../../../../core/theme/app_theme_cubit.dart';
+import '../../../../../core/utils/haptic_utils.dart';
 import '../../../data/models/category_model.dart';
 import '../../../data/models/product_model.dart';
 import '../../../data/models/recommendation_model.dart';
@@ -16,6 +17,7 @@ import '../../cubit/home_state.dart';
 import '../../cubit/recommendation_cubit.dart';
 import '../../cubit/recommendation_state.dart';
 import '../../../../../core/theme/uicons.dart';
+import '../../../../../shared/widgets/shimmer_skeleton.dart';
 import '../../../../../shared/widgets/voice_search_button.dart';
 
 class CustomerHomePage extends StatefulWidget {
@@ -36,6 +38,10 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   final _heroController = PageController();
   int _currentHeroPage = 0;
   Timer? _heroTimer;
+
+  String _selectedMarket = 'all';
+  List<ProductModel> _marketProducts = [];
+  bool _isLoadingMarket = false;
 
   static const _heroSlides = [
     {
@@ -102,54 +108,80 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
             : <ProductModel>[];
         final isLoadingData = homeState is HomeLoading;
 
+        if (homeState is HomeLoaded && _marketProducts.isEmpty && !_isLoadingMarket) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _loadMarketProducts('all');
+          });
+        }
+
+        if (isLoadingData && homeState is! HomeLoaded) {
+          return const SafeArea(child: HomeLoadingSkeleton());
+        }
+
         return SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                _buildHeader(colorScheme, userName: user?.fullName ?? 'Guest'),
-                const SizedBox(height: 20),
-                _buildSearchBar(colorScheme),
-                const SizedBox(height: 16),
-                _buildPromoBanner(colorScheme),
-                const SizedBox(height: 24),
-                if (_searchQuery.isNotEmpty) ...[
-                  _buildSearchResults(colorScheme, searchResults, isLoadingData),
+          child: RefreshIndicator(
+            onRefresh: () async {
+              HapticUtils.light();
+              await context.read<HomeCubit>().loadHome();
+              await context.read<RecommendationCubit>().loadAll();
+            },
+            color: colorScheme.primary,
+            strokeWidth: 2.5,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 16),
+                  _buildHeader(colorScheme, userName: user?.fullName ?? 'Guest'),
+                  const SizedBox(height: 20),
+                  _buildSearchBar(colorScheme),
+                  const SizedBox(height: 16),
+                  _buildPromoBanner(colorScheme),
                   const SizedBox(height: 24),
-                ] else ...[
-                  _buildSectionTitle(
-                    'Explore Categories',
-                    'See all',
-                    colorScheme,
-                    onActionTap: () => context.push(AppConstants.categoriesRoute),
-                  ),
-                  const SizedBox(height: 14),
-                  _buildCategories(colorScheme, categories, isLoadingData),
-                  const SizedBox(height: 28),
-                  _buildMarketplaceSections(colorScheme, featured, isLoadingData),
-                  const SizedBox(height: 24),
-                  _buildSectionTitle(
-                    'Featured',
-                    'See all',
-                    colorScheme,
-                    icon: Uicons.star,
-                    onActionTap: () => context.push(AppConstants.exploreProductsRoute),
-                  ),
-                  const SizedBox(height: 14),
-                  _buildFeaturedProducts(colorScheme, featured, isLoadingData),
-                  const SizedBox(height: 24),
-                  _buildFlashSaleBanner(colorScheme),
-                  const SizedBox(height: 24),
-                  _buildDiscoverMix(colorScheme, featured),
-                  const SizedBox(height: 24),
-                  _buildRecommendationSections(colorScheme),
-                  const SizedBox(height: 24),
-                  _buildBecomeSellerCard(colorScheme),
-                  const SizedBox(height: 24),
+                  if (_searchQuery.isNotEmpty) ...[
+                    _buildSearchResults(colorScheme, searchResults, isLoadingData),
+                    const SizedBox(height: 24),
+                  ] else ...[
+                    _buildSectionTitle(
+                      'Explore Categories',
+                      'See all',
+                      colorScheme,
+                      onActionTap: () {
+                        HapticUtils.selection();
+                        context.push(AppConstants.categoriesRoute);
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    _buildCategories(colorScheme, categories, isLoadingData),
+                    const SizedBox(height: 28),
+                    _buildMarketplaceSections(colorScheme, featured, isLoadingData),
+                    const SizedBox(height: 24),
+                    _buildSectionTitle(
+                      'Featured',
+                      'See all',
+                      colorScheme,
+                      icon: Uicons.star,
+                      onActionTap: () {
+                        HapticUtils.selection();
+                        context.push(AppConstants.exploreProductsRoute);
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    _buildFeaturedProducts(colorScheme, featured, isLoadingData),
+                    const SizedBox(height: 24),
+                    _buildFlashSaleBanner(colorScheme),
+                    const SizedBox(height: 24),
+                    _buildDiscoverMix(colorScheme, featured),
+                    const SizedBox(height: 24),
+                    _buildRecommendationSections(colorScheme),
+                    const SizedBox(height: 24),
+                    _buildBecomeSellerCard(colorScheme),
+                    const SizedBox(height: 24),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         );
@@ -1483,352 +1515,450 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     );
   }
 
+  static const _markets = [
+    {'key': 'all', 'label': 'All', 'icon': Uicons.grid, 'color': Color(0xFF6C5CE7)},
+    {'key': 'local', 'label': 'Local TZ', 'icon': Uicons.storeAlt, 'color': Color(0xFF3B82F6)},
+    {'key': 'dubai', 'label': 'Dubai', 'icon': Uicons.globe, 'color': Color(0xFF00A651)},
+    {'key': 'china', 'label': 'China', 'icon': Uicons.globe, 'color': Color(0xFFE53935)},
+    {'key': 'turkey', 'label': 'Turkey', 'icon': Uicons.globe, 'color': Color(0xFFE91E63)},
+    {'key': 'wholesale', 'label': 'Wholesale', 'icon': Uicons.warehouse, 'color': Color(0xFFF59E0B)},
+  ];
+
+  void _loadMarketProducts(String marketKey) {
+    setState(() {
+      _selectedMarket = marketKey;
+      _isLoadingMarket = true;
+    });
+
+    if (marketKey == 'wholesale') {
+      context.push(AppConstants.wholesaleRoute);
+      setState(() {
+        _selectedMarket = 'all';
+        _isLoadingMarket = false;
+      });
+      return;
+    }
+
+    final homeState = context.read<HomeCubit>().state;
+    final allProducts = homeState is HomeLoaded ? homeState.featuredProducts : <ProductModel>[];
+
+    List<ProductModel> filtered;
+    switch (marketKey) {
+      case 'all':
+        filtered = allProducts;
+        break;
+      case 'local':
+        filtered = allProducts.where((p) {
+          final c = (p.country ?? '').toLowerCase();
+          return c.isEmpty || c.contains('tanzania') || c.contains('tz');
+        }).toList();
+        break;
+      case 'dubai':
+        filtered = allProducts.where((p) {
+          final c = (p.country ?? '').toLowerCase();
+          return c.contains('dubai') || c.contains('uae') || c.contains('emirates');
+        }).toList();
+        break;
+      case 'china':
+        filtered = allProducts.where((p) {
+          final c = (p.country ?? '').toLowerCase();
+          return c.contains('china') || c.contains('cn');
+        }).toList();
+        break;
+      case 'turkey':
+        filtered = allProducts.where((p) {
+          final c = (p.country ?? '').toLowerCase();
+          return c.contains('turkey') || c.contains('türkiye') || c.contains('tr');
+        }).toList();
+        break;
+      default:
+        filtered = allProducts;
+    }
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(() {
+          _marketProducts = filtered;
+          _isLoadingMarket = false;
+        });
+      }
+    });
+  }
+
   Widget _buildMarketplaceSections(ColorScheme cs, List<ProductModel> featured, bool isLoading) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildMarketplaceBanner(
+        _buildSectionTitle(
+          'Shop by Market',
+          'See all',
           cs,
-          title: 'Local Tanzania',
-          subtitle: 'Shop from local sellers across the country',
           icon: Uicons.storeAlt,
-          gradientColors: [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)],
-          badgeText: 'AVAILABLE NOW',
-          badgeColor: const Color(0xFF22C55E),
-          isAvailable: true,
-          onTap: () => context.push(AppConstants.exploreProductsRoute),
+          onActionTap: () => context.push(AppConstants.exploreProductsRoute),
         ),
         const SizedBox(height: 14),
-        _buildMarketplaceProducts(cs, featured, isLoading),
-        const SizedBox(height: 28),
-        _buildMarketplaceBanner(
-          cs,
-          title: 'Buy from Abroad',
-          subtitle: 'Dubai • China • Turkey • India & more',
-          icon: Uicons.globe,
-          gradientColors: [const Color(0xFF00A651), const Color(0xFF00732F)],
-          badgeText: 'COMING SOON',
-          badgeColor: const Color(0xFFF59E0B),
-          isAvailable: false,
-          onTap: () => context.push(AppConstants.buyFromAbroadRoute),
+        SizedBox(
+          height: 42,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.zero,
+            itemCount: _markets.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final m = _markets[index];
+              final key = m['key'] as String;
+              final color = m['color'] as Color;
+              final isSelected = _selectedMarket == key;
+
+              return GestureDetector(
+                onTap: () {
+                  HapticUtils.selection();
+                  _loadMarketProducts(key);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutCubic,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? color
+                        : isDark
+                            ? color.withValues(alpha: 0.08)
+                            : color.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(11),
+                    border: Border.all(
+                      color: isSelected ? color : color.withValues(alpha: 0.15),
+                      width: 1,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        m['icon'] as IconData,
+                        size: 15,
+                        color: isSelected ? Colors.white : color,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        m['label'] as String,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+                          color: isSelected ? Colors.white : (isDark ? color.withValues(alpha: 0.9) : color),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ),
-        const SizedBox(height: 28),
-        _buildMarketplaceBanner(
-          cs,
-          title: 'Shop Tanzania',
-          subtitle: 'Local goods delivered worldwide',
-          icon: Uicons.shippingFast,
-          gradientColors: [const Color(0xFF1EB53A), const Color(0xFF15803D)],
-          badgeText: 'COMING SOON',
-          badgeColor: const Color(0xFFF59E0B),
-          isAvailable: false,
-          onTap: () => context.push(AppConstants.shopTanzaniaRoute),
-        ),
-        const SizedBox(height: 28),
-        _buildMarketplaceBanner(
-          cs,
-          title: 'Wholesale & B2B',
-          subtitle: 'Bulk pricing, MOQ & Request for Quotation',
-          icon: Uicons.warehouse,
-          gradientColors: [const Color(0xFFF59E0B), const Color(0xFFB45309)],
-          badgeText: 'COMING SOON',
-          badgeColor: const Color(0xFFF59E0B),
-          isAvailable: false,
-          onTap: () => context.push(AppConstants.wholesaleRoute),
+        const SizedBox(height: 16),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          child: _isLoadingMarket
+              ? _buildMarketLoadingGrid(cs, isDark)
+              : _marketProducts.isEmpty
+                  ? _buildMarketEmptyState(cs, isDark)
+                  : _buildMarketProductGrid(cs, _marketProducts, isDark),
         ),
       ],
     );
   }
 
-  Widget _buildMarketplaceBanner(
-    ColorScheme cs, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required List<Color> gradientColors,
-    required String badgeText,
-    required Color badgeColor,
-    required bool isAvailable,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 150,
+  Widget _buildMarketLoadingGrid(ColorScheme cs, bool isDark) {
+    return GridView.builder(
+      key: const ValueKey('loading'),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 0.72,
+      ),
+      itemCount: 4,
+      itemBuilder: (_, _) => Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: gradientColors[0].withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: cs.onSurface.withValues(alpha: 0.06),
+          ),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: cs.onSurface.withValues(alpha: 0.04),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 12,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: cs.onSurface.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 14,
+                    width: 80,
+                    decoration: BoxDecoration(
+                      color: cs.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(18),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.asset(
-                'assets/images/retro-style-organic-turing-lines-pattern-background-design.png',
-                fit: BoxFit.cover,
-              ),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      gradientColors[0].withValues(alpha: 0.85),
-                      gradientColors[1].withValues(alpha: 0.55),
-                      gradientColors[1].withValues(alpha: 0.2),
-                    ],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    stops: const [0.0, 0.5, 1.0],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(icon, color: Colors.white, size: 24),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: 0.5,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
+      ),
+    );
+  }
+
+  Widget _buildMarketEmptyState(ColorScheme cs, bool isDark) {
+    final selectedMarket = _markets.firstWhere((m) => m['key'] == _selectedMarket);
+    final color = selectedMarket['color'] as Color;
+
+    return Container(
+      key: const ValueKey('empty'),
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withValues(alpha: 0.15),
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              selectedMarket['icon'] as IconData,
+              size: 26,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No products in ${selectedMarket['label']} yet',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: cs.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Check back soon — new products arriving daily',
+            style: TextStyle(
+              fontSize: 12,
+              color: cs.onSurface.withValues(alpha: 0.4),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMarketProductGrid(ColorScheme cs, List<ProductModel> products, bool isDark) {
+    return GridView.builder(
+      key: ValueKey('grid_${_selectedMarket}_${products.length}'),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 0.72,
+      ),
+      itemCount: products.length > 6 ? 6 : products.length,
+      itemBuilder: (context, index) {
+        final product = products[index];
+        return _buildMarketProductCard(cs, product, isDark);
+      },
+    );
+  }
+
+  Widget _buildMarketProductCard(ColorScheme cs, ProductModel product, bool isDark) {
+    return GestureDetector(
+      onTap: () => context.push(
+        AppConstants.productDetailRoute,
+        extra: {
+          'product': product,
+          'category': product.categoryName ?? 'All',
+        },
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: product.thumbnailUrl != null
+                      ? Image.network(
+                          product.thumbnailUrl!,
+                          height: 130,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, progress) {
+                            if (progress == null) return child;
+                            return Container(
+                              height: 130,
+                              color: cs.primary.withValues(alpha: 0.06),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: cs.primary,
                                 ),
-                              ],
+                              ),
+                            );
+                          },
+                          errorBuilder: (_, _, _) => Container(
+                            height: 130,
+                            color: cs.primary.withValues(alpha: 0.06),
+                            child: Center(
+                              child: Icon(Uicons.box, size: 28, color: cs.primary.withValues(alpha: 0.3)),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white.withValues(alpha: 0.95),
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withValues(alpha: 0.25),
-                            blurRadius: 6,
-                            offset: const Offset(0, 1),
+                        )
+                      : Container(
+                          height: 130,
+                          color: cs.primary.withValues(alpha: 0.06),
+                          child: Center(
+                            child: Icon(Uicons.box, size: 28, color: cs.primary.withValues(alpha: 0.3)),
                           ),
-                        ],
+                        ),
+                ),
+                if (product.country != null && product.country!.isNotEmpty)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        product.country!,
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                  ),
+              ],
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: cs.onSurface,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    if (product.categoryName != null)
+                      Text(
+                        product.categoryName!,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: cs.onSurface.withValues(alpha: 0.4),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    const Spacer(),
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: badgeColor,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.15),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
+                        Expanded(
                           child: Text(
-                            badgeText,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: 0.5,
+                            product.formattedPrice,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: cs.primary,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const Spacer(),
-                        if (isAvailable)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.15),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
+                        if (product.rating > 0)
+                          Row(
+                            children: [
+                              Icon(Uicons.star, size: 10, color: Colors.amber.shade700),
+                              const SizedBox(width: 2),
+                              Text(
+                                product.rating.toStringAsFixed(1),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.amber.shade800,
                                 ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text('Shop Now',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                    color: gradientColors[0],
-                                  ),
-                                ),
-                                const SizedBox(width: 5),
-                                Icon(Uicons.arrowRight, size: 14, color: gradientColors[0]),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                       ],
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMarketplaceProducts(ColorScheme cs, List<ProductModel> products, bool isLoading) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    if (isLoading) {
-      return SizedBox(
-        height: 220,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: 4,
-          separatorBuilder: (_, _) => const SizedBox(width: 12),
-          itemBuilder: (_, _) => Container(
-            width: 140,
-            decoration: BoxDecoration(
-              color: cs.onSurface.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (products.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: cs.onSurface.withValues(alpha: 0.03),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Column(
-          children: [
-            Icon(Uicons.box, size: 32, color: cs.onSurface.withValues(alpha: 0.2)),
-            const SizedBox(height: 8),
-            Text('Products loading...',
-              style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4)),
             ),
           ],
         ),
-      );
-    }
-
-    return SizedBox(
-      height: 220,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: products.take(8).length,
-        separatorBuilder: (_, _) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final product = products[index];
-          return GestureDetector(
-            onTap: () => context.push(AppConstants.productDetailRoute, extra: {
-              'product': product,
-              'category': product.categoryName ?? 'All',
-            }),
-            child: Container(
-              width: 140,
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF252525) : Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-                    child: product.thumbnailUrl != null
-                        ? Image.network(
-                            product.thumbnailUrl!,
-                            height: 120,
-                            width: 140,
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, progress) {
-                              if (progress == null) return child;
-                              return Container(
-                                height: 120,
-                                width: 140,
-                                color: cs.primary.withValues(alpha: 0.06),
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: cs.primary,
-                                  ),
-                                ),
-                              );
-                            },
-                            errorBuilder: (_, _, _) => Container(
-                              height: 120,
-                              width: 140,
-                              color: cs.primary.withValues(alpha: 0.06),
-                              child: Icon(Uicons.box, size: 24, color: cs.primary.withValues(alpha: 0.3)),
-                            ),
-                          )
-                        : Container(
-                            height: 120,
-                            width: 140,
-                            color: cs.primary.withValues(alpha: 0.06),
-                            child: Icon(Uicons.box, size: 24, color: cs.primary.withValues(alpha: 0.3)),
-                          ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(product.name,
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: cs.onSurface),
-                          maxLines: 1, overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(product.formattedPrice,
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: cs.primary),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
       ),
     );
   }

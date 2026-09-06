@@ -3,7 +3,7 @@ import '../../features/auth/data/models/user_model.dart';
 /// General app constants.
 abstract class AppConstants {
   static const String appName = 'XerinMarket';
-  static const String appVersion = '1.0.10';
+  static const String appVersion = '1.0.11';
 
   // Routes
   static const String splashRoute = '/splash';

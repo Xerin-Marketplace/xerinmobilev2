@@ -22,6 +22,7 @@ class ProductModel {
   final String? categoryName;
   final double rating;
   final List<String> images;
+  final String? country;
 
   const ProductModel({
     required this.id,
@@ -43,6 +44,7 @@ class ProductModel {
     this.categoryName,
     this.rating = 0.0,
     this.images = const [],
+    this.country,
   });
 
   String get formattedPrice {
@@ -99,6 +101,7 @@ class ProductModel {
       categoryName: json['category_name'] as String?,
       rating: _pd(json['rating']),
       images: imageUrls,
+      country: json['country'] as String? ?? json['origin_country'] as String?,
     );
   }
 }

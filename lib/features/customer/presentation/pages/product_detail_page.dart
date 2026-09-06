@@ -9,6 +9,8 @@ import '../../../../core/notifications/notification_service.dart';
 import '../../../../shared/widgets/guest_auth_gate.dart';
 import '../../data/models/product_model.dart';
 import '../../data/models/review_model.dart';
+import '../../data/models/order_model.dart';
+import '../../data/datasources/customer_remote_datasource.dart';
 import '../cubit/cart_cubit.dart';
 import '../cubit/wishlist_cubit.dart';
 import '../cubit/wishlist_state.dart';
@@ -36,6 +38,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   int _currentImageIndex = 0;
   final PageController _imagePageController = PageController();
   late final ReviewCubit _reviewCubit;
+  String? _eligibleOrderItemId;
+  bool _checkingEligibility = true;
 
   @override
   void initState() {
@@ -44,6 +48,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkWishlistStatus();
       _reviewCubit.loadProductReviews(widget.product.id);
+      _checkReviewEligibility();
     });
   }
 
@@ -62,6 +67,37 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     NotificationService().success(
       _isWishlisted ? '${widget.product.name} added to wishlist' : '${widget.product.name} removed from wishlist',
     );
+  }
+
+  Future<void> _checkReviewEligibility() async {
+    try {
+      final customerDs = sl<CustomerRemoteDataSource>();
+      final orders = await customerDs.getOrders(pageSize: 50);
+      String? foundItemId;
+      for (final order in orders) {
+        if (order.status == 'delivered' || order.status == 'completed') {
+          for (final item in order.items) {
+            if (item.productId == widget.product.id) {
+              foundItemId = item.id;
+              break;
+            }
+          }
+          if (foundItemId != null) break;
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _eligibleOrderItemId = foundItemId;
+          _checkingEligibility = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _checkingEligibility = false;
+        });
+      }
+    }
   }
 
   @override
@@ -842,31 +878,55 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         ],
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () => _showReviewDialog(context, colorScheme),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    if (_eligibleOrderItemId != null)
+                      GestureDetector(
+                        onTap: () => _showReviewDialog(context, colorScheme),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Uicons.add, size: 16, color: Colors.white),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Write Review',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (!_checkingEligibility)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary,
+                          color: colorScheme.onSurface.withValues(alpha: 0.06),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Uicons.add, size: 16, color: Colors.white),
+                            Icon(Uicons.shoppingBag, size: 14, color: colorScheme.onSurface.withValues(alpha: 0.4)),
                             const SizedBox(width: 6),
                             Text(
-                              'Write Review',
+                              'Buy to review',
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface.withValues(alpha: 0.4),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -1138,6 +1198,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             : () {
                                 _reviewCubit.submitProductReview(
                                   productId: widget.product.id,
+                                  orderItemId: _eligibleOrderItemId!,
                                   rating: rating,
                                   comment: commentController.text.trim().isEmpty
                                       ? null

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class NavItem {
   final IconData icon;
@@ -32,6 +33,13 @@ class ModernBottomNav extends StatelessWidget {
     this.inactiveColor,
   });
 
+  void _handleTap(int index) {
+    if (index != selectedIndex) {
+      HapticFeedback.selectionClick();
+    }
+    onTap(index);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -64,7 +72,7 @@ class ModernBottomNav extends StatelessWidget {
             final item = items[index];
             final isActive = index == selectedIndex;
             return GestureDetector(
-              onTap: () => onTap(index),
+              onTap: () => _handleTap(index),
               behavior: HitTestBehavior.opaque,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
@@ -94,25 +102,7 @@ class ModernBottomNav extends StatelessWidget {
                             Positioned(
                               top: -6,
                               right: -8,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 5, vertical: 2),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFE53935),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(
-                                  item.badgeCount > 99
-                                      ? '99+'
-                                      : item.badgeCount.toString(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                    height: 1,
-                                  ),
-                                ),
-                              ),
+                              child: _BounceBadge(count: item.badgeCount),
                             ),
                         ],
                       ),
@@ -139,6 +129,83 @@ class ModernBottomNav extends StatelessWidget {
               ),
             );
           }),
+        ),
+      ),
+    );
+  }
+}
+
+class _BounceBadge extends StatefulWidget {
+  final int count;
+
+  const _BounceBadge({required this.count});
+
+  @override
+  State<_BounceBadge> createState() => _BounceBadgeState();
+}
+
+class _BounceBadgeState extends State<_BounceBadge>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scale;
+  int _prevCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _prevCount = widget.count;
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _scale = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(begin: 1.0, end: 1.4)
+            .chain(CurveTween(curve: Curves.elasticOut)),
+        weight: 60,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.4, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeOutCubic)),
+        weight: 40,
+      ),
+    ]).animate(_ctrl);
+  }
+
+  @override
+  void didUpdateWidget(_BounceBadge oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.count != _prevCount) {
+      _prevCount = widget.count;
+      _ctrl.forward(from: 0.0);
+      HapticFeedback.lightImpact();
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scale,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+        decoration: const BoxDecoration(
+          color: Color(0xFFE53935),
+          shape: BoxShape.circle,
+        ),
+        child: Text(
+          widget.count > 99 ? '99+' : widget.count.toString(),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 8,
+            fontWeight: FontWeight.bold,
+            height: 1,
+          ),
         ),
       ),
     );

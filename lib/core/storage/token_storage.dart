@@ -57,7 +57,7 @@ class TokenStorage {
   String? get refreshToken => _refreshToken;
   bool get hasTokens => accessToken != null;
   bool get isAuthenticated => accessToken != null;
-  bool get isGuest => _isGuest;
+  bool get isGuest => false;
   UserModel? get currentUser => _currentUser;
 
   Future<void> setGuest() async {

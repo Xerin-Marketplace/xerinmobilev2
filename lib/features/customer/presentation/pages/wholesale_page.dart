@@ -44,7 +44,7 @@ class _WholesalePageState extends State<WholesalePage> {
                   children: [
                     _buildHeroBanner(cs),
                     const SizedBox(height: 20),
-                    _buildComingSoonBanner(cs),
+                    _buildInfoBanner(cs),
                     const SizedBox(height: 24),
                     _buildTieredPricingCard(cs),
                     const SizedBox(height: 24),
@@ -207,39 +207,39 @@ class _WholesalePageState extends State<WholesalePage> {
     );
   }
 
-  Widget _buildComingSoonBanner(ColorScheme cs) {
+  Widget _buildInfoBanner(ColorScheme cs) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF59E0B).withValues(alpha: 0.08),
+        color: const Color(0xFF00A651).withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.2)),
+        border: Border.all(color: const Color(0xFF00A651).withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [
           Container(
             width: 40, height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B),
+              color: const Color(0xFF00A651),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Uicons.bellRing, color: Colors.white, size: 18),
+            child: const Icon(Uicons.checkCircle, color: Colors.white, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Coming Soon',
+                Text('Bulk Orders Available',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFFF59E0B),
+                    color: const Color(0xFF00A651),
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text('We\'re onboarding wholesale suppliers. Browse products below!',
+                Text('Browse wholesale products below and enjoy tiered pricing!',
                   style: TextStyle(
                     fontSize: 12,
                     color: cs.onSurface.withValues(alpha: 0.6),

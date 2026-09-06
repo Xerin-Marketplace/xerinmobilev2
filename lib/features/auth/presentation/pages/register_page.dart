@@ -438,30 +438,6 @@ class _RegisterPageState extends State<RegisterPage>
                             ),
                           ),
                           const SizedBox(height: 12),
-                          Center(
-                            child: TextButton.icon(
-                              onPressed: () async {
-                                await GetIt.instance<TokenStorage>().setGuest();
-                                if (context.mounted) {
-                                  context.go(AppConstants.homeRoute);
-                                }
-                              },
-                              icon: Icon(Uicons.user,
-                                  size: 18,
-                                  color: colorScheme.onSurface
-                                      .withValues(alpha: 0.6)),
-                              label: Text(
-                                'Continue as Guest',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: colorScheme.onSurface
-                                      .withValues(alpha: 0.6),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
                         ],
                       );
                     },

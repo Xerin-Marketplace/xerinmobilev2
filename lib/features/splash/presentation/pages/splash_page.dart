@@ -82,9 +82,7 @@ class _SplashPageState extends State<SplashPage>
     final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
 
     if (!tokenStorage.hasTokens) {
-      if (tokenStorage.isGuest) {
-        context.go(AppConstants.homeRoute);
-      } else if (hasSeenOnboarding) {
+      if (hasSeenOnboarding) {
         context.go(AppConstants.signInRoute);
       } else {
         context.go(AppConstants.onboardingRoute);
@@ -118,56 +116,26 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [const Color(0xFF121212), const Color(0xFF1E1E1E)]
-                : [const Color(0xFFFFFFFF), const Color(0xFFFFF5EE)],
-          ),
-        ),
-        child: SafeArea(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Spacer(flex: 3),
               ScaleTransition(
                 scale: _logoScale,
                 child: FadeTransition(
                   opacity: _logoFade,
-                  child: Stack(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFF47524).withValues(alpha: 0.2),
-                              blurRadius: 40,
-                              spreadRadius: 8,
-                              offset: const Offset(0, 12),
-                            ),
-                          ],
-                        ),
-                        child: Image.asset(
-                          'assets/logo/logo.png',
-                          width: 280,
-                          height: 200,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ],
+                  child: Image.asset(
+                    'assets/logo/mark.png',
+                    width: 280,
+                    height: 200,
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),
-              const Spacer(flex: 2),
+              const SizedBox(height: 32),
               AnimatedBuilder(
                 animation: _shimmerAnim,
                 builder: (context, child) {
@@ -192,7 +160,7 @@ class _SplashPageState extends State<SplashPage>
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      Colors.white.withValues(alpha: 0.9),
+                      const Color(0xFFF47524).withValues(alpha: 0.9),
                     ),
                   ),
                 ),
@@ -210,7 +178,6 @@ class _SplashPageState extends State<SplashPage>
                   ),
                 ),
               ),
-              const Spacer(flex: 1),
             ],
           ),
         ),

@@ -69,7 +69,7 @@ class _AnimatedLogoState extends State<AnimatedLogo>
         );
       },
       child: Image.asset(
-        'assets/logo/logo.png',
+        'assets/logo/mark.png',
         width: widget.width,
         height: widget.height,
         fit: BoxFit.contain,
