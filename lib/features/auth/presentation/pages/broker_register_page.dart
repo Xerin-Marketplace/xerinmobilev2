@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/password_validator.dart';
+
 import '../../../../config/constants/app_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/theme/country_data.dart';
@@ -134,15 +136,13 @@ class _BrokerRegisterPageState extends State<BrokerRegisterPage>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 4),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              const AuthLogo(width: 140, height: 80),
-                              const ThemeToggleButton(),
+                              ThemeToggleButton(),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 16),
                           _sectionTitle(context, 'Become a Broker',
                               'Promote products and earn commissions'),
                           const SizedBox(height: 16),
@@ -231,8 +231,7 @@ class _BrokerRegisterPageState extends State<BrokerRegisterPage>
                             hint: 'Create a password',
                             icon: Uicons.lock,
                             obscureText: _obscurePass,
-                            validator: (v) =>
-                                v == null || v.length < 8 ? 'Min 8 characters' : null,
+                            validator: PasswordValidator.validate,
                             suffix: IconButton(
                               icon: Icon(
                                 _obscurePass ? Uicons.eyeCrossed : Uicons.eye,

@@ -111,8 +111,6 @@ class _PinSetupPageState extends State<PinSetupPage>
               ),
             ),
             const Spacer(flex: 2),
-            const AuthLogo(width: 140, height: 80),
-            const SizedBox(height: 24),
             Text(
               _isConfirming ? 'Confirm PIN' : 'Set Up PIN',
               style: TextStyle(

@@ -19,23 +19,18 @@ class SettingsPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: BlocBuilder<HomeCubit, HomeState>(
-            builder: (context, homeState) {
-              final user = homeState is HomeLoaded ? homeState.user : null;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-                  Text('Settings',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildProfileRow(context, colorScheme, user),
-                  const SizedBox(height: 28),
+      appBar: AppBar(title: const Text('Settings')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: BlocBuilder<HomeCubit, HomeState>(
+          builder: (context, homeState) {
+            final user = homeState is HomeLoaded ? homeState.user : null;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                _buildProfileRow(context, colorScheme, user),
+                const SizedBox(height: 28),
                   _buildSectionLabel('Appearance', colorScheme),
                   const SizedBox(height: 12),
                   BlocBuilder<AppThemeCubit, AppThemeState>(
@@ -76,7 +71,6 @@ class SettingsPage extends StatelessWidget {
             },
           ),
         ),
-      ),
     );
   }
 

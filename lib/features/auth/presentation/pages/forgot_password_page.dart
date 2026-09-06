@@ -108,15 +108,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage>
                             color: colorScheme.primary,
                           ),
                           const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              const AuthLogo(width: 140, height: 80),
-                              const ThemeToggleButton(),
+                              ThemeToggleButton(),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
                           Text(
                             'Forgot password?',
                             style: TextStyle(

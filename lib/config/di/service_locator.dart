@@ -28,6 +28,7 @@ import '../../features/customer/data/datasources/recommendation_remote_datasourc
 import '../../features/customer/data/datasources/review_remote_datasource.dart';
 import '../../features/customer/data/datasources/search_remote_datasource.dart';
 import '../../features/customer/data/datasources/support_remote_datasource.dart';
+import '../../features/customer/domain/services/recommendation_engine.dart';
 import '../../features/customer/data/datasources/delivery_verification_remote_datasource.dart';
 import '../../features/customer/data/datasources/wishlist_remote_datasource.dart';
 import '../../features/customer/presentation/cubit/cart_cubit.dart';
@@ -186,6 +187,9 @@ Future<void> initServiceLocator({bool reset = false}) async {
   );
 
   // Recommendations
+  sl.registerLazySingleton<RecommendationEngine>(
+    () => RecommendationEngine(),
+  );
   sl.registerLazySingleton<RecommendationRemoteDataSource>(
       () => RecommendationRemoteDataSource(sl(), sl()));
   sl.registerLazySingleton<RecommendationCubit>(

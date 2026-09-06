@@ -77,9 +77,7 @@ class _RoleSelectionPageState extends State<RoleSelectionPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 40),
-                      const AuthLogo(width: 140, height: 90),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 48),
                       Text(
                         'Choose Your Role',
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(

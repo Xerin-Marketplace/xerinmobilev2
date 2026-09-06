@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/password_validator.dart';
+
 import '../../../../config/constants/app_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../shared/widgets/app_icon.dart';
@@ -115,8 +117,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                             color: colorScheme.primary,
                           ),
                           const SizedBox(height: 20),
-                          const AuthLogo(width: 140, height: 80),
-                          const SizedBox(height: 16),
                           Text(
                             'Reset password',
                             style: TextStyle(
@@ -163,9 +163,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage>
                             hint: 'Create a new password',
                             icon: Uicons.lock,
                             obscureText: _obscurePass,
-                            validator: (v) => v == null || v.length < 6
-                                ? 'Min 6 characters'
-                                : null,
+                            validator: PasswordValidator.validate,
                             suffix: IconButton(
                               icon: Icon(
                                 _obscurePass

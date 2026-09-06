@@ -73,6 +73,8 @@ abstract class AppConstants {
   static const String buyFromAbroadRoute = '/buy-from-abroad';
   static const String shopTanzaniaRoute = '/shop-tanzania';
   static const String wholesaleRoute = '/wholesale';
+  static const String xerinAiRoute = '/xerin-ai';
+  static const String questionnaireRoute = '/questionnaire';
 
   // Seller panel routes
   static const String sellerDashboardRoute = '/seller-dashboard';
@@ -218,5 +220,7 @@ abstract class AppConstants {
     couponsRoute,
     termsRoute,
     privacyRoute,
+    xerinAiRoute,
+    questionnaireRoute,
   ];
 }

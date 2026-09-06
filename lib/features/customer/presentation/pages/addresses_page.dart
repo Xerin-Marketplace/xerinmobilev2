@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:get_it/get_it.dart';
 
 import '../cubit/customer_cubit.dart';
@@ -213,34 +212,27 @@ class _AddressesPageState extends State<AddressesPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: SafeArea(
-        child: BlocBuilder<CustomerCubit, CustomerState>(
-          builder: (context, state) {
-            final addresses = state is CustomerLoaded ? state.addresses : <AddressModel>[];
-            final isLoading = state is CustomerLoading;
+      appBar: AppBar(title: const Text('Addresses')),
+      body: BlocBuilder<CustomerCubit, CustomerState>(
+        builder: (context, state) {
+          final addresses = state is CustomerLoaded ? state.addresses : <AddressModel>[];
+          final isLoading = state is CustomerLoading;
 
-            return Column(
-              children: [
-                _buildHeader(colorScheme),
-                if (isLoading)
-                  const Expanded(child: Center(child: CircularProgressIndicator()))
-                else if (addresses.isEmpty)
-                  _buildEmptyState(colorScheme)
-                else
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 80),
-                      itemCount: addresses.length,
-                      itemBuilder: (context, index) {
-                        final address = addresses[index];
-                        return _buildAddressCard(address, colorScheme, isDark);
-                      },
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
+          if (isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (addresses.isEmpty) {
+            return _buildEmptyState(colorScheme);
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 80),
+            itemCount: addresses.length,
+            itemBuilder: (context, index) {
+              final address = addresses[index];
+              return _buildAddressCard(address, colorScheme, isDark);
+            },
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEditSheet(),
@@ -249,27 +241,8 @@ class _AddressesPageState extends State<AddressesPage> {
     );
   }
 
-  Widget _buildHeader(ColorScheme cs) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => context.pop(),
-            child: Icon(Icons.arrow_back, size: 22, color: cs.onSurface),
-          ),
-          const SizedBox(width: 16),
-          Text('Addresses',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: cs.onSurface),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildEmptyState(ColorScheme cs) {
-    return Expanded(
-      child: Center(
+    return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -293,8 +266,7 @@ class _AddressesPageState extends State<AddressesPage> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildAddressCard(AddressModel address, ColorScheme cs, bool isDark) {

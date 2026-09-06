@@ -45,6 +45,8 @@ import '../../features/customer/presentation/pages/promotions_page.dart';
 import '../../features/customer/presentation/pages/buy_from_abroad_page.dart';
 import '../../features/customer/presentation/pages/shop_tanzania_page.dart';
 import '../../features/customer/presentation/pages/wholesale_page.dart';
+import '../../features/customer/presentation/pages/xerin_ai_page.dart';
+import '../../features/customer/presentation/pages/questionnaire_page.dart';
 import '../../features/customer/presentation/pages/recently_viewed_page.dart';
 import '../../features/customer/presentation/pages/search_page.dart';
 import '../../features/customer/presentation/pages/settings_page.dart';
@@ -475,6 +477,14 @@ class AppRouter {
       GoRoute(
         path: AppConstants.wholesaleRoute,
         builder: (context, state) => const WholesalePage(),
+      ),
+      GoRoute(
+        path: AppConstants.xerinAiRoute,
+        builder: (context, state) => const XerinAiPage(),
+      ),
+      GoRoute(
+        path: AppConstants.questionnaireRoute,
+        builder: (context, state) => const QuestionnairePage(),
       ),
       // Seller panel routes
       GoRoute(

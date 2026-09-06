@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/notifications/notification_service.dart';
 
@@ -47,94 +46,68 @@ class _HelpSupportPageState extends State<HelpSupportPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            if (context.canPop()) {
-                              context.pop();
-                            } else {
-                              context.go('/');
-                            }
-                          },
-                          child: Icon(Icons.arrow_back, size: 22, color: colorScheme.onSurface),
-                        ),
-                        const SizedBox(width: 16),
-                        Text('Help & Support',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Text('Contact Options',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildContactOption(Icons.phone, 'Call Support', '+255 792 810 292', const Color(0xFF22C55E), colorScheme),
-                    const SizedBox(height: 10),
-                    _buildContactOption(Icons.email_outlined, 'Email Us', 'support@xerin.co.tz', const Color(0xFF3B82F6), colorScheme),
-                    const SizedBox(height: 10),
-                    _buildContactOption(Icons.chat_outlined, 'Live Chat', 'Available now', const Color(0xFFF59E0B), colorScheme),
-                    const SizedBox(height: 10),
-                    _buildContactOption(Icons.chat, 'WhatsApp', '+255 792 810 292', const Color(0xFF22C55E), colorScheme),
-                    const SizedBox(height: 24),
-                    Text('Frequently Asked Questions',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                    ),
-                    const SizedBox(height: 16),
-                    ..._faqs.map((faq) => _FaqItem(
-                      question: faq['question'] as String,
-                      answer: faq['answer'] as String,
-                      colorScheme: colorScheme,
-                    )),
-                    const SizedBox(height: 24),
-                    Text('Send us a Message',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _messageCtrl,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText: 'Describe your issue...',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity, height: 48,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (_messageCtrl.text.isNotEmpty) {
-                            _messageCtrl.clear();
-                            NotificationService().success('Message sent to support');
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 0,
-                        ),
-                        child: const Text('Send Message',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
+      appBar: AppBar(title: const Text('Help & Support')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Contact Options',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+            ),
+            const SizedBox(height: 16),
+            _buildContactOption(Icons.phone, 'Call Support', '+255 792 810 292', const Color(0xFF22C55E), colorScheme),
+            const SizedBox(height: 10),
+            _buildContactOption(Icons.email_outlined, 'Email Us', 'support@xerin.co.tz', const Color(0xFF3B82F6), colorScheme),
+            const SizedBox(height: 10),
+            _buildContactOption(Icons.chat_outlined, 'Live Chat', 'Available now', const Color(0xFFF59E0B), colorScheme),
+            const SizedBox(height: 10),
+            _buildContactOption(Icons.chat, 'WhatsApp', '+255 792 810 292', const Color(0xFF22C55E), colorScheme),
+            const SizedBox(height: 24),
+            Text('Frequently Asked Questions',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+            ),
+            const SizedBox(height: 16),
+            ..._faqs.map((faq) => _FaqItem(
+              question: faq['question'] as String,
+              answer: faq['answer'] as String,
+              colorScheme: colorScheme,
+            )),
+            const SizedBox(height: 24),
+            Text('Send us a Message',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _messageCtrl,
+              maxLines: 4,
+              decoration: InputDecoration(
+                hintText: 'Describe your issue...',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity, height: 48,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (_messageCtrl.text.isNotEmpty) {
+                    _messageCtrl.clear();
+                    NotificationService().success('Message sent to support');
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: const Text('Send Message',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
+            const SizedBox(height: 24),
           ],
         ),
       ),

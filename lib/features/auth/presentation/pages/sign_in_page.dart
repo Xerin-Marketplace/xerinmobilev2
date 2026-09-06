@@ -210,15 +210,13 @@ class _SignInPageState extends State<SignInPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        const AuthLogo(width: 160, height: 100),
-                        const ThemeToggleButton(),
+                        ThemeToggleButton(),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 28),
                     Text(
                       'Welcome Back',
                       style: TextStyle(

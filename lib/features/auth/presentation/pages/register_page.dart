@@ -4,12 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/password_validator.dart';
+
 import '../../../../config/constants/app_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/storage/token_storage.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
-import '../widgets/auth_logo.dart';
 import '../widgets/auth_text_field.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/theme_toggle_button.dart';
@@ -146,35 +147,36 @@ class _RegisterPageState extends State<RegisterPage>
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 4),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                          const SizedBox(height: 8),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              const AuthLogo(width: 140, height: 80),
-                              const ThemeToggleButton(),
+                              ThemeToggleButton(),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Create your account',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface,
-                              letterSpacing: -0.3,
+                          const SizedBox(height: 24),
+                          Center(
+                            child: Text(
+                              'Create Account',
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                color: colorScheme.onSurface,
+                                letterSpacing: -0.5,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 6),
-                          Text(
-                            'Join XerinMarket and start shopping',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color:
-                                  colorScheme.onSurface.withValues(alpha: 0.45),
+                          Center(
+                            child: Text(
+                              'Join XerinMarket and start shopping',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: colorScheme.onSurface.withValues(alpha: 0.45),
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 24),
                           Row(
                             children: [
                               Expanded(
@@ -268,9 +270,7 @@ class _RegisterPageState extends State<RegisterPage>
                             hint: 'Create a password',
                             icon: Uicons.lock,
                             obscureText: _obscurePass,
-                            validator: (v) => v == null || v.length < 6
-                                ? 'Min 6 characters'
-                                : null,
+                            validator: PasswordValidator.validate,
                             suffix: IconButton(
                               icon: Icon(
                                 _obscurePass

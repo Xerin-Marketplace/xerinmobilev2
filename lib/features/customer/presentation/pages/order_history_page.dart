@@ -58,76 +58,68 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
     }
   }
 
-  String _formatCompact(double amount) {
-    if (amount >= 1000000000) return 'TZS ${(amount / 1000000000).toStringAsFixed(2)}B';
-    if (amount >= 1000000) return 'TZS ${(amount / 1000000).toStringAsFixed(2)}M';
-    if (amount >= 1000) return 'TZS ${(amount / 1000).toStringAsFixed(1)}K';
-    return 'TZS ${amount.toStringAsFixed(0)}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: SafeArea(
-        child: BlocBuilder<CustomerCubit, CustomerState>(
-          builder: (context, state) {
-            if (state is CustomerLoading) {
-              return _buildLoadingState(colorScheme);
-            }
-            if (state is CustomerError) {
-              return _buildErrorState(state, colorScheme);
-            }
-            if (state is CustomerLoaded) {
-              final orders = state.orders;
-              final filtered = _selectedFilter == 'All'
-                  ? orders
-                  : orders.where((o) {
-                      final s = o.status.toLowerCase();
-                      switch (_selectedFilter.toLowerCase()) {
-                        case 'pending':
-                          return s == 'pending' || s == 'paid';
-                        case 'processing':
-                          return s == 'processing' || s == 'received_at_hub';
-                        case 'shipped':
-                          return s == 'shipped';
-                        case 'delivered':
-                          return s == 'delivered';
-                        case 'cancelled':
-                          return s == 'cancelled' || s == 'refunded';
-                        default:
-                          return true;
-                      }
-                    }).toList();
-
-              return Column(
-                children: [
-                  _buildHeader(colorScheme),
-                  if (orders.isNotEmpty)
-                    _buildFilterTabs(colorScheme),
-                  if (filtered.isEmpty)
-                    _buildEmptyState(colorScheme)
-                  else
-                    Expanded(
-                      child: ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-                        itemCount: filtered.length,
-                        separatorBuilder: (_, __) => Divider(height: 1, color: colorScheme.onSurface.withValues(alpha: 0.06)),
-                        itemBuilder: (context, index) {
-                          final order = filtered[index];
-                          return _buildOrderItem(order, colorScheme);
-                        },
-                      ),
-                    ),
-                ],
-              );
-            }
+      appBar: AppBar(title: const Text('My Orders')),
+      body: BlocBuilder<CustomerCubit, CustomerState>(
+        builder: (context, state) {
+          if (state is CustomerLoading) {
             return _buildLoadingState(colorScheme);
-          },
-        ),
+          }
+          if (state is CustomerError) {
+            return _buildErrorState(state, colorScheme);
+          }
+          if (state is CustomerLoaded) {
+            final orders = state.orders;
+            final filtered = _selectedFilter == 'All'
+                ? orders
+                : orders.where((o) {
+                    final s = o.status.toLowerCase();
+                    switch (_selectedFilter.toLowerCase()) {
+                      case 'pending':
+                        return s == 'pending' || s == 'paid';
+                      case 'processing':
+                        return s == 'processing' || s == 'received_at_hub';
+                      case 'shipped':
+                        return s == 'shipped';
+                      case 'delivered':
+                        return s == 'delivered';
+                      case 'cancelled':
+                        return s == 'cancelled' || s == 'refunded';
+                      default:
+                        return true;
+                    }
+                  }).toList();
+
+            if (orders.isEmpty) {
+              return _buildEmptyState(colorScheme);
+            }
+
+            return Column(
+              children: [
+                _buildFilterTabs(colorScheme),
+                if (filtered.isEmpty)
+                  _buildEmptyState(colorScheme)
+                else
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, _) => Divider(height: 1, color: colorScheme.onSurface.withValues(alpha: 0.06)),
+                      itemBuilder: (context, index) {
+                        final order = filtered[index];
+                        return _buildOrderItem(order, colorScheme);
+                      },
+                    ),
+                  ),
+              ],
+            );
+          }
+          return _buildLoadingState(colorScheme);
+        },
       ),
     );
   }
@@ -168,22 +160,21 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
     );
   }
 
-  Widget _buildHeader(ColorScheme cs) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => context.pop(),
-            child: Icon(Icons.arrow_back, size: 22, color: cs.onSurface),
-          ),
-          const SizedBox(width: 16),
-          Text('My Orders',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: cs.onSurface),
-          ),
-        ],
-      ),
-    );
+  Widget _buildEmptyState(ColorScheme cs) {
+    return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('No orders found',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+            const SizedBox(height: 8),
+            Text(_selectedFilter == 'All' ? 'Your orders will appear here' : 'No $_selectedFilter orders',
+              style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3)),
+            ),
+          ],
+        ),
+      );
   }
 
   Widget _buildFilterTabs(ColorScheme cs) {
@@ -222,30 +213,10 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
     );
   }
 
-  Widget _buildEmptyState(ColorScheme cs) {
-    return Expanded(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('No orders found',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface.withValues(alpha: 0.5)),
-            ),
-            const SizedBox(height: 8),
-            Text(_selectedFilter == 'All' ? 'Your orders will appear here' : 'No $_selectedFilter orders',
-              style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildOrderItem(OrderModel order, ColorScheme cs) {
     final statusColor = _statusColor(order.status);
     final deliveryRange = order.estimatedDeliveryRange;
     final shipment = order.primaryShipment;
-    final carrier = shipment?.carrierName ?? order.shippingCarrier;
 
     return GestureDetector(
       onTap: () => context.push(AppConstants.orderDetailRoute, extra: {'order': order}),

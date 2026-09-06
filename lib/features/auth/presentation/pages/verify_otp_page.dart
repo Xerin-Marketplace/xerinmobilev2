@@ -209,8 +209,6 @@ class _VerifyOtpPageState extends State<VerifyOtpPage>
                     color: colorScheme.primary,
                   ),
                   const SizedBox(height: 32),
-                  const AuthLogo(width: 180, height: 110),
-                  const SizedBox(height: 28),
                   Text(
                     'Verify your number',
                     style: TextStyle(

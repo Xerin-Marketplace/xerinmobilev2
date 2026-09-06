@@ -117,8 +117,6 @@ class _LockScreenPageState extends State<LockScreenPage>
         child: Column(
           children: [
             const Spacer(flex: 2),
-            const AuthLogo(width: 140, height: 80),
-            const SizedBox(height: 20),
             Container(
               width: 56,
               height: 56,

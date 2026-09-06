@@ -22,29 +22,19 @@ class _SplashPageState extends State<SplashPage>
   late final AnimationController _logoCtrl;
   late final Animation<double> _logoScale;
   late final Animation<double> _logoFade;
-  late final AnimationController _shimmerCtrl;
-  late final Animation<double> _shimmerAnim;
 
   @override
   void initState() {
     super.initState();
     _logoCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1400),
     );
-    _logoScale = Tween<double>(begin: 0.6, end: 1.0).animate(
+    _logoScale = Tween<double>(begin: 0.4, end: 1.0).animate(
       CurvedAnimation(parent: _logoCtrl, curve: Curves.easeOutBack),
     );
     _logoFade = CurvedAnimation(parent: _logoCtrl, curve: Curves.easeOut);
     _logoCtrl.forward();
-
-    _shimmerCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    )..repeat();
-    _shimmerAnim = Tween<double>(begin: -1.0, end: 2.0).animate(
-      CurvedAnimation(parent: _shimmerCtrl, curve: Curves.easeInOut),
-    );
 
     _navigateAfterSplash();
   }
@@ -52,7 +42,6 @@ class _SplashPageState extends State<SplashPage>
   @override
   void dispose() {
     _logoCtrl.dispose();
-    _shimmerCtrl.dispose();
     super.dispose();
   }
 
@@ -60,19 +49,14 @@ class _SplashPageState extends State<SplashPage>
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
 
-    // ─── Version check ───────────────────────────────────────
-    // Compare installed version against backend minimum and show
-    // a non-dismissible update / maintenance dialog if needed.
     try {
       final versionService = GetIt.instance<AppVersionService>();
       final result = await versionService.checkVersion();
       if (mounted && (result.needsUpdate || result.maintenanceMode || !result.appEnabled)) {
         ForceUpdateDialog.show(context, result);
-        return; // do not proceed to normal navigation
+        return;
       }
-    } catch (_) {
-      // Silently ignore — never block the user on version-check failure.
-    }
+    } catch (_) {}
 
     if (!mounted) return;
 
@@ -90,7 +74,6 @@ class _SplashPageState extends State<SplashPage>
       return;
     }
 
-    // Validate the stored token by fetching the user profile.
     bool sessionValid = false;
     try {
       final dataSource = GetIt.instance<AuthRemoteDataSource>();
@@ -108,7 +91,6 @@ class _SplashPageState extends State<SplashPage>
       final user = tokenStorage.currentUser;
       context.go(AppConstants.dashboardRouteForUser(user));
     } else {
-      // Token is invalid and refresh already failed in the interceptor.
       await tokenStorage.clearTokens();
       context.go(AppConstants.signInRoute);
     }
@@ -129,52 +111,23 @@ class _SplashPageState extends State<SplashPage>
                   opacity: _logoFade,
                   child: Image.asset(
                     'assets/logo/mark.png',
-                    width: 280,
-                    height: 200,
+                    width: 220,
+                    height: 160,
                     fit: BoxFit.contain,
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
-              AnimatedBuilder(
-                animation: _shimmerAnim,
-                builder: (context, child) {
-                  return ShaderMask(
-                    shaderCallback: (bounds) {
-                      return LinearGradient(
-                        begin: Alignment(_shimmerAnim.value - 0.5, 0),
-                        end: Alignment(_shimmerAnim.value + 0.5, 0),
-                        colors: [
-                          const Color(0xFFF47524).withValues(alpha: 0.3),
-                          const Color(0xFFF47524).withValues(alpha: 0.8),
-                          const Color(0xFFF47524).withValues(alpha: 0.3),
-                        ],
-                      ).createShader(bounds);
-                    },
-                    child: child,
-                  );
-                },
+              const SizedBox(height: 40),
+              FadeTransition(
+                opacity: _logoFade,
                 child: SizedBox(
-                  width: 28,
-                  height: 28,
+                  width: 24,
+                  height: 24,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      const Color(0xFFF47524).withValues(alpha: 0.9),
+                      const Color(0xFFF47524).withValues(alpha: 0.8),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              FadeTransition(
-                opacity: _logoFade,
-                child: Text(
-                  'XerinMarket v${AppConstants.appVersion}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFFF47524).withValues(alpha: 0.6),
-                    letterSpacing: 0.5,
                   ),
                 ),
               ),

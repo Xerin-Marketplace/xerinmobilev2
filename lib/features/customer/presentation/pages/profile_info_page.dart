@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/notifications/notification_service.dart';
@@ -16,84 +15,56 @@ class ProfileInfoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final state = context.read<HomeCubit>().state;
     final user = state is HomeLoaded ? state.user : null;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: SafeArea(
+      appBar: AppBar(title: const Text('Personal Information')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildAppBar(context, colorScheme),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSimpleHeader(user, colorScheme),
-                    const SizedBox(height: 28),
-                    _buildSectionLabel('Personal Information', colorScheme),
-                    const SizedBox(height: 12),
-                    _buildInfoRow('First Name', user?.firstName ?? '—', colorScheme),
-                    _buildDivider(colorScheme),
-                    _buildInfoRow('Last Name', user?.lastName ?? '—', colorScheme),
-                    _buildDivider(colorScheme),
-                    _buildInfoRow('Email', user?.email ?? '—', colorScheme),
-                    _buildDivider(colorScheme),
-                    _buildInfoRow('Phone', user?.phone ?? '—', colorScheme),
-                    const SizedBox(height: 24),
-                    _buildSectionLabel('Account Status', colorScheme),
-                    const SizedBox(height: 12),
-                    _buildInfoRow('Account Type', _capitalize(user?.accountType ?? 'Customer'), colorScheme),
-                    _buildDivider(colorScheme),
-                    _buildInfoRow('Verification', user?.isVerified == true ? 'Verified' : 'Pending', colorScheme,
-                        valueColor: user?.isVerified == true ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)),
-                    _buildDivider(colorScheme),
-                    _buildInfoRow('Status', _capitalize(user?.status ?? 'Active'), colorScheme),
-                    if (user?.isSeller == true) ...[
-                      _buildDivider(colorScheme),
-                      _buildInfoRow('Seller Account', _capitalize(user?.sellerStatus ?? 'Active'), colorScheme),
-                    ],
-                    const SizedBox(height: 28),
-                    SizedBox(
-                      width: double.infinity, height: 50,
-                      child: ElevatedButton(
-                        onPressed: () => _showEditDrawer(context, user),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 0,
-                        ),
-                        child: const Text('Edit Profile', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                      ),
-                    ),
-                  ],
+            _buildSimpleHeader(user, colorScheme),
+            const SizedBox(height: 28),
+            _buildSectionLabel('Personal Information', colorScheme),
+            const SizedBox(height: 12),
+            _buildInfoRow('First Name', user?.firstName ?? '—', colorScheme),
+            _buildDivider(colorScheme),
+            _buildInfoRow('Last Name', user?.lastName ?? '—', colorScheme),
+            _buildDivider(colorScheme),
+            _buildInfoRow('Email', user?.email ?? '—', colorScheme),
+            _buildDivider(colorScheme),
+            _buildInfoRow('Phone', user?.phone ?? '—', colorScheme),
+            const SizedBox(height: 24),
+            _buildSectionLabel('Account Status', colorScheme),
+            const SizedBox(height: 12),
+            _buildInfoRow('Account Type', _capitalize(user?.accountType ?? 'Customer'), colorScheme),
+            _buildDivider(colorScheme),
+            _buildInfoRow('Verification', user?.isVerified == true ? 'Verified' : 'Pending', colorScheme,
+                valueColor: user?.isVerified == true ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)),
+            _buildDivider(colorScheme),
+            _buildInfoRow('Status', _capitalize(user?.status ?? 'Active'), colorScheme),
+            if (user?.isSeller == true) ...[
+              _buildDivider(colorScheme),
+              _buildInfoRow('Seller Account', _capitalize(user?.sellerStatus ?? 'Active'), colorScheme),
+            ],
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity, height: 50,
+              child: ElevatedButton(
+                onPressed: () => _showEditDrawer(context, user),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
                 ),
+                child: const Text('Edit Profile', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildAppBar(BuildContext context, ColorScheme cs) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => context.pop(),
-            child: Icon(Icons.arrow_back, size: 22, color: cs.onSurface),
-          ),
-          const SizedBox(width: 16),
-          Text('Personal Information',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: cs.onSurface),
-          ),
-        ],
       ),
     );
   }
@@ -153,10 +124,6 @@ class ProfileInfoPage extends StatelessWidget {
 
   Widget _buildDivider(ColorScheme cs) {
     return Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06));
-  }
-
-  Widget _buildStatusRow(IconData icon, String label, String value, ColorScheme cs, {Color? valueColor}) {
-    return _buildInfoRow(label, value, cs, valueColor: valueColor);
   }
 
   void _showEditDrawer(BuildContext context, UserModel? user) {
