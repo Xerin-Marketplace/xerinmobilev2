@@ -3,12 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:get_it/get_it.dart';
 
-import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/customer_cubit.dart';
 import '../cubit/customer_state.dart';
 import '../../data/models/address_model.dart';
 import '../../../../core/services/location_service.dart';
-import '../../../../core/theme/uicons.dart';
 
 class AddressesPage extends StatefulWidget {
   const AddressesPage({super.key});
@@ -44,10 +42,6 @@ class _AddressesPageState extends State<AddressesPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setModalState) {
@@ -64,58 +58,53 @@ class _AddressesPageState extends State<AddressesPage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Center(
-                        child: Container(
-                          width: 40, height: 4,
-                          decoration: BoxDecoration(
-                            color: cs.onSurface.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
                       Text(address == null ? 'Add Address' : 'Edit Address',
                         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: cs.onSurface),
                       ),
                       const SizedBox(height: 16),
-                      // Use Current Location button
-                      _buildUseLocationButton(cs, setModalState, () async {
-                        setModalState(() => isFetchingLocation = true);
-                        try {
-                          final location = await GetIt.instance<LocationService>().getCurrentLocation();
-                          setModalState(() {
-                            if (location.country != null) countryCtrl.text = location.country!;
-                            if (location.region != null) regionCtrl.text = location.region!;
-                            if (location.city != null) cityCtrl.text = location.city!;
-                            if (location.street != null) streetCtrl.text = location.street!;
-                            if (location.postalCode != null) postalCtrl.text = location.postalCode!;
-                            if (location.landmark != null) landmarkCtrl.text = location.landmark!;
-                            savedLatitude = location.latitude;
-                            savedLongitude = location.longitude;
-                            isFetchingLocation = false;
-                          });
-                          if (ctx.mounted) {
-                            ScaffoldMessenger.of(ctx).showSnackBar(
-                              SnackBar(
-                                content: Text('Location found: ${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}'),
-                                backgroundColor: const Color(0xFF22C55E),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
+                      OutlinedButton.icon(
+                        onPressed: isFetchingLocation ? null : () async {
+                          setModalState(() => isFetchingLocation = true);
+                          try {
+                            final location = await GetIt.instance<LocationService>().getCurrentLocation();
+                            setModalState(() {
+                              if (location.country != null) countryCtrl.text = location.country!;
+                              if (location.region != null) regionCtrl.text = location.region!;
+                              if (location.city != null) cityCtrl.text = location.city!;
+                              if (location.street != null) streetCtrl.text = location.street!;
+                              if (location.postalCode != null) postalCtrl.text = location.postalCode!;
+                              if (location.landmark != null) landmarkCtrl.text = location.landmark!;
+                              savedLatitude = location.latitude;
+                              savedLongitude = location.longitude;
+                              isFetchingLocation = false;
+                            });
+                            if (ctx.mounted) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                SnackBar(
+                                  content: Text('Location found: ${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}'),
+                                  backgroundColor: const Color(0xFF22C55E),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            setModalState(() => isFetchingLocation = false);
+                            if (ctx.mounted) {
+                              ScaffoldMessenger.of(ctx).showSnackBar(
+                                SnackBar(
+                                  content: Text(e.toString().replaceFirst('Exception: ', '')),
+                                  backgroundColor: const Color(0xFFE53935),
+                                  duration: const Duration(seconds: 3),
+                                ),
+                              );
+                            }
                           }
-                        } catch (e) {
-                          setModalState(() => isFetchingLocation = false);
-                          if (ctx.mounted) {
-                            ScaffoldMessenger.of(ctx).showSnackBar(
-                              SnackBar(
-                                content: Text(e.toString().replaceFirst('Exception: ', '')),
-                                backgroundColor: const Color(0xFFE53935),
-                                duration: const Duration(seconds: 3),
-                              ),
-                            );
-                          }
-                        }
-                      }, isFetchingLocation),
+                        },
+                        icon: isFetchingLocation
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.my_location, size: 18),
+                        label: Text(isFetchingLocation ? 'Detecting location...' : 'Use My Current Location'),
+                      ),
                       const SizedBox(height: 16),
                       _bottomField('Label (e.g. Home, Work)', labelCtrl, cs, required: false),
                       const SizedBox(height: 12),
@@ -136,7 +125,7 @@ class _AddressesPageState extends State<AddressesPage> {
                       _bottomField('Postal Code (optional)', postalCtrl, cs, required: false),
                       const SizedBox(height: 20),
                       SizedBox(
-                        width: double.infinity, height: 52,
+                        width: double.infinity, height: 48,
                         child: ElevatedButton(
                           onPressed: () {
                             if (formKey.currentState!.validate()) {
@@ -178,11 +167,11 @@ class _AddressesPageState extends State<AddressesPage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: cs.primary,
                             foregroundColor: cs.onPrimary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             elevation: 0,
                           ),
                           child: Text(address == null ? 'Add Address' : 'Save Changes',
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
@@ -195,55 +184,6 @@ class _AddressesPageState extends State<AddressesPage> {
           },
         );
       },
-    );
-  }
-
-  Widget _buildUseLocationButton(ColorScheme cs, StateSetter setModalState, Future<void> Function() onTap, bool isFetching) {
-    return GestureDetector(
-      onTap: isFetching ? null : () => onTap(),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [cs.primary, cs.primary.withValues(alpha: 0.8)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: cs.primary.withValues(alpha: 0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isFetching)
-              SizedBox(
-                width: 20, height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white.withValues(alpha: 0.9)),
-                ),
-              )
-            else
-              Icon(Uicons.mapPin, color: Colors.white, size: 20),
-            const SizedBox(width: 10),
-            Text(
-              isFetching ? 'Detecting location...' : 'Use My Current Location',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -273,7 +213,6 @@ class _AddressesPageState extends State<AddressesPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: BlocBuilder<CustomerCubit, CustomerState>(
           builder: (context, state) {
@@ -305,8 +244,7 @@ class _AddressesPageState extends State<AddressesPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddEditSheet(),
-        backgroundColor: colorScheme.primary,
-        child: const Icon(Uicons.add, color: Colors.white),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -316,9 +254,9 @@ class _AddressesPageState extends State<AddressesPage> {
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
         children: [
-          BackIconButton(
+          GestureDetector(
             onTap: () => context.pop(),
-            color: cs.primary,
+            child: Icon(Icons.arrow_back, size: 22, color: cs.onSurface),
           ),
           const SizedBox(width: 16),
           Text('Addresses',
@@ -335,15 +273,6 @@ class _AddressesPageState extends State<AddressesPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 90, height: 90,
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.06),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Uicons.mapPin, size: 38, color: cs.primary.withValues(alpha: 0.3)),
-            ),
-            const SizedBox(height: 20),
             Text('No addresses yet',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface.withValues(alpha: 0.5)),
             ),
@@ -354,13 +283,12 @@ class _AddressesPageState extends State<AddressesPage> {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () => _showAddEditSheet(),
-              icon: const Icon(Uicons.add, size: 18),
+              icon: const Icon(Icons.add, size: 18),
               label: const Text('Add Address', style: TextStyle(fontWeight: FontWeight.w600)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: cs.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ],
@@ -370,111 +298,50 @@ class _AddressesPageState extends State<AddressesPage> {
   }
 
   Widget _buildAddressCard(AddressModel address, ColorScheme cs, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: address.isDefault
-              ? cs.primary.withValues(alpha: 0.3)
-              : cs.onSurface.withValues(alpha: 0.06),
-        ),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 3))],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 38, height: 38,
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Uicons.mapPin, color: cs.primary, size: 18),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (address.label != null && address.label!.isNotEmpty) ...[
+                Text(address.label!,
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: cs.onSurface),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          if (address.label != null && address.label!.isNotEmpty) ...[
-                            Text(address.label!,
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: cs.onSurface),
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                          if (address.isDefault)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF22C55E).withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text('Default',
-                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF22C55E)),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(address.fullAddress,
-                        style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
-                      ),
-                    ],
-                  ),
-                ),
+                const SizedBox(width: 8),
               ],
-            ),
-            if (address.recipientName != null && address.recipientName!.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.only(left: 50),
-                child: Row(
-                  children: [
-                    Icon(Uicons.user, size: 12, color: cs.onSurface.withValues(alpha: 0.3)),
-                    const SizedBox(width: 4),
-                    Text(address.recipientName!,
-                      style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
-                    ),
-                    if (address.recipientPhone != null && address.recipientPhone!.isNotEmpty) ...[
-                      const SizedBox(width: 10),
-                      Icon(Uicons.phone, size: 12, color: cs.onSurface.withValues(alpha: 0.3)),
-                      const SizedBox(width: 4),
-                      Text(address.recipientPhone!,
-                        style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
-                      ),
-                    ],
-                  ],
+              if (address.isDefault)
+                Text('Default',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF22C55E)),
                 ),
-              ),
             ],
-            const SizedBox(height: 10),
-            Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton.icon(
-                  onPressed: () => _showAddEditSheet(address: address),
-                  icon: Icon(Uicons.edit, size: 15, color: cs.onSurface.withValues(alpha: 0.4)),
-                  label: Text('Edit', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.4))),
-                ),
-                TextButton.icon(
-                  onPressed: () => context.read<CustomerCubit>().deleteAddress(address.id),
-                  icon: Icon(Uicons.trash, size: 15, color: const Color(0xFFE53935)),
-                  label: Text('Delete', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFFE53935))),
-                ),
-              ],
+          ),
+          const SizedBox(height: 4),
+          Text(address.fullAddress,
+            style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
+          ),
+          if (address.recipientName != null && address.recipientName!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text('${address.recipientName}${address.recipientPhone != null && address.recipientPhone!.isNotEmpty ? ' · ${address.recipientPhone}' : ''}',
+              style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
             ),
           ],
-        ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () => _showAddEditSheet(address: address),
+                child: Text('Edit', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.4))),
+              ),
+              TextButton(
+                onPressed: () => context.read<CustomerCubit>().deleteAddress(address.id),
+                child: Text('Delete', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFFE53935))),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

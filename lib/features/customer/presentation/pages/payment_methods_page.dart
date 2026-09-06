@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/uicons.dart';
 import '../cubit/customer_cubit.dart';
 import '../cubit/customer_state.dart';
 import '../../data/models/payment_method_model.dart';
@@ -31,7 +30,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
       id: 'mobile_money',
       label: 'Mobile Money',
       subtitle: 'Pay securely using your preferred mobile network.',
-      icon: Uicons.mobile,
+      icon: Icons.phone_android,
       color: Color(0xFF22C55E),
       providers: ['M-Pesa', 'Airtel Money', 'Mixx by Yas', 'HaloPesa'],
     ),
@@ -39,7 +38,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
       id: 'card',
       label: 'Card Payment',
       subtitle: 'Pay securely using Visa or Mastercard through AzamPay.',
-      icon: Uicons.creditCard,
+      icon: Icons.credit_card,
       color: Color(0xFFF59E0B),
       providers: ['azampay'],
     ),
@@ -63,9 +62,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: colorScheme.surface,
       drawer: _buildDrawer(colorScheme, isDark),
-      drawerScrimColor: Colors.black54,
       body: SafeArea(
         child: Column(
           children: [
@@ -104,37 +101,16 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
       padding: const EdgeInsets.fromLTRB(12, 12, 20, 0),
       child: Row(
         children: [
-          Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: () => _scaffoldKey.currentState?.openDrawer(),
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Icon(Uicons.grid, size: 22, color: cs.primary),
-              ),
+          GestureDetector(
+            onTap: () => context.pop(),
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Icon(Icons.arrow_back, size: 22, color: cs.onSurface),
             ),
           ),
           const SizedBox(width: 12),
           Text('Payment Methods',
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: cs.onSurface),
-          ),
-          const Spacer(),
-          BlocBuilder<CustomerCubit, CustomerState>(
-            builder: (context, state) {
-              final count = state is CustomerLoaded ? state.paymentMethods.length : 0;
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: cs.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text('$count',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: cs.primary),
-                ),
-              );
-            },
           ),
         ],
       ),
@@ -143,11 +119,6 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
 
   Widget _buildDrawer(ColorScheme cs, bool isDark) {
     return Drawer(
-      backgroundColor: isDark ? const Color(0xFF1A1A1A) : cs.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(topRight: Radius.circular(0), bottomRight: Radius.circular(0)),
-      ),
-      width: 300,
       child: BlocBuilder<CustomerCubit, CustomerState>(
         builder: (context, state) {
           final methods = state is CustomerLoaded ? state.paymentMethods : <PaymentMethodModel>[];
@@ -165,7 +136,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                     _buildDrawerSectionLabel('Filter by Type', cs),
                     const SizedBox(height: 6),
                     _buildDrawerItem(
-                      icon: Uicons.grid,
+                      icon: Icons.list,
                       label: 'All Methods',
                       count: methods.length,
                       color: cs.primary,
@@ -173,7 +144,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                       onTap: () => _selectFilter('all', cs),
                     ),
                     _buildDrawerItem(
-                      icon: Uicons.bookmark,
+                      icon: Icons.bookmark_border,
                       label: 'Saved Methods',
                       count: methods.length,
                       color: const Color(0xFF8B5CF6),
@@ -181,7 +152,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                       onTap: () => _selectFilter('saved', cs),
                     ),
                     _buildDrawerItem(
-                      icon: Uicons.mobile,
+                      icon: Icons.phone_android,
                       label: 'Mobile Money',
                       count: mobileCount,
                       color: const Color(0xFF22C55E),
@@ -189,7 +160,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                       onTap: () => _selectFilter('mobile_money', cs),
                     ),
                     _buildDrawerItem(
-                      icon: Uicons.creditCard,
+                      icon: Icons.credit_card,
                       label: 'Card Payment',
                       count: cardCount,
                       color: const Color(0xFFF59E0B),
@@ -197,7 +168,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                       onTap: () => _selectFilter('card', cs),
                     ),
                     _buildDrawerItem(
-                      icon: Uicons.bank,
+                      icon: Icons.account_balance,
                       label: 'Bank Account',
                       count: bankCount,
                       color: const Color(0xFF3B82F6),
@@ -208,19 +179,19 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                     _buildDrawerSectionLabel('Quick Actions', cs),
                     const SizedBox(height: 6),
                     _buildDrawerActionItem(
-                      icon: Uicons.shieldCheck,
+                      icon: Icons.security,
                       label: 'Payment Security',
                       color: const Color(0xFF22C55E),
                       onTap: () {},
                     ),
                     _buildDrawerActionItem(
-                      icon: Uicons.receipt,
+                      icon: Icons.receipt_long,
                       label: 'Transaction History',
                       color: const Color(0xFF3B82F6),
                       onTap: () => context.push('/customer/orders'),
                     ),
                     _buildDrawerActionItem(
-                      icon: Uicons.circleQuestion,
+                      icon: Icons.help_outline,
                       label: 'Help & Support',
                       color: const Color(0xFFF59E0B),
                       onTap: () {},
@@ -238,69 +209,26 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
 
   Widget _buildDrawerHeader(ColorScheme cs) {
     return Container(
-      height: 180,
+      height: 140,
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [cs.primary, cs.primary.withValues(alpha: 0.6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: cs.primary,
       ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.black.withValues(alpha: 0.15), Colors.transparent],
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-              ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            const Text('Payment Methods',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Container(
-                  width: 52, height: 52,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(Uicons.creditCard, color: Colors.white, size: 26),
-                ),
-                const SizedBox(height: 12),
-                const Text('Payment Methods',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-                const SizedBox(height: 4),
-                Text('Manage your payment options',
-                  style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.7)),
-                ),
-              ],
+            const SizedBox(height: 4),
+            Text('Manage your payment options',
+              style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.7)),
             ),
-          ),
-          Positioned(
-            top: 16,
-            right: 12,
-            child: Material(
-              color: Colors.white.withValues(alpha: 0.2),
-              shape: const CircleBorder(),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () => Navigator.of(context).pop(),
-                child: const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Icon(Uicons.xmark, color: Colors.white, size: 18),
-                ),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -327,23 +255,11 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 4),
+        child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          decoration: BoxDecoration(
-            color: isSelected ? color.withValues(alpha: 0.08) : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
           child: Row(
             children: [
-              Container(
-                width: 34, height: 34,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: isSelected ? 0.15 : 0.08),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, size: 16, color: color),
-              ),
+              Icon(icon, size: 20, color: color),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(label,
@@ -355,18 +271,11 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                 ),
               ),
               if (count > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: isSelected ? color.withValues(alpha: 0.15) : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text('$count',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: isSelected ? color : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                    ),
+                Text('$count',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected ? color : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ),
             ],
@@ -387,22 +296,11 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 4),
+        child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-          ),
           child: Row(
             children: [
-              Container(
-                width: 34, height: 34,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, size: 16, color: color),
-              ),
+              Icon(icon, size: 20, color: color),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(label,
@@ -413,7 +311,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
                   ),
                 ),
               ),
-              Icon(Uicons.arrowForwardIos, size: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2)),
+              Icon(Icons.chevron_right, size: 18, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2)),
             ],
           ),
         ),
@@ -427,16 +325,8 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: cs.onSurface.withValues(alpha: 0.06))),
       ),
-      child: Row(
-        children: [
-          Icon(Uicons.lock, size: 14, color: cs.onSurface.withValues(alpha: 0.3)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text('Payments are encrypted & secure',
-              style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4)),
-            ),
-          ),
-        ],
+      child: Text('Payments are encrypted & secure',
+        style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4)),
       ),
     );
   }
@@ -461,98 +351,14 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
         final allMethods = state is CustomerLoaded ? state.paymentMethods : <PaymentMethodModel>[];
         final methods = _filterMethods(allMethods);
 
-        if (allMethods.isEmpty && _activeFilter != 'all') {
-          return Container(
+        if (allMethods.isEmpty || methods.isEmpty) {
+          return Padding(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: cs.primary.withValues(alpha: 0.12)),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 56, height: 56,
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(Uicons.creditCard, color: cs.primary, size: 26),
-                ),
-                const SizedBox(height: 16),
-                Text('No saved payment methods',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: cs.onSurface),
-                ),
-                const SizedBox(height: 6),
-                Text('Your saved payment methods will appear here.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
-                ),
-              ],
-            ),
-          );
-        }
-
-        if (methods.isEmpty) {
-          return Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: cs.primary.withValues(alpha: 0.12)),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 56, height: 56,
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(Uicons.filter, color: cs.primary, size: 26),
-                ),
-                const SizedBox(height: 16),
-                Text('No methods in this category',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: cs.onSurface),
-                ),
-                const SizedBox(height: 6),
-                Text('Try selecting a different filter from the sidebar.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
-                ),
-              ],
-            ),
-          );
-        }
-
-        if (allMethods.isEmpty) {
-          return Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: cs.primary.withValues(alpha: 0.12)),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 56, height: 56,
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(Uicons.creditCard, color: cs.primary, size: 26),
-                ),
-                const SizedBox(height: 16),
-                Text('No saved payment methods',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: cs.onSurface),
-                ),
-                const SizedBox(height: 6),
-                Text('Your saved payment methods will appear here.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
-                ),
-              ],
+            child: Center(
+              child: Text(allMethods.isEmpty ? 'No saved payment methods' : 'No methods in this category',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
+                textAlign: TextAlign.center,
+              ),
             ),
           );
         }
@@ -572,75 +378,47 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
               ],
             ),
             const SizedBox(height: 14),
-            ...methods.map((m) => _buildSavedMethodCard(m, cs, isDark)),
+            ...methods.map((m) => _buildSavedMethodItem(m, cs)),
           ],
         );
       },
     );
   }
 
-  Widget _buildSavedMethodCard(PaymentMethodModel method, ColorScheme cs, bool isDark) {
-    final color = _typeColor(method.type);
-    final icon = _typeIcon(method.type);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 3))],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(method.typeLabel,
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: cs.onSurface),
+  Widget _buildSavedMethodItem(PaymentMethodModel method, ColorScheme cs) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(_typeIcon(method.type), color: _typeColor(method.type), size: 22),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(method.typeLabel,
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: cs.onSurface),
+                    ),
+                    if (method.isDefault) ...[
+                      const SizedBox(width: 8),
+                      Text('Default',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: cs.primary),
                       ),
-                      if (method.isDefault) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: cs.primary.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text('Default',
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: cs.primary),
-                          ),
-                        ),
-                      ],
                     ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(method.provider,
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(method.maskedNumber,
-                    style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4), fontFamily: 'monospace'),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+                Text(method.provider,
+                  style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
+                ),
+                Text(method.maskedNumber,
+                  style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4), fontFamily: 'monospace'),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -661,87 +439,67 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> {
   IconData _typeIcon(String type) {
     switch (type) {
       case 'mobile_money':
-        return Uicons.mobile;
+        return Icons.phone_android;
       case 'card':
-        return Uicons.creditCard;
+        return Icons.credit_card;
       case 'bank':
-        return Uicons.accountBalanceWallet;
+        return Icons.account_balance;
       default:
-        return Uicons.creditCard;
+        return Icons.credit_card;
     }
   }
 
   Widget _buildOptionCard(_PaymentOption option, ColorScheme cs, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 3))],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 42, height: 42,
-                  decoration: BoxDecoration(
-                    color: option.color.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(option.icon, color: option.color, size: 20),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(option.icon, color: option.color, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(option.label,
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: cs.onSurface),
+                    ),
+                    Text(option.subtitle,
+                      style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5), height: 1.4),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(option.label,
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(option.subtitle,
-                        style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5), height: 1.4),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (option.providers.isNotEmpty) ...[
-              const SizedBox(height: 14),
-              Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
-              const SizedBox(height: 14),
-              Text('Available Providers',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.4)),
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: option.providers.map((p) => _buildProviderChip(p, option.color, cs)).toList(),
               ),
             ],
+          ),
+          if (option.providers.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text('Available Providers',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.4)),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: option.providers.map((p) => _buildProviderChip(p, option.color, cs)).toList(),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildProviderChip(String name, Color color, ColorScheme cs) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.15)),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Text(name,
-        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: color),
       ),
     );
   }

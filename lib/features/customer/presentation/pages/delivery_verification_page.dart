@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../../../core/notifications/notification_service.dart';
-import '../../../../core/theme/uicons.dart';
 import '../../data/models/delivery_proof_model.dart';
 import '../../presentation/cubit/delivery_verification_cubit.dart';
 import '../../presentation/cubit/delivery_verification_state.dart';
@@ -30,7 +27,7 @@ class _DeliveryVerificationPageState extends State<DeliveryVerificationPage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Uicons.angleLeft),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         title: const Text('Delivery Verification'),
@@ -81,9 +78,6 @@ class _DeliveryVerificationPageState extends State<DeliveryVerificationPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Uicons.boxOpen,
-                size: 64, color: cs.onSurface.withValues(alpha: 0.2)),
-            const SizedBox(height: 16),
             Text('No Delivery Proofs',
                 style: TextStyle(
                     fontSize: 18,
@@ -128,11 +122,6 @@ class _ProofCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: cs.onSurface.withValues(alpha: 0.08)),
-      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -140,21 +129,12 @@ class _ProofCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _statusColor(proof.status)
-                        .withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    proof.status.replaceAll('_', ' ').toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: _statusColor(proof.status),
-                    ),
+                Text(
+                  proof.status.replaceAll('_', ' ').toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: _statusColor(proof.status),
                   ),
                 ),
                 const Spacer(),
@@ -170,7 +150,7 @@ class _ProofCard extends StatelessWidget {
                         width: 56,
                         height: 56,
                         color: cs.onSurface.withValues(alpha: 0.06),
-                        child: Icon(Uicons.picture,
+                        child: Icon(Icons.broken_image_outlined,
                             size: 24,
                             color: cs.onSurface.withValues(alpha: 0.3)),
                       ),
@@ -197,7 +177,7 @@ class _ProofCard extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Uicons.checkCircle,
+                  Icon(Icons.check_circle_outline,
                       size: 14, color: Colors.green),
                   const SizedBox(width: 4),
                   Text(
@@ -212,7 +192,7 @@ class _ProofCard extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Uicons.circleExclamation,
+                  Icon(Icons.error_outline,
                       size: 14, color: Colors.red),
                   const SizedBox(width: 4),
                   Text(
@@ -231,7 +211,7 @@ class _ProofCard extends StatelessWidget {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () => _showDisputeDialog(context, proof.id),
-                    icon: const Icon(Uicons.circleExclamation, size: 16),
+                    icon: const Icon(Icons.error_outline, size: 16),
                     style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red),
                     label: const Text('Dispute Delivery'),
@@ -242,7 +222,7 @@ class _ProofCard extends StatelessWidget {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () => _showDisputeDialog(context, proof.id),
-                    icon: const Icon(Uicons.circleExclamation, size: 16),
+                    icon: const Icon(Icons.error_outline, size: 16),
                     style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red),
                     label: const Text('Report Issue'),

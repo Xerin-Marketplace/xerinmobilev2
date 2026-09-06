@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/notifications/notification_service.dart';
-import '../../../../shared/widgets/app_icon.dart';
-import '../../../../core/theme/uicons.dart';
 
 class HelpSupportPage extends StatefulWidget {
   const HelpSupportPage({super.key});
@@ -12,9 +10,7 @@ class HelpSupportPage extends StatefulWidget {
   State<HelpSupportPage> createState() => _HelpSupportPageState();
 }
 
-class _HelpSupportPageState extends State<HelpSupportPage>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _animController;
+class _HelpSupportPageState extends State<HelpSupportPage> {
   final _messageCtrl = TextEditingController();
 
   final List<Map<String, dynamic>> _faqs = const [
@@ -41,18 +37,7 @@ class _HelpSupportPageState extends State<HelpSupportPage>
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-    _animController.forward();
-  }
-
-  @override
   void dispose() {
-    _animController.dispose();
     _messageCtrl.dispose();
     super.dispose();
   }
@@ -62,7 +47,6 @@ class _HelpSupportPageState extends State<HelpSupportPage>
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -74,7 +58,7 @@ class _HelpSupportPageState extends State<HelpSupportPage>
                   children: [
                     Row(
                       children: [
-                        BackIconButton(
+                        GestureDetector(
                           onTap: () {
                             if (context.canPop()) {
                               context.pop();
@@ -82,154 +66,52 @@ class _HelpSupportPageState extends State<HelpSupportPage>
                               context.go('/');
                             }
                           },
-                          color: colorScheme.primary,
+                          child: Icon(Icons.arrow_back, size: 22, color: colorScheme.onSurface),
                         ),
                         const SizedBox(width: 16),
                         Text('Help & Support',
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.75)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colorScheme.primary.withValues(alpha: 0.3),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 54, height: 54,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Uicons.headset, color: Colors.white, size: 28),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Need help?',
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                                ),
-                                const SizedBox(height: 4),
-                                Text('We are here for you 24/7',
-                                  style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.8)),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                     const SizedBox(height: 24),
                     Text('Contact Options',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
                     ),
                     const SizedBox(height: 16),
-                    _buildContactOption(Uicons.phone, 'Call Support', '+255 792 810 292', const Color(0xFF22C55E), colorScheme),
+                    _buildContactOption(Icons.phone, 'Call Support', '+255 792 810 292', const Color(0xFF22C55E), colorScheme),
                     const SizedBox(height: 10),
-                    _buildContactOption(Uicons.envelope, 'Email Us', 'support@xerin.co.tz', const Color(0xFF3B82F6), colorScheme),
+                    _buildContactOption(Icons.email_outlined, 'Email Us', 'support@xerin.co.tz', const Color(0xFF3B82F6), colorScheme),
                     const SizedBox(height: 10),
-                    _buildContactOption(Uicons.comment, 'Live Chat', 'Available now', const Color(0xFFF59E0B), colorScheme),
+                    _buildContactOption(Icons.chat_outlined, 'Live Chat', 'Available now', const Color(0xFFF59E0B), colorScheme),
                     const SizedBox(height: 10),
-                    _buildContactOption(Uicons.comment, 'WhatsApp', '+255 792 810 292', const Color(0xFF22C55E), colorScheme),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.12)),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(Uicons.ticket, size: 22, color: colorScheme.primary),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Support Ticket Reference',
-                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colorScheme.onSurface),
-                                ),
-                                const SizedBox(height: 4),
-                                Text('When you contact support, you\'ll receive a ticket reference (e.g. XM-SUP-00123). Always include your order reference (e.g. XM-260811-00125) for faster resolution.',
-                                  style: TextStyle(fontSize: 12, height: 1.5, color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildContactOption(Icons.chat, 'WhatsApp', '+255 792 810 292', const Color(0xFF22C55E), colorScheme),
                     const SizedBox(height: 24),
                     Text('Frequently Asked Questions',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
                     ),
                     const SizedBox(height: 16),
-                    ..._faqs.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final faq = entry.value;
-                      return AnimatedBuilder(
-                        animation: _animController,
-                        builder: (context, child) {
-                          final delay = index * 0.1;
-                          final value = Curves.easeOutCubic.transform(
-                            (_animController.value - delay).clamp(0.0, 1.0),
-                          );
-                          return Transform.translate(
-                            offset: Offset(0, 20 * (1 - value)),
-                            child: Opacity(opacity: value, child: child),
-                          );
-                        },
-                        child: _FaqItem(
-                          question: faq['question'] as String,
-                          answer: faq['answer'] as String,
-                          colorScheme: colorScheme,
-                        ),
-                      );
-                    }),
+                    ..._faqs.map((faq) => _FaqItem(
+                      question: faq['question'] as String,
+                      answer: faq['answer'] as String,
+                      colorScheme: colorScheme,
+                    )),
                     const SizedBox(height: 24),
                     Text('Send us a Message',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
                     ),
                     const SizedBox(height: 16),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.onSurface.withValues(alpha: 0.03),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.08)),
-                      ),
-                      child: TextField(
-                        controller: _messageCtrl,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          hintText: 'Describe your issue...',
-                          hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.4)),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.all(16),
-                        ),
+                    TextField(
+                      controller: _messageCtrl,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        hintText: 'Describe your issue...',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                     const SizedBox(height: 16),
                     SizedBox(
-                      width: double.infinity, height: 54,
+                      width: double.infinity, height: 48,
                       child: ElevatedButton(
                         onPressed: () {
                           if (_messageCtrl.text.isNotEmpty) {
@@ -240,11 +122,11 @@ class _HelpSupportPageState extends State<HelpSupportPage>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: colorScheme.primary,
                           foregroundColor: colorScheme.onPrimary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           elevation: 0,
                         ),
                         child: const Text('Send Message',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
@@ -260,31 +142,18 @@ class _HelpSupportPageState extends State<HelpSupportPage>
   }
 
   Widget _buildContactOption(IconData icon, String title, String subtitle, Color color, ColorScheme colorScheme) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 3)),
-        ],
-      ),
+    return Padding(
+      padding: const EdgeInsets.all(14),
       child: Row(
         children: [
-          IconContainer(
-            icon: icon,
-            color: color,
-            size: 44,
-            iconSize: AppIconSize.lg,
-          ),
+          Icon(icon, color: color, size: 22),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colorScheme.onSurface),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
                 ),
                 const SizedBox(height: 4),
                 Text(subtitle,
@@ -293,7 +162,7 @@ class _HelpSupportPageState extends State<HelpSupportPage>
               ],
             ),
           ),
-          TrailingChevron(color: colorScheme.onSurface.withValues(alpha: 0.3)),
+          Icon(Icons.chevron_right, size: 20, color: colorScheme.onSurface.withValues(alpha: 0.3)),
         ],
       ),
     );
@@ -315,74 +184,38 @@ class _FaqItem extends StatefulWidget {
   State<_FaqItem> createState() => _FaqItemState();
 }
 
-class _FaqItemState extends State<_FaqItem>
-    with SingleTickerProviderStateMixin {
+class _FaqItemState extends State<_FaqItem> {
   bool _expanded = false;
-  late final AnimationController _controller;
-  late final Animation<double> _rotation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    );
-    _rotation = Tween<double>(begin: 0, end: 0.5).animate(_controller);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: widget.colorScheme.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: widget.colorScheme.onSurface.withValues(alpha: 0.06)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
       child: Column(
         children: [
           GestureDetector(
-            onTap: () {
-              setState(() {
-                _expanded = !_expanded;
-                if (_expanded) {
-                  _controller.forward();
-                } else {
-                  _controller.reverse();
-                }
-              });
-            },
+            onTap: () => setState(() => _expanded = !_expanded),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
                     child: Text(widget.question,
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: widget.colorScheme.onSurface),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: widget.colorScheme.onSurface),
                     ),
                   ),
-                  RotationTransition(
-                    turns: _rotation,
-                    child: Icon(Uicons.add, color: widget.colorScheme.primary, size: 22),
-                  ),
+                  Icon(_expanded ? Icons.expand_less : Icons.expand_more,
+                      color: widget.colorScheme.primary, size: 22),
                 ],
               ),
             ),
           ),
           AnimatedSize(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
+            duration: const Duration(milliseconds: 200),
             child: _expanded
                 ? Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    padding: const EdgeInsets.only(bottom: 12),
                     child: Text(widget.answer,
                       style: TextStyle(fontSize: 13, height: 1.5,
                         color: widget.colorScheme.onSurface.withValues(alpha: 0.6)),

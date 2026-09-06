@@ -105,4 +105,28 @@ class ProductRemoteDataSource {
       throw ServerException(_client.getErrorMessage(e));
     }
   }
+
+  Future<List<Map<String, String>>> getCountryOptions() async {
+    try {
+      final response = await _client.get(ApiConstants.logisticsCountryOptions);
+      final data = response.data;
+      List<dynamic> list;
+      if (data is List) {
+        list = data;
+      } else if (data is Map && data['items'] != null) {
+        list = data['items'] as List;
+      } else {
+        list = [];
+      }
+      return list.map((e) {
+        final map = e as Map<String, dynamic>;
+        return {
+          'code': map['code']?.toString() ?? '',
+          'name': map['name']?.toString() ?? '',
+        };
+      }).where((c) => c['name']!.isNotEmpty).toList();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
 }

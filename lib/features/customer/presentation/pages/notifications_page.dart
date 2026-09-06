@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/notification_cubit.dart';
 import '../../data/models/notification_model.dart';
-import '../../../../core/theme/uicons.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -27,11 +25,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   IconData _typeIcon(String type) {
     switch (type) {
-      case 'order': return Uicons.shoppingBag;
-      case 'promo': return Uicons.hashtag;
-      case 'payment': return Uicons.creditCard;
-      case 'system': return Uicons.circleInfo;
-      default: return Uicons.bell;
+      case 'order': return Icons.shopping_bag_outlined;
+      case 'promo': return Icons.local_offer_outlined;
+      case 'payment': return Icons.credit_card_outlined;
+      case 'system': return Icons.info_outline;
+      default: return Icons.notifications_outlined;
     }
   }
 
@@ -56,7 +54,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: BlocBuilder<NotificationCubit, NotificationState>(
           builder: (context, state) {
@@ -102,9 +99,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
       padding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
       child: Row(
         children: [
-          BackIconButton(
+          GestureDetector(
             onTap: () => context.pop(),
-            color: cs.primary,
+            child: Icon(Icons.arrow_back, size: 22, color: cs.onSurface),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -115,39 +112,18 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 ),
                 if (unreadCount > 0) ...[
                   const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: cs.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text('$unreadCount',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: cs.primary),
-                    ),
+                  Text('$unreadCount',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary),
                   ),
                 ],
               ],
             ),
           ),
           if (hasUnread)
-            GestureDetector(
-              onTap: () => context.read<NotificationCubit>().markAllAsRead(),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: cs.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Uicons.checkCircle, size: 14, color: cs.primary),
-                    const SizedBox(width: 5),
-                    Text('Mark All Read',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary),
-                    ),
-                  ],
-                ),
+            TextButton(
+              onPressed: () => context.read<NotificationCubit>().markAllAsRead(),
+              child: Text('Mark All Read',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary),
               ),
             ),
         ],
@@ -183,45 +159,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   Widget _buildLoadingState(ColorScheme cs) {
-    return Expanded(
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-        itemCount: 5,
-        itemBuilder: (context, index) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: cs.onSurface.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 38, height: 38,
-                  decoration: BoxDecoration(
-                    color: cs.onSurface.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(height: 14, width: 160, decoration: BoxDecoration(color: cs.onSurface.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(4))),
-                      const SizedBox(height: 8),
-                      Container(height: 12, width: 220, decoration: BoxDecoration(color: cs.onSurface.withValues(alpha: 0.04), borderRadius: BorderRadius.circular(4))),
-                      const SizedBox(height: 6),
-                      Container(height: 10, width: 60, decoration: BoxDecoration(color: cs.onSurface.withValues(alpha: 0.03), borderRadius: BorderRadius.circular(4))),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+    return const Expanded(
+      child: Center(child: CircularProgressIndicator()),
     );
   }
 
@@ -231,33 +170,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 80, height: 80,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE53935).withValues(alpha: 0.06),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Uicons.circleExclamation, size: 36, color: const Color(0xFFE53935).withValues(alpha: 0.4)),
-            ),
-            const SizedBox(height: 16),
-            Text('Something went wrong',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface.withValues(alpha: 0.5)),
-            ),
-            const SizedBox(height: 6),
             Text(message,
-              style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.3)),
+              style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.5)),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
+            const SizedBox(height: 16),
+            ElevatedButton(
               onPressed: () => context.read<NotificationCubit>().loadNotifications(),
-              icon: const Icon(Uicons.refresh, size: 16),
-              label: const Text('Retry', style: TextStyle(fontWeight: FontWeight.w600)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: cs.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
+              child: const Text('Retry'),
             ),
           ],
         ),
@@ -268,32 +188,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
   Widget _buildEmptyState(ColorScheme cs, bool unreadOnly) {
     return Expanded(
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 90, height: 90,
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.06),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                unreadOnly ? Uicons.checkCircle : Uicons.bellSlash,
-                size: 38,
-                color: cs.primary.withValues(alpha: 0.3),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              unreadOnly ? 'All caught up!' : 'No notifications',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface.withValues(alpha: 0.5)),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              unreadOnly ? 'You have no unread notifications' : 'You\'re all caught up!',
-              style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3)),
-            ),
-          ],
+        child: Text(
+          unreadOnly ? 'No unread notifications' : 'No notifications',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
         ),
       ),
     );
@@ -307,11 +204,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         margin: const EdgeInsets.only(bottom: 10),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: const Color(0xFFE53935).withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: const Icon(Uicons.trash, color: Color(0xFFE53935), size: 20),
+        child: const Icon(Icons.delete_outline, color: Color(0xFFE53935), size: 20),
       ),
       confirmDismiss: (direction) async {
         return await showDialog<bool>(
@@ -322,15 +215,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 56, height: 56,
-                  decoration: const BoxDecoration(
-                    color: Color(0x14E53935),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Uicons.trash, color: Color(0xFFE53935), size: 24),
-                ),
-                const SizedBox(height: 14),
                 Text('Delete notification?',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface),
                 ),
@@ -374,59 +258,23 @@ class _NotificationsPageState extends State<NotificationsPage> {
           context.read<NotificationCubit>().markAsRead(notification.id);
         }
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: notification.isRead
-              ? (isDark ? const Color(0xFF252525) : Colors.white)
-              : color.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: notification.isRead
-                ? cs.onSurface.withValues(alpha: 0.06)
-                : color.withValues(alpha: 0.15),
-          ),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 3))],
-        ),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 38, height: 38,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(_typeIcon(notification.type), color: color, size: 18),
-            ),
+            Icon(_typeIcon(notification.type), color: color, size: 22),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(notification.title,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: notification.isRead ? FontWeight.w500 : FontWeight.w700,
-                            color: cs.onSurface,
-                          ),
-                        ),
-                      ),
-                      if (!notification.isRead) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          width: 8, height: 8,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
-                    ],
+                  Text(notification.title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: notification.isRead ? FontWeight.w500 : FontWeight.w600,
+                      color: cs.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(notification.message,

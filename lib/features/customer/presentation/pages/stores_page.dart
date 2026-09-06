@@ -7,7 +7,6 @@ import '../../../../shared/widgets/app_network_image.dart';
 import '../cubit/recommendation_cubit.dart';
 import '../cubit/recommendation_state.dart';
 import '../../data/models/recommendation_model.dart';
-import '../../../../core/theme/uicons.dart';
 
 class StoresPage extends StatefulWidget {
   const StoresPage({super.key});
@@ -41,7 +40,6 @@ class _StoresPageState extends State<StoresPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: BlocBuilder<RecommendationCubit, RecommendationState>(
           builder: (context, state) {
@@ -70,7 +68,7 @@ class _StoresPageState extends State<StoresPage> {
                       titlePadding: const EdgeInsets.only(left: 20, bottom: 14),
                     ),
                     leading: IconButton(
-                      icon: Icon(Uicons.arrowBack,
+                      icon: Icon(Icons.arrow_back,
                           color: colorScheme.onSurface),
                       onPressed: () => context.pop(),
                     ),
@@ -106,18 +104,10 @@ class _StoresPageState extends State<StoresPage> {
     return SizedBox(
       height: 400,
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Uicons.storeAlt,
-                size: 72, color: cs.onSurface.withValues(alpha: 0.15)),
-            const SizedBox(height: 16),
-            Text('No stores available',
-                style: TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.w600,
-                    color: cs.onSurface.withValues(alpha: 0.5))),
-          ],
-        ),
+        child: Text('No stores available',
+            style: TextStyle(
+                fontSize: 16, fontWeight: FontWeight.w600,
+                color: cs.onSurface.withValues(alpha: 0.5))),
       ),
     );
   }
@@ -127,11 +117,6 @@ class _StoresPageState extends State<StoresPage> {
       onTap: () => context.read<RecommendationCubit>().loadStoreProducts(store.slug),
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -144,45 +129,32 @@ class _StoresPageState extends State<StoresPage> {
                   height: 120,
                   fit: BoxFit.cover,
                   borderRadius: 0,
-                  placeholderIcon: Uicons.storeAlt,
+                  placeholderIcon: Icons.store_outlined,
                 ),
               )
             else
               Container(
                 height: 120,
                 width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [cs.primary.withValues(alpha: 0.1), cs.primary.withValues(alpha: 0.03)],
-                    begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  ),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                child: Icon(Uicons.storeAlt, size: 40, color: cs.primary.withValues(alpha: 0.3)),
+                color: cs.surfaceContainerHighest,
+                child: Icon(Icons.store_outlined, size: 40, color: cs.primary.withValues(alpha: 0.3)),
               ),
             Padding(
               padding: const EdgeInsets.all(14),
               child: Row(
                 children: [
-                  Container(
-                    width: 48, height: 48,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-                    ),
-                    child: store.logoUrl != null
-                        ? ClipOval(
-                            child: AppNetworkImage(
-                              imageUrl: ApiConstants.resolveImageUrl(store.logoUrl),
-                              width: 48,
-                              height: 48,
-                              fit: BoxFit.cover,
-                              borderRadius: 0,
-                              placeholderIcon: Uicons.shop,
-                            ),
-                          )
-                        : Icon(Uicons.shop, color: cs.primary),
-                  ),
+                  store.logoUrl != null
+                      ? ClipOval(
+                          child: AppNetworkImage(
+                            imageUrl: ApiConstants.resolveImageUrl(store.logoUrl),
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                            borderRadius: 0,
+                            placeholderIcon: Icons.store_outlined,
+                          ),
+                        )
+                      : Icon(Icons.store_outlined, color: cs.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -197,14 +169,14 @@ class _StoresPageState extends State<StoresPage> {
                                   maxLines: 1, overflow: TextOverflow.ellipsis),
                             ),
                             if (store.isVerified)
-                              Icon(Uicons.badgeCheck, size: 16, color: cs.primary),
+                              Icon(Icons.verified, size: 16, color: cs.primary),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
                             if (store.rating > 0) ...[
-                              Icon(Uicons.star, size: 14, color: Colors.amber[600]),
+                              Icon(Icons.star, size: 14, color: Colors.amber[600]),
                               const SizedBox(width: 2),
                               Text(store.rating.toStringAsFixed(1),
                                   style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
@@ -217,20 +189,11 @@ class _StoresPageState extends State<StoresPage> {
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: store.isOpen
-                          ? const Color(0xFF22C55E).withValues(alpha: 0.1)
-                          : cs.onSurface.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      store.isOpen ? 'Open' : 'Closed',
-                      style: TextStyle(
-                          fontSize: 11, fontWeight: FontWeight.w600,
-                          color: store.isOpen ? const Color(0xFF22C55E) : cs.onSurface.withValues(alpha: 0.4)),
-                    ),
+                  Text(
+                    store.isOpen ? 'Open' : 'Closed',
+                    style: TextStyle(
+                        fontSize: 11, fontWeight: FontWeight.w600,
+                        color: store.isOpen ? const Color(0xFF22C55E) : cs.onSurface.withValues(alpha: 0.4)),
                   ),
                 ],
               ),

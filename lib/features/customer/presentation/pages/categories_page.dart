@@ -7,7 +7,6 @@ import '../../../../config/di/service_locator.dart';
 import '../cubit/products_cubit.dart';
 import '../cubit/products_state.dart';
 import '../../data/models/category_model.dart';
-import '../../../../core/theme/uicons.dart';
 
 class CategoriesPage extends StatefulWidget {
   const CategoriesPage({super.key});
@@ -36,7 +35,6 @@ class _CategoriesPageState extends State<CategoriesPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       body: BlocProvider.value(
         value: _cubit,
         child: SafeArea(
@@ -55,40 +53,28 @@ class _CategoriesPageState extends State<CategoriesPage> {
                           context.go(AppConstants.homeRoute);
                         }
                       },
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(
-                        Uicons.arrowBack,
-                        color: colorScheme.primary,
-                        size: 22,
+                      child: Icon(Icons.arrow_back, size: 22, color: colorScheme.onSurface),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      'All Categories',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Text(
-                    'All Categories',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Browse products by category',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: colorScheme.onSurface.withValues(alpha: 0.45),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 8),
+                Text(
+                  'Browse products by category',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: colorScheme.onSurface.withValues(alpha: 0.45),
+                  ),
+                ),
+                const SizedBox(height: 24),
               BlocBuilder<ProductsCubit, ProductsState>(
                 builder: (context, state) {
                   if (state is ProductsLoading) {
@@ -143,9 +129,6 @@ class _CategoriesPageState extends State<CategoriesPage> {
                           decoration: BoxDecoration(
                             color: colorScheme.primary.withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: colorScheme.primary.withValues(alpha: 0.15),
-                            ),
                           ),
                           child: Center(
                             child: Text(
@@ -155,7 +138,7 @@ class _CategoriesPageState extends State<CategoriesPage> {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 15,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                                 color: colorScheme.onSurface,
                               ),
                             ),

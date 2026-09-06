@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/notifications/notification_service.dart';
-import '../../../../core/theme/uicons.dart';
 import '../../data/models/support_model.dart';
 import '../../presentation/cubit/support_cubit.dart';
 import '../../presentation/cubit/support_state.dart';
@@ -29,13 +28,13 @@ class _SupportTicketsPageState extends State<SupportTicketsPage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Uicons.angleLeft),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         title: const Text('Support Tickets'),
         actions: [
           IconButton(
-            icon: const Icon(Uicons.plus),
+            icon: const Icon(Icons.add),
             onPressed: () => context.push('/support-ticket-create'),
           ),
         ],
@@ -73,7 +72,7 @@ class _SupportTicketsPageState extends State<SupportTicketsPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/support-ticket-create'),
-        child: const Icon(Uicons.plus),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -85,12 +84,6 @@ class _SupportTicketsPageState extends State<SupportTicketsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Uicons.comments,
-              size: 64,
-              color: colorScheme.onSurface.withValues(alpha: 0.2),
-            ),
-            const SizedBox(height: 16),
             Text(
               'No Support Tickets',
               style: TextStyle(
@@ -111,7 +104,7 @@ class _SupportTicketsPageState extends State<SupportTicketsPage> {
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: () => context.push('/support-ticket-create'),
-              icon: const Icon(Uicons.plus),
+              icon: const Icon(Icons.add),
               label: const Text('Create Ticket'),
             ),
           ],
@@ -164,15 +157,7 @@ class _TicketCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: colorScheme.onSurface.withValues(alpha: 0.08),
-        ),
-      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
         onTap: () => context.push('/support-ticket-detail', extra: {
           'ticketId': ticket.id,
         }),
@@ -183,39 +168,21 @@ class _TicketCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _statusColor(ticket.status, colorScheme)
-                          .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      ticket.status.replaceAll('_', ' ').toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: _statusColor(ticket.status, colorScheme),
-                      ),
+                  Text(
+                    ticket.status.replaceAll('_', ' ').toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: _statusColor(ticket.status, colorScheme),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _priorityColor(ticket.priority)
-                          .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      ticket.priority.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: _priorityColor(ticket.priority),
-                      ),
+                  Text(
+                    ticket.priority.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: _priorityColor(ticket.priority),
                     ),
                   ),
                   const Spacer(),
@@ -254,7 +221,7 @@ class _TicketCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Uicons.clock,
+                  Icon(Icons.schedule_outlined,
                       size: 14,
                       color: colorScheme.onSurface.withValues(alpha: 0.4)),
                   const SizedBox(width: 4),
@@ -267,7 +234,7 @@ class _TicketCard extends StatelessWidget {
                   ),
                   if (ticket.messages.isNotEmpty) ...[
                     const Spacer(),
-                    Icon(Uicons.comment,
+                    Icon(Icons.chat_bubble_outline,
                         size: 14,
                         color: colorScheme.onSurface
                             .withValues(alpha: 0.4)),

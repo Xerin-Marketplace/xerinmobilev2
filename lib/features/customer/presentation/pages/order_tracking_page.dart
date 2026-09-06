@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../shared/widgets/app_icon.dart';
 import '../../data/models/order_model.dart';
-import '../../../../core/theme/uicons.dart';
 
 class OrderTrackingPage extends StatelessWidget {
   final OrderModel order;
@@ -76,12 +74,12 @@ class OrderTrackingPage extends StatelessWidget {
     final isCancelled = currentStep == -1;
 
     final steps = [
-      {'icon': Uicons.receipt, 'title': 'Order Confirmed', 'desc': 'Your order has been received and confirmed'},
-      {'icon': Uicons.badgeCheck, 'title': 'Payment Verified', 'desc': 'Payment has been verified and seller notified'},
-      {'icon': Uicons.box, 'title': 'Seller Preparing', 'desc': 'The seller is preparing your order for dispatch'},
-      {'icon': Uicons.warehouse, 'title': 'Received at Xerin Hub', 'desc': 'Your order has arrived at the Xerin fulfilment centre'},
-      {'icon': Uicons.shippingFast, 'title': 'Out for Delivery', 'desc': 'Your order is on the way via Xerin Express'},
-      {'icon': Uicons.checkCircle, 'title': 'Delivered', 'desc': 'Order has been delivered successfully'},
+      {'title': 'Order Confirmed', 'desc': 'Your order has been received and confirmed'},
+      {'title': 'Payment Verified', 'desc': 'Payment has been verified and seller notified'},
+      {'title': 'Seller Preparing', 'desc': 'The seller is preparing your order for dispatch'},
+      {'title': 'Received at Xerin Hub', 'desc': 'Your order has arrived at the Xerin fulfilment centre'},
+      {'title': 'Out for Delivery', 'desc': 'Your order is on the way via Xerin Express'},
+      {'title': 'Delivered', 'desc': 'Order has been delivered successfully'},
     ];
 
     return Scaffold(
@@ -93,9 +91,9 @@ class OrderTrackingPage extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  BackIconButton(
+                  GestureDetector(
                     onTap: () => context.pop(),
-                    color: colorScheme.primary,
+                    child: Icon(Icons.arrow_back, size: 22, color: colorScheme.onSurface),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -112,34 +110,15 @@ class OrderTrackingPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: _statusColor(order.status).withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: _statusColor(order.status).withValues(alpha: 0.2)),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            isCancelled ? Uicons.circleXmark : Uicons.shippingFast,
-                            color: _statusColor(order.status),
-                            size: 48,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            isCancelled ? 'Order Cancelled' : order.displayStatus.toUpperCase(),
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold, color: _statusColor(order.status)),
-                          ),
-                          const SizedBox(height: 4),
-                          Text('Order ${order.orderRef}',
-                              style: TextStyle(
-                                  fontSize: 13, color: colorScheme.onSurface.withValues(alpha: 0.5))),
-                        ],
-                      ),
+                    Text(
+                      isCancelled ? 'Order Cancelled' : order.displayStatus.toUpperCase(),
+                      style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold, color: _statusColor(order.status)),
                     ),
+                    const SizedBox(height: 4),
+                    Text('Order ${order.orderRef}',
+                        style: TextStyle(
+                            fontSize: 13, color: colorScheme.onSurface.withValues(alpha: 0.5))),
                     const SizedBox(height: 28),
                     if (!isCancelled)
                       ...List.generate(steps.length, (index) {
@@ -154,14 +133,10 @@ class OrderTrackingPage extends StatelessWidget {
                             Column(
                               children: [
                                 Container(
-                                  width: 40, height: 40,
+                                  width: 12, height: 12,
                                   decoration: BoxDecoration(
                                     color: stepColor,
                                     shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    isCompleted ? Uicons.check : step['icon'] as IconData,
-                                    color: Colors.white, size: 20,
                                   ),
                                 ),
                                 if (index < steps.length - 1)
@@ -176,7 +151,7 @@ class OrderTrackingPage extends StatelessWidget {
                             const SizedBox(width: 16),
                             Expanded(
                               child: Padding(
-                                padding: const EdgeInsets.only(top: 8),
+                                padding: const EdgeInsets.only(top: 0),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -217,14 +192,13 @@ class OrderTrackingPage extends StatelessWidget {
                           ),
                         ),
                       ),
-                    // Shipment tracking info
                     if (order.shipments.isNotEmpty) ...[
                       const SizedBox(height: 28),
                       Text('Shipment Tracking',
                           style: TextStyle(
                               fontSize: 16, fontWeight: FontWeight.w700, color: colorScheme.onSurface)),
                       const SizedBox(height: 12),
-                      ...order.shipments.map((shipment) => _buildShipmentCard(shipment, colorScheme, isDark)),
+                      ...order.shipments.map((shipment) => _buildShipmentInfo(shipment, colorScheme)),
                     ],
 
                     const SizedBox(height: 28),
@@ -233,24 +207,10 @@ class OrderTrackingPage extends StatelessWidget {
                           style: TextStyle(
                               fontSize: 16, fontWeight: FontWeight.w700, color: colorScheme.onSurface)),
                       const SizedBox(height: 12),
-                      ...order.statusHistory.map((h) => Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF252525) : Colors.white,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
-                            ),
+                      ...order.statusHistory.map((h) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             child: Row(
                               children: [
-                                Container(
-                                  width: 8, height: 8,
-                                  decoration: BoxDecoration(
-                                    color: _statusColor(h.status),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(h.status.toUpperCase(),
                                       style: TextStyle(
@@ -285,31 +245,15 @@ class OrderTrackingPage extends StatelessWidget {
     }
   }
 
-  Widget _buildShipmentCard(ShipmentModel shipment, ColorScheme cs, bool isDark) {
+  Widget _buildShipmentInfo(ShipmentModel shipment, ColorScheme cs) {
     final statusColor = _shipmentStatusColor(shipment.status);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Shipment header
           Row(
             children: [
-              Container(
-                width: 36, height: 36,
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(Uicons.shippingFast, color: statusColor, size: 18),
-              ),
-              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,31 +270,17 @@ class OrderTrackingPage extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(shipment.status.replaceAll('_', ' ').toUpperCase(),
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: statusColor),
-                ),
+              Text(shipment.status.replaceAll('_', ' ').toUpperCase(),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: statusColor),
               ),
             ],
           ),
           if (shipment.estimatedDeliveryFrom != null || shipment.estimatedDeliveryTo != null) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(Uicons.clock, size: 14, color: cs.onSurface.withValues(alpha: 0.4)),
-                const SizedBox(width: 6),
-                Text('Est. delivery: ${_formatDateRange(shipment.estimatedDeliveryFrom, shipment.estimatedDeliveryTo)}',
-                  style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
-                ),
-              ],
+            const SizedBox(height: 8),
+            Text('Est. delivery: ${_formatDateRange(shipment.estimatedDeliveryFrom, shipment.estimatedDeliveryTo)}',
+              style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
             ),
           ],
-          // Tracking events
           if (shipment.trackingEvents.isNotEmpty) ...[
             const SizedBox(height: 16),
             ...shipment.trackingEvents.map((event) => _buildTrackingEvent(event, cs, statusColor)),

@@ -25,6 +25,7 @@ class HomeLoaded extends HomeState {
   final List<ProductModel> featuredProducts;
   final List<OrderModel> orders;
   final List<ProductModel> searchResults;
+  final List<Map<String, String>> countries;
   final bool isSearching;
 
   const HomeLoaded({
@@ -33,6 +34,7 @@ class HomeLoaded extends HomeState {
     this.featuredProducts = const [],
     this.orders = const [],
     this.searchResults = const [],
+    this.countries = const [],
     this.isSearching = false,
   });
 
@@ -42,6 +44,7 @@ class HomeLoaded extends HomeState {
     List<ProductModel>? featuredProducts,
     List<OrderModel>? orders,
     List<ProductModel>? searchResults,
+    List<Map<String, String>>? countries,
     bool? isSearching,
   }) =>
       HomeLoaded(
@@ -50,12 +53,13 @@ class HomeLoaded extends HomeState {
         featuredProducts: featuredProducts ?? this.featuredProducts,
         orders: orders ?? this.orders,
         searchResults: searchResults ?? this.searchResults,
+        countries: countries ?? this.countries,
         isSearching: isSearching ?? this.isSearching,
       );
 
   @override
   List<Object?> get props =>
-      [user, categories, featuredProducts, orders, searchResults, isSearching];
+      [user, categories, featuredProducts, orders, searchResults, countries, isSearching];
 }
 
 class HomeError extends HomeState {

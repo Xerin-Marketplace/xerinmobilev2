@@ -6,9 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/utils/helpers.dart';
-import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/customer_cubit.dart';
-import '../../../../core/theme/uicons.dart';
 
 class PaymentProcessingPage extends StatefulWidget {
   final String? paymentId;
@@ -171,19 +169,17 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: cs.surface,
       body: SafeArea(
         child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  BackIconButton(
-                    onTap: () => context.go('/'),
-                    color: cs.primary,
-                  ),
-                ],
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: GestureDetector(
+                  onTap: () => context.go('/'),
+                  child: Icon(Icons.arrow_back, size: 22, color: cs.onSurface),
+                ),
               ),
             ),
             Expanded(
@@ -215,63 +211,28 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Pulsing animation container
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.92, end: 1.0),
-          duration: const Duration(milliseconds: 800),
-          builder: (context, scale, child) => Transform.scale(scale: scale, child: child),
-          child: Container(
-            width: 120, height: 120,
-            decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: SizedBox(
-                width: 56, height: 56,
-                child: CircularProgressIndicator(
-                  strokeWidth: 4,
-                  color: cs.primary,
-                ),
-              ),
-            ),
+        SizedBox(
+          width: 56, height: 56,
+          child: CircularProgressIndicator(
+            strokeWidth: 3,
+            color: cs.primary,
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 28),
         Text('Processing Payment',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: cs.onSurface),
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: cs.onSurface),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Text(_statusMessage,
           style: TextStyle(fontSize: 15, color: cs.onSurface.withValues(alpha: 0.5)),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
-        if (widget.paymentId != null && widget.paymentId!.isNotEmpty)
+        if (widget.paymentId != null && widget.paymentId!.isNotEmpty) ...[
+          const SizedBox(height: 8),
           Text('Payment ID: ${widget.paymentId!.substring(0, 8)}...',
             style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.3), fontFamily: 'monospace'),
           ),
-        const SizedBox(height: 32),
-        // Animated dots
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(3, (index) {
-            return TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: Duration(milliseconds: 600 + index * 200),
-              builder: (context, value, child) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: 8, height: 8,
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: 0.3 + value * 0.7),
-                    shape: BoxShape.circle,
-                  ),
-                );
-              },
-            );
-          }),
-        ),
+        ],
       ],
     );
   }
@@ -282,35 +243,17 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
       children: [
         ScaleTransition(
           scale: _successScale,
-          child: Container(
-            width: 120, height: 120,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [const Color(0xFF22C55E), const Color(0xFF16A34A)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF22C55E).withValues(alpha: 0.3),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Uicons.check,
-              color: Colors.white,
-              size: 64,
-            ),
+          child: const Icon(
+            Icons.check_circle,
+            color: Color(0xFF22C55E),
+            size: 72,
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 28),
         Text('Payment Successful!',
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: cs.onSurface),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: cs.onSurface),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Text(
           'Your order has been placed and payment confirmed. You will receive a confirmation shortly.',
           style: TextStyle(fontSize: 15, color: cs.onSurface.withValues(alpha: 0.5)),
@@ -318,32 +261,25 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
         ),
         if (widget.orderId != null && widget.orderId!.isNotEmpty) ...[
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              'Order Ref: ${formatOrderRef(widget.orderId!)}',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.primary),
-            ),
+          Text(
+            'Order Ref: ${formatOrderRef(widget.orderId!)}',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.primary),
           ),
         ],
-        const SizedBox(height: 40),
+        const SizedBox(height: 36),
         SizedBox(
           width: double.infinity,
-          height: 56,
+          height: 50,
           child: ElevatedButton(
             onPressed: () => context.go('/'),
             style: ElevatedButton.styleFrom(
               backgroundColor: cs.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               elevation: 0,
             ),
             child: const Text('Continue Shopping',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -364,49 +300,31 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
       children: [
         ScaleTransition(
           scale: _failScale,
-          child: Container(
-            width: 120, height: 120,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [const Color(0xFFEF4444), const Color(0xFFDC2626)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFEF4444).withValues(alpha: 0.3),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Uicons.crossSmall,
-              color: Colors.white,
-              size: 64,
-            ),
+          child: const Icon(
+            Icons.cancel,
+            color: Color(0xFFEF4444),
+            size: 72,
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 28),
         Text('Payment Failed',
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: cs.onSurface),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: cs.onSurface),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Text(_statusMessage,
           style: TextStyle(fontSize: 15, color: cs.onSurface.withValues(alpha: 0.5)),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 40),
+        const SizedBox(height: 36),
         SizedBox(
           width: double.infinity,
-          height: 56,
+          height: 50,
           child: ElevatedButton(
             onPressed: _isRetrying ? null : _retryPayment,
             style: ElevatedButton.styleFrom(
               backgroundColor: cs.primary,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               elevation: 0,
             ),
             child: _isRetrying
@@ -415,11 +333,11 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
                   children: [
                     SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
                     SizedBox(width: 12),
-                    Text('Retrying...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    Text('Retrying...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   ],
                 )
               : const Text('Retry Payment',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
           ),
         ),

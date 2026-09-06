@@ -5,7 +5,6 @@ import '../../cubit/customer_cubit.dart';
 import '../../cubit/customer_state.dart';
 import '../../../data/models/order_model.dart';
 import '../../../../common/presentation/widgets/kpi_widgets.dart';
-import '../../../../../core/theme/uicons.dart';
 
 class CustomerAnalyticsPage extends StatefulWidget {
   const CustomerAnalyticsPage({super.key});
@@ -117,7 +116,6 @@ class _CustomerAnalyticsPageState extends State<CustomerAnalyticsPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F9FA),
       body: SafeArea(
         child: BlocBuilder<CustomerCubit, CustomerState>(
           builder: (context, state) {
@@ -129,7 +127,7 @@ class _CustomerAnalyticsPageState extends State<CustomerAnalyticsPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Uicons.circleExclamation, size: 48, color: colorScheme.error),
+                    Icon(Icons.error_outline, size: 48, color: colorScheme.error),
                     const SizedBox(height: 12),
                     Text(state.message, textAlign: TextAlign.center),
                     const SizedBox(height: 16),
@@ -180,14 +178,14 @@ class _CustomerAnalyticsPageState extends State<CustomerAnalyticsPage> {
                         label: 'Total Spent',
                         value: 'TZS ${_formatCompact(totalSpent)}',
                         subValue: 'From delivered orders',
-                        icon: Uicons.accountBalanceWallet,
+                        icon: Icons.account_balance_wallet_outlined,
                         gradientColors: [const Color(0xFFF47524), const Color(0xFFFF9A56)],
                       ),
                       GradientKpiCard(
                         label: 'Total Orders',
                         value: '$totalOrders',
                         subValue: '${state is CustomerLoaded ? state.pendingOrders : 0} pending',
-                        icon: Uicons.shoppingBag,
+                        icon: Icons.shopping_bag_outlined,
                         gradientColors: [const Color(0xFF3B82F6), const Color(0xFF60A5FA)],
                       ),
                     ],
@@ -207,7 +205,7 @@ class _CustomerAnalyticsPageState extends State<CustomerAnalyticsPage> {
                         label: 'Avg Order Value',
                         value: 'TZS ${_formatCompact(avgOrderValue)}',
                         subValue: 'Per order average',
-                        icon: Uicons.arrowTrendUp,
+                        icon: Icons.trending_up,
                         color: const Color(0xFF22C55E),
                         subColor: const Color(0xFF22C55E),
                       ),
@@ -215,7 +213,7 @@ class _CustomerAnalyticsPageState extends State<CustomerAnalyticsPage> {
                         label: 'Delivered',
                         value: '$deliveredCount',
                         subValue: 'Successfully delivered',
-                        icon: Uicons.checkCircle,
+                        icon: Icons.check_circle_outline,
                         color: const Color(0xFF8B5CF6),
                         subColor: const Color(0xFF8B5CF6),
                       ),
@@ -227,7 +225,7 @@ class _CustomerAnalyticsPageState extends State<CustomerAnalyticsPage> {
                   SellerSectionHeader(
                     title: 'Spending Trend',
                     subtitle: 'Last 7 days',
-                    icon: Uicons.barChart,
+                    icon: Icons.bar_chart,
                     iconColor: const Color(0xFFF47524),
                   ),
                   const SizedBox(height: 12),
@@ -244,7 +242,7 @@ class _CustomerAnalyticsPageState extends State<CustomerAnalyticsPage> {
                   SellerSectionHeader(
                     title: 'Order Status',
                     subtitle: 'Breakdown of all orders',
-                    icon: Uicons.pieChart,
+                    icon: Icons.pie_chart_outline,
                     iconColor: const Color(0xFF3B82F6),
                   ),
                   const SizedBox(height: 12),
@@ -259,7 +257,7 @@ class _CustomerAnalyticsPageState extends State<CustomerAnalyticsPage> {
                   SellerSectionHeader(
                     title: 'Top Purchased Products',
                     subtitle: 'Most bought items',
-                    icon: Uicons.box,
+                    icon: Icons.inventory_2_outlined,
                     iconColor: const Color(0xFF22C55E),
                   ),
                   const SizedBox(height: 12),

@@ -34,13 +34,15 @@ class HomeCubit extends Cubit<HomeState> {
     final catFuture = _productDs.getCategories().then<dynamic>((v) => v).catchError((_) => null);
     final prodFuture = _productDs.getProducts(limit: 10).then<dynamic>((v) => v).catchError((_) => null);
     final orderFuture = _customerDs.getOrders(pageSize: 10).then<dynamic>((v) => v).catchError((_) => null);
+    final countryFuture = _productDs.getCountryOptions().then<dynamic>((v) => v).catchError((_) => null);
 
-    final results = await Future.wait([userFuture, catFuture, prodFuture, orderFuture]);
+    final results = await Future.wait([userFuture, catFuture, prodFuture, orderFuture, countryFuture]);
 
     final user = results[0] is UserModel ? results[0] as UserModel : null;
     final categories = results[1] is List ? (results[1] as List).whereType<CategoryModel>().toList() : <CategoryModel>[];
     final featured = results[2] is List ? (results[2] as List).whereType<ProductModel>().toList() : <ProductModel>[];
     final orders = results[3] is List ? (results[3] as List).whereType<OrderModel>().toList() : <OrderModel>[];
+    final countries = results[4] is List ? (results[4] as List).whereType<Map<String, String>>().toList() : <Map<String, String>>[];
 
     _logger.i(
       '✅ Home loaded — user: ${user?.fullName ?? "guest"}, '
@@ -54,6 +56,7 @@ class HomeCubit extends Cubit<HomeState> {
       categories: categories,
       featuredProducts: featured,
       orders: orders,
+      countries: countries,
     ));
   }
 

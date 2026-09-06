@@ -6,7 +6,6 @@ import '../../../../config/constants/api_constants.dart';
 import '../cubit/search_cubit.dart';
 import '../../data/models/product_model.dart';
 import 'product_detail_page.dart';
-import '../../../../core/theme/uicons.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -48,7 +47,7 @@ class _SearchPageState extends State<SearchPage> {
             hintText: 'Search products...',
             border: InputBorder.none,
             suffixIcon: IconButton(
-              icon: const Icon(Uicons.search),
+              icon: const Icon(Icons.search),
               onPressed: _performSearch,
             ),
           ),
@@ -57,7 +56,7 @@ class _SearchPageState extends State<SearchPage> {
         ),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Uicons.sort),
+            icon: const Icon(Icons.sort),
             onSelected: (value) {
               setState(() => _sort = value);
               _performSearch();
@@ -158,9 +157,9 @@ class _SearchProductCard extends StatelessWidget {
                       ApiConstants.resolveImageUrl(product.images.first) ?? '',
                       fit: BoxFit.cover,
                       width: double.infinity,
-                      errorBuilder: (_, __, ___) => const Icon(Uicons.image, size: 48),
+                      errorBuilder: (_, __, ___) => const Icon(Icons.image_outlined, size: 48),
                     )
-                  : const Icon(Uicons.image, size: 48),
+                  : const Icon(Icons.image_outlined, size: 48),
             ),
             Padding(
               padding: const EdgeInsets.all(8),

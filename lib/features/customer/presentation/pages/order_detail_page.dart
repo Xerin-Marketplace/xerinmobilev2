@@ -3,10 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
-import '../../../../shared/widgets/app_icon.dart';
 import '../cubit/customer_cubit.dart';
 import '../../data/models/order_model.dart';
-import '../../../../core/theme/uicons.dart';
 
 class OrderDetailPage extends StatefulWidget {
   final OrderModel order;
@@ -69,26 +67,6 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     }
   }
 
-  IconData _statusIcon(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-      case 'delivered':
-        return Uicons.checkCircle;
-      case 'processing':
-      case 'received_at_hub':
-      case 'paid':
-        return Uicons.clock;
-      case 'shipped':
-        return Uicons.shippingFast;
-      case 'cancelled':
-      case 'failed':
-        return Uicons.circleXmark;
-      case 'pending':
-      default:
-        return Uicons.accessTime;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -106,21 +84,16 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  BackIconButton(
+                  GestureDetector(
                     onTap: () => context.pop(),
-                    color: colorScheme.primary,
+                    child: Icon(Icons.arrow_back, size: 22, color: colorScheme.onSurface),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
                       'Order ${order.orderRef}',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -132,156 +105,91 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: statusColor.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            _statusIcon(order.status),
-                            color: statusColor,
-                            size: 48,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            order.displayStatus.toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: statusColor,
-                            ),
-                          ),
-                          if (order.createdAt != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              'Placed on ${_formatDate(order.createdAt!)}',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: colorScheme.onSurface.withValues(alpha: 0.5),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
+                    Text(order.displayStatus.toUpperCase(),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: statusColor),
                     ),
+                    if (order.createdAt != null) ...[
+                      const SizedBox(height: 4),
+                      Text('Placed on ${_formatDate(order.createdAt!)}',
+                        style: TextStyle(fontSize: 13, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                      ),
+                    ],
                     const SizedBox(height: 24),
                     _buildSectionTitle('Items', colorScheme),
-                    const SizedBox(height: 12),
-                    ...order.items.map((item) => _buildItemCard(item, colorScheme, isDark)),
+                    const SizedBox(height: 8),
+                    ...order.items.map((item) => _buildItemRow(item, colorScheme)),
                     const SizedBox(height: 24),
                     _buildSectionTitle('Order Summary', colorScheme),
-                    const SizedBox(height: 12),
-                    _buildSummaryCard(order, colorScheme, isDark),
+                    const SizedBox(height: 8),
+                    _buildSummary(order, colorScheme),
                     if (order.shipments.isNotEmpty) ...[
                       const SizedBox(height: 24),
                       _buildSectionTitle('Delivery Status', colorScheme),
-                      const SizedBox(height: 12),
-                      ...order.shipments.map((s) => _buildShipmentCard(s, colorScheme, isDark)),
+                      const SizedBox(height: 8),
+                      ...order.shipments.map((s) => _buildShipmentInfo(s, colorScheme)),
                     ],
-                    // Escrow status
                     if (_escrowStatus != null) ...[
                       const SizedBox(height: 24),
                       _buildSectionTitle('Escrow & Payment', colorScheme),
-                      const SizedBox(height: 12),
-                      _buildEscrowCard(_escrowStatus!, colorScheme, isDark),
+                      const SizedBox(height: 8),
+                      _buildEscrowInfo(_escrowStatus!, colorScheme),
                     ],
                     if (order.statusHistory.isNotEmpty) ...[
                       const SizedBox(height: 24),
                       _buildSectionTitle('Status History', colorScheme),
-                      const SizedBox(height: 12),
-                      ...order.statusHistory.map((h) => _buildHistoryItem(h, colorScheme, isDark)),
+                      const SizedBox(height: 8),
+                      ...order.statusHistory.map((h) => _buildHistoryRow(h, colorScheme)),
                     ],
                     if (order.notes != null && order.notes!.isNotEmpty) ...[
                       const SizedBox(height: 24),
                       _buildSectionTitle('Notes', colorScheme),
-                      const SizedBox(height: 12),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF252525) : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
-                        ),
-                        child: Text(
-                          order.notes!,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: colorScheme.onSurface.withValues(alpha: 0.7),
-                          ),
-                        ),
+                      const SizedBox(height: 8),
+                      Text(order.notes!,
+                        style: TextStyle(fontSize: 14, color: colorScheme.onSurface.withValues(alpha: 0.7)),
                       ),
                     ],
                     const SizedBox(height: 24),
                     SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: OutlinedButton.icon(
-                        onPressed: () => context.push(
-                          AppConstants.invoiceRoute,
-                          extra: {'order': order},
-                        ),
+                      width: double.infinity, height: 48,
+                      child: OutlinedButton(
+                        onPressed: () => context.push(AppConstants.invoiceRoute, extra: {'order': order}),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: colorScheme.primary,
                           side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.3), width: 1.5),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        icon: const Icon(Uicons.file, size: 20),
-                        label: const Text('View Invoice',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                        child: const Text('View Invoice', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                       ),
                     ),
                     const SizedBox(height: 12),
                     SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                        onPressed: () => context.push(
-                          AppConstants.orderTrackingRoute,
-                          extra: {'order': order},
-                        ),
+                      width: double.infinity, height: 48,
+                      child: ElevatedButton(
+                        onPressed: () => context.push(AppConstants.orderTrackingRoute, extra: {'order': order}),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: colorScheme.primary,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           elevation: 0,
                         ),
-                        icon: const Icon(Uicons.shippingFast, size: 20),
-                        label: const Text('Track Order',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                        child: const Text('Track Order', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                       ),
                     ),
                     if (canApproveReceipt) ...[
                       const SizedBox(height: 12),
                       SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton.icon(
+                        width: double.infinity, height: 48,
+                        child: ElevatedButton(
                           onPressed: _isApprovingReceipt ? null : _approveReceipt,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF22C55E),
                             foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             elevation: 0,
                           ),
-                          icon: _isApprovingReceipt
+                          child: _isApprovingReceipt
                             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                            : const Icon(Uicons.badgeCheck, size: 20),
-                          label: Text(_isApprovingReceipt ? 'Confirming...' : 'Confirm Receipt',
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                            : const Text('Confirm Receipt', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                         ),
                       ),
                     ],
@@ -307,60 +215,27 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     );
   }
 
-  Widget _buildItemCard(OrderItemModel item, ColorScheme cs, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-      ),
+  Widget _buildItemRow(OrderItemModel item, ColorScheme cs) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: item.productImage != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      item.productImage!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(
-                        Uicons.box,
-                        color: cs.primary.withValues(alpha: 0.4),
-                        size: 22,
-                      ),
-                    ),
-                  )
-                : Icon(Uicons.box, color: cs.primary.withValues(alpha: 0.4), size: 22),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.productName,
+                Text(item.productName,
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  'Qty: ${item.quantity} × ${item.formattedPrice}',
+                Text('Qty: ${item.quantity} × ${item.formattedPrice}',
                   style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
                 ),
               ],
             ),
           ),
-          Text(
-            item.formattedTotal,
+          Text(item.formattedTotal,
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurface),
           ),
         ],
@@ -368,84 +243,59 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     );
   }
 
-  Widget _buildSummaryCard(OrderModel order, ColorScheme cs, bool isDark) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-      ),
-      child: Column(
-        children: [
-          _summaryRow('Subtotal', order.formattedSubtotal, cs),
-          if (order.discountAmount > 0) ...[
-            const SizedBox(height: 8),
-            _summaryRow('Discount', '- ${_formatPrice(order.discountAmount, order.currency)}', cs,
-                valueColor: cs.primary),
-          ],
-          if (order.shippingAmount > 0) ...[
-            const SizedBox(height: 8),
-            _summaryRow('Shipping', _formatPrice(order.shippingAmount, order.currency), cs),
-          ],
-          if (order.taxAmount > 0) ...[
-            const SizedBox(height: 8),
-            _summaryRow('Tax', _formatPrice(order.taxAmount, order.currency), cs),
-          ],
-          const SizedBox(height: 12),
-          Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface)),
-              Text(order.formattedTotal,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: cs.primary)),
-            ],
-          ),
+  Widget _buildSummary(OrderModel order, ColorScheme cs) {
+    return Column(
+      children: [
+        _summaryRow('Subtotal', order.formattedSubtotal, cs),
+        if (order.discountAmount > 0) ...[
+          const SizedBox(height: 8),
+          _summaryRow('Discount', '- ${_formatPrice(order.discountAmount, order.currency)}', cs,
+              valueColor: cs.primary),
         ],
-      ),
+        if (order.shippingAmount > 0) ...[
+          const SizedBox(height: 8),
+          _summaryRow('Shipping', _formatPrice(order.shippingAmount, order.currency), cs),
+        ],
+        if (order.taxAmount > 0) ...[
+          const SizedBox(height: 8),
+          _summaryRow('Tax', _formatPrice(order.taxAmount, order.currency), cs),
+        ],
+        const SizedBox(height: 12),
+        Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface)),
+            Text(order.formattedTotal,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.primary)),
+          ],
+        ),
+      ],
     );
   }
 
-  Widget _buildHistoryItem(OrderStatusHistoryModel history, ColorScheme cs, bool isDark) {
-    final color = _statusColor(history.status);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-      ),
+  Widget _buildHistoryRow(OrderStatusHistoryModel history, ColorScheme cs) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  history.status.toUpperCase(),
+                Text(history.status.toUpperCase(),
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface),
                 ),
                 if (history.notes != null)
-                  Text(
-                    history.notes!,
+                  Text(history.notes!,
                     style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
                   ),
               ],
             ),
           ),
           if (history.createdAt != null)
-            Text(
-              _formatDate(history.createdAt!),
+            Text(_formatDate(history.createdAt!),
               style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
             ),
         ],
@@ -468,108 +318,56 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     );
   }
 
-  Widget _buildEscrowCard(Map<String, dynamic> escrow, ColorScheme cs, bool isDark) {
+  Widget _buildEscrowInfo(Map<String, dynamic> escrow, ColorScheme cs) {
     final escrowStatus = escrow['escrow_status'] as String? ?? 'pending';
     final receiptApproved = escrow['receipt_approved'] as bool? ?? false;
     final fundsReleased = escrow['funds_released'] as bool? ?? false;
     final sellerPayoutStatus = escrow['seller_payout_status'] as String?;
 
     Color escrowColor;
-    IconData escrowIcon;
     switch (escrowStatus.toLowerCase()) {
       case 'released':
       case 'completed':
         escrowColor = const Color(0xFF22C55E);
-        escrowIcon = Uicons.checkCircle;
         break;
       case 'held':
       case 'funds_held':
         escrowColor = const Color(0xFF3B82F6);
-        escrowIcon = Uicons.shield;
         break;
       case 'refunded':
         escrowColor = const Color(0xFFE53935);
-        escrowIcon = Uicons.circleXmark;
         break;
       default:
         escrowColor = const Color(0xFFF59E0B);
-        escrowIcon = Uicons.clock;
     }
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(
-                  color: escrowColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(escrowIcon, color: escrowColor, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Escrow: ${escrowStatus.split('_').map((w) => w[0].toUpperCase() + w.substring(1)).join(' ')}',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: escrowColor),
-                    ),
-                    const SizedBox(height: 2),
-                    Text('Your payment is protected',
-                      style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _summaryRow('Receipt Confirmed', receiptApproved ? 'Yes' : 'No', cs,
-              valueColor: receiptApproved ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Escrow: ${escrowStatus.split('_').map((w) => w[0].toUpperCase() + w.substring(1)).join(' ')}',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: escrowColor),
+        ),
+        const SizedBox(height: 4),
+        Text('Your payment is protected',
+          style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
+        ),
+        const SizedBox(height: 12),
+        _summaryRow('Receipt Confirmed', receiptApproved ? 'Yes' : 'No', cs,
+            valueColor: receiptApproved ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)),
+        const SizedBox(height: 8),
+        _summaryRow('Funds Released', fundsReleased ? 'Yes' : 'No', cs,
+            valueColor: fundsReleased ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)),
+        if (sellerPayoutStatus != null) ...[
           const SizedBox(height: 8),
-          _summaryRow('Funds Released', fundsReleased ? 'Yes' : 'No', cs,
-              valueColor: fundsReleased ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)),
-          if (sellerPayoutStatus != null) ...[
-            const SizedBox(height: 8),
-            _summaryRow('Seller Payout', sellerPayoutStatus.toUpperCase(), cs),
-          ],
-          if (!receiptApproved && order.status.toLowerCase() == 'delivered') ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF22C55E).withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFF22C55E).withValues(alpha: 0.2)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Uicons.info, color: Color(0xFF22C55E), size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text('Confirm receipt to release funds to the seller and complete the transaction.',
-                      style: TextStyle(fontSize: 12, height: 1.4, color: cs.onSurface.withValues(alpha: 0.6)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          _summaryRow('Seller Payout', sellerPayoutStatus.toUpperCase(), cs),
         ],
-      ),
+        if (!receiptApproved && order.status.toLowerCase() == 'delivered') ...[
+          const SizedBox(height: 12),
+          Text('Confirm receipt to release funds to the seller and complete the transaction.',
+            style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.6)),
+          ),
+        ],
+      ],
     );
   }
 
@@ -590,99 +388,41 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     return '$currency $formatted';
   }
 
-  Widget _buildShipmentCard(ShipmentModel shipment, ColorScheme cs, bool isDark) {
+  Widget _buildShipmentInfo(ShipmentModel shipment, ColorScheme cs) {
     final color = _statusColor(shipment.status);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 40, height: 40,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(_statusIcon(shipment.status), color: color, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(shipment.status.split('_').map((w) => w[0].toUpperCase() + w.substring(1)).join(' '),
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: color),
-                      ),
-                      const SizedBox(height: 2),
-                      if (shipment.carrierName != null)
-                        Text('Carrier: ${shipment.carrierName}',
-                          style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
-                        ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(shipment.status.toUpperCase(),
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color),
-                  ),
-                ),
-              ],
-            ),
+          Text(shipment.status.split('_').map((w) => w[0].toUpperCase() + w.substring(1)).join(' '),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: color),
           ),
-          if (shipment.trackingNumber != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Row(
-                children: [
-                  Icon(Uicons.box, size: 14, color: cs.onSurface.withValues(alpha: 0.3)),
-                  const SizedBox(width: 6),
-                  Text('Tracking: ${shipment.trackingNumber}',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary),
-                  ),
-                ],
-              ),
+          if (shipment.carrierName != null) ...[
+            const SizedBox(height: 2),
+            Text('Carrier: ${shipment.carrierName}',
+              style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
             ),
-          if (shipment.estimatedDeliveryFrom != null || shipment.estimatedDeliveryTo != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Row(
-                children: [
-                  Icon(Uicons.truckBox, size: 14, color: cs.onSurface.withValues(alpha: 0.3)),
-                  const SizedBox(width: 6),
-                  Text('Est. delivery: ${order.estimatedDeliveryRange ?? ''}',
-                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
-                  ),
-                ],
-              ),
-            ),
-          if (shipment.trackingEvents.isNotEmpty) ...[
+          ],
+          if (shipment.trackingNumber != null) ...[
             const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Tracking History',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: cs.onSurface.withValues(alpha: 0.5)),
-                  ),
-                  const SizedBox(height: 10),
-                  ...shipment.trackingEvents.map((e) => _buildTrackingEvent(e, cs)),
-                ],
-              ),
+            Text('Tracking: ${shipment.trackingNumber}',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary),
             ),
+          ],
+          if (shipment.estimatedDeliveryFrom != null || shipment.estimatedDeliveryTo != null) ...[
+            const SizedBox(height: 4),
+            Text('Est. delivery: ${order.estimatedDeliveryRange ?? ''}',
+              style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+          ],
+          if (shipment.trackingEvents.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text('Tracking History',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+            const SizedBox(height: 8),
+            ...shipment.trackingEvents.map((e) => _buildTrackingEvent(e, cs)),
           ],
         ],
       ),

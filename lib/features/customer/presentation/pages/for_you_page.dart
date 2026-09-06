@@ -7,7 +7,6 @@ import '../cubit/recommendation_cubit.dart';
 import '../cubit/recommendation_state.dart';
 import '../../data/models/product_model.dart';
 import '../../data/models/recommendation_model.dart';
-import '../../../../core/theme/uicons.dart';
 
 class ForYouPage extends StatefulWidget {
   const ForYouPage({super.key});
@@ -34,7 +33,6 @@ class _ForYouPageState extends State<ForYouPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: BlocBuilder<RecommendationCubit, RecommendationState>(
           builder: (context, state) {
@@ -67,9 +65,6 @@ class _ForYouPageState extends State<ForYouPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Uicons.circleExclamation,
-                size: 64, color: cs.error.withValues(alpha: 0.4)),
-            const SizedBox(height: 16),
             Text(message,
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -91,7 +86,6 @@ class _ForYouPageState extends State<ForYouPage> {
         SliverAppBar(
           pinned: true,
           expandedHeight: 120,
-          backgroundColor: cs.surface,
           surfaceTintColor: Colors.transparent,
           flexibleSpace: FlexibleSpaceBar(
             title: Text('For You',
@@ -102,14 +96,14 @@ class _ForYouPageState extends State<ForYouPage> {
             titlePadding: const EdgeInsets.only(left: 20, bottom: 14),
           ),
           leading: IconButton(
-            icon: Icon(Uicons.arrowBack, color: cs.onSurface),
+            icon: Icon(Icons.arrow_back, color: cs.onSurface),
             onPressed: () => context.pop(),
           ),
         ),
         if (state.recommended.isNotEmpty)
           SliverToBoxAdapter(
             child: _buildSectionHeader(
-                'Recommended for You', Uicons.autoAwesome, cs),
+                'Recommended for You', Icons.auto_awesome, cs),
           ),
         if (state.recommended.isNotEmpty)
           SliverPadding(
@@ -127,7 +121,7 @@ class _ForYouPageState extends State<ForYouPage> {
         if (state.newArrivals.isNotEmpty) ...[
           SliverToBoxAdapter(
             child: _buildSectionHeader(
-                'New Arrivals', Uicons.bolt, cs),
+                'New Arrivals', Icons.bolt, cs),
           ),
           SliverToBoxAdapter(
             child: _buildHorizontalList(state.newArrivals, cs),
@@ -135,7 +129,7 @@ class _ForYouPageState extends State<ForYouPage> {
         ],
         if (state.topRated.isNotEmpty) ...[
           SliverToBoxAdapter(
-            child: _buildSectionHeader('Top Rated', Uicons.star, cs),
+            child: _buildSectionHeader('Top Rated', Icons.star, cs),
           ),
           SliverToBoxAdapter(
             child: _buildHorizontalList(state.topRated, cs),
@@ -144,7 +138,7 @@ class _ForYouPageState extends State<ForYouPage> {
         if (state.bestSellers.isNotEmpty) ...[
           SliverToBoxAdapter(
             child: _buildSectionHeader(
-                'Best Sellers', Uicons.arrowTrendUp, cs),
+                'Best Sellers', Icons.trending_up, cs),
           ),
           SliverToBoxAdapter(
             child: _buildHorizontalList(state.bestSellers, cs),
@@ -160,23 +154,11 @@ class _ForYouPageState extends State<ForYouPage> {
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
       child: Row(
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [cs.primary, cs.primary.withValues(alpha: 0.7)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: Colors.white, size: 16),
-          ),
-          const SizedBox(width: 10),
+          Icon(icon, size: 18, color: cs.primary),
+          const SizedBox(width: 8),
           Text(title,
               style: TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface)),
+                  fontSize: 16, fontWeight: FontWeight.w600, color: cs.onSurface)),
         ],
       ),
     );
@@ -188,7 +170,6 @@ class _ForYouPageState extends State<ForYouPage> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
       ),
@@ -198,19 +179,19 @@ class _ForYouPageState extends State<ForYouPage> {
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
               child: product.thumbnailUrl != null
                   ? Image.network(product.thumbnailUrl!,
                       width: 72, height: 72, fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Container(
                           width: 72, height: 72,
                           color: cs.primary.withValues(alpha: 0.08),
-                          child: Icon(Uicons.box,
+                          child: Icon(Icons.inventory_2_outlined,
                               color: cs.primary, size: 28)))
                   : Container(
                       width: 72, height: 72,
                       color: cs.primary.withValues(alpha: 0.08),
-                      child: Icon(Uicons.box,
+                      child: Icon(Icons.inventory_2_outlined,
                           color: cs.primary, size: 28)),
             ),
             const SizedBox(width: 14),
@@ -224,24 +205,14 @@ class _ForYouPageState extends State<ForYouPage> {
                       maxLines: 2, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
                   if (item.reason.isNotEmpty)
-                    Row(
-                      children: [
-                        Icon(Uicons.autoAwesome,
-                            size: 12, color: cs.primary),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(item.reason,
-                              style: TextStyle(
-                                  fontSize: 11, color: cs.primary),
-                              maxLines: 1, overflow: TextOverflow.ellipsis),
-                        ),
-                      ],
-                    ),
+                    Text(item.reason,
+                        style: TextStyle(fontSize: 11, color: cs.primary),
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 6),
                   Row(
                     children: [
                       if (product.rating > 0) ...[
-                        Icon(Uicons.star, size: 14, color: Colors.amber[600]),
+                        Icon(Icons.star, size: 14, color: Colors.amber[600]),
                         const SizedBox(width: 2),
                         Text(product.rating.toStringAsFixed(1),
                             style: TextStyle(
@@ -278,7 +249,6 @@ class _ForYouPageState extends State<ForYouPage> {
               width: 140,
               margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
-                color: cs.surface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
               ),
@@ -293,12 +263,12 @@ class _ForYouPageState extends State<ForYouPage> {
                             errorBuilder: (_, __, ___) => Container(
                                 width: 140, height: 110,
                                 color: cs.primary.withValues(alpha: 0.08),
-                                child: Icon(Uicons.box,
+                                child: Icon(Icons.inventory_2_outlined,
                                     color: cs.primary, size: 32)))
                         : Container(
                             width: 140, height: 110,
                             color: cs.primary.withValues(alpha: 0.08),
-                            child: Icon(Uicons.box,
+                            child: Icon(Icons.inventory_2_outlined,
                                 color: cs.primary, size: 32)),
                   ),
                   Padding(

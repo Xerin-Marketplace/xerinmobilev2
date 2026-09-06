@@ -6,7 +6,6 @@ import '../../../../../config/constants/app_constants.dart';
 import '../cubit/recommendation_cubit.dart';
 import '../cubit/recommendation_state.dart';
 import '../../data/models/product_model.dart';
-import '../../../../core/theme/uicons.dart';
 
 class RecentlyViewedPage extends StatefulWidget {
   const RecentlyViewedPage({super.key});
@@ -32,7 +31,6 @@ class _RecentlyViewedPageState extends State<RecentlyViewedPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: BlocBuilder<RecommendationCubit, RecommendationState>(
           builder: (context, state) {
@@ -64,7 +62,7 @@ class _RecentlyViewedPageState extends State<RecentlyViewedPage> {
                       titlePadding: const EdgeInsets.only(left: 20, bottom: 14),
                     ),
                     leading: IconButton(
-                      icon: Icon(Uicons.arrowBack,
+                      icon: Icon(Icons.arrow_back,
                           color: colorScheme.onSurface),
                       onPressed: () => context.pop(),
                     ),
@@ -99,22 +97,10 @@ class _RecentlyViewedPageState extends State<RecentlyViewedPage> {
 
   Widget _buildEmpty(ColorScheme cs) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Uicons.orderHistory,
-              size: 72, color: cs.onSurface.withValues(alpha: 0.15)),
-          const SizedBox(height: 16),
-          Text('No recently viewed products',
-              style: TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w600,
-                  color: cs.onSurface.withValues(alpha: 0.5))),
-          const SizedBox(height: 8),
-          Text('Products you view will appear here',
-              style: TextStyle(
-                  fontSize: 13, color: cs.onSurface.withValues(alpha: 0.35))),
-        ],
-      ),
+      child: Text('No recently viewed products',
+          style: TextStyle(
+              fontSize: 16, fontWeight: FontWeight.w600,
+              color: cs.onSurface.withValues(alpha: 0.5))),
     );
   }
 
@@ -122,13 +108,7 @@ class _RecentlyViewedPageState extends State<RecentlyViewedPage> {
     return GestureDetector(
       onTap: () => context.push(AppConstants.productDetailRoute,
           extra: {'product': product, 'category': product.categoryName ?? 'All'}),
-      child: Container(
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-        ),
-        child: Column(
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
@@ -138,12 +118,12 @@ class _RecentlyViewedPageState extends State<RecentlyViewedPage> {
                     ? Image.network(product.thumbnailUrl!,
                         width: double.infinity, fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
-                            color: cs.primary.withValues(alpha: 0.08),
-                            child: Icon(Uicons.box,
+                            color: cs.surfaceContainerHighest,
+                            child: Icon(Icons.inventory_2_outlined,
                                 color: cs.primary, size: 36)))
                     : Container(
-                        color: cs.primary.withValues(alpha: 0.08),
-                        child: Icon(Uicons.box,
+                        color: cs.surfaceContainerHighest,
+                        child: Icon(Icons.inventory_2_outlined,
                             color: cs.primary, size: 36)),
               ),
             ),

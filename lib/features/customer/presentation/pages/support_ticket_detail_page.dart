@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/notifications/notification_service.dart';
-import '../../../../core/theme/uicons.dart';
 import '../../data/models/support_model.dart';
 import '../../presentation/cubit/support_cubit.dart';
 import '../../presentation/cubit/support_state.dart';
@@ -52,7 +51,7 @@ class _SupportTicketDetailPageState extends State<SupportTicketDetailPage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Uicons.angleLeft),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         title: const Text('Ticket Details'),
@@ -108,16 +107,8 @@ class _SupportTicketDetailPageState extends State<SupportTicketDetailPage> {
   }
 
   Widget _buildTicketHeader(SupportTicketModel ticket, ColorScheme cs) {
-    return Container(
+    return Padding(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: cs.onSurface.withValues(alpha: 0.03),
-        border: Border(
-          bottom: BorderSide(
-            color: cs.onSurface.withValues(alpha: 0.08),
-          ),
-        ),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -128,25 +119,17 @@ class _SupportTicketDetailPageState extends State<SupportTicketDetailPage> {
                   ticket.subject,
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.bold,
                     color: cs.onSurface,
                   ),
                 ),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _statusColor(ticket.status).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  ticket.status.replaceAll('_', ' ').toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: _statusColor(ticket.status),
-                  ),
+              Text(
+                ticket.status.replaceAll('_', ' ').toUpperCase(),
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: _statusColor(ticket.status),
                 ),
               ),
             ],
@@ -191,7 +174,6 @@ class _SupportTicketDetailPageState extends State<SupportTicketDetailPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: cs.surface,
         border: Border(
           top: BorderSide(color: cs.onSurface.withValues(alpha: 0.08)),
         ),
@@ -202,18 +184,9 @@ class _SupportTicketDetailPageState extends State<SupportTicketDetailPage> {
             Expanded(
               child: TextField(
                 controller: _messageCtrl,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Type your message...',
-                  hintStyle: TextStyle(
-                      color: cs.onSurface.withValues(alpha: 0.4)),
-                  filled: true,
-                  fillColor: cs.onSurface.withValues(alpha: 0.05),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
+                  border: OutlineInputBorder(),
                 ),
                 maxLines: null,
                 textCapitalization: TextCapitalization.sentences,
@@ -222,7 +195,7 @@ class _SupportTicketDetailPageState extends State<SupportTicketDetailPage> {
             const SizedBox(width: 8),
             IconButton.filled(
               onPressed: _sendMessage,
-              icon: const Icon(Uicons.paperPlane),
+              icon: const Icon(Icons.send),
             ),
           ],
         ),

@@ -4,7 +4,6 @@ import 'package:get_it/get_it.dart';
 
 import '../../../common/presentation/widgets/modern_bottom_nav.dart';
 import '../../../../core/storage/token_storage.dart';
-import '../../../../core/theme/uicons.dart';
 import '../../../../shared/widgets/guest_auth_gate.dart';
 import '../cubit/cart_cubit.dart';
 import '../cubit/cart_state.dart';
@@ -61,31 +60,30 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
         final navItems = [
           const NavItem(
-              icon: Uicons.home,
-              activeIcon: Uicons.home,
+              icon: Icons.home_outlined,
+              activeIcon: Icons.home,
               label: 'Home'),
           const NavItem(
-              icon: Uicons.compass,
-              activeIcon: Uicons.compass,
+              icon: Icons.explore_outlined,
+              activeIcon: Icons.explore,
               label: 'Explore'),
           NavItem(
-            icon: Uicons.shoppingCart,
-            activeIcon: Uicons.shoppingCart,
+            icon: Icons.shopping_cart_outlined,
+            activeIcon: Icons.shopping_cart,
             label: 'Cart',
             badgeCount: cartCount,
           ),
           const NavItem(
-              icon: Uicons.heart,
-              activeIcon: Uicons.heart,
+              icon: Icons.favorite_outline,
+              activeIcon: Icons.favorite,
               label: 'Wishlist'),
           const NavItem(
-              icon: Uicons.user,
-              activeIcon: Uicons.user,
+              icon: Icons.person_outline,
+              activeIcon: Icons.person,
               label: 'Profile'),
         ];
 
         return Scaffold(
-          backgroundColor: colorScheme.surface,
           body: IndexedStack(
             index: _selectedIndex,
             children: _pages,

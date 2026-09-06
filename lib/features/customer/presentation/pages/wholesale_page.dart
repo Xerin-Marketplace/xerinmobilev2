@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../../config/di/service_locator.dart';
-import '../../../../core/theme/uicons.dart';
 import '../../data/models/product_model.dart';
 import '../cubit/products_cubit.dart';
 import '../cubit/products_state.dart';
@@ -31,7 +30,6 @@ class _WholesalePageState extends State<WholesalePage> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -69,16 +67,9 @@ class _WholesalePageState extends State<WholesalePage> {
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => context.pop(),
-            child: Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(
-                color: cs.onSurface.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Uicons.arrowBack, color: cs.onSurface, size: 20),
-            ),
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
           ),
           const SizedBox(width: 16),
           Column(
@@ -100,16 +91,6 @@ class _WholesalePageState extends State<WholesalePage> {
   Widget _buildHeroBanner(ColorScheme cs) {
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Stack(
@@ -141,38 +122,24 @@ class _WholesalePageState extends State<WholesalePage> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Uicons.warehouse, color: Colors.white, size: 28),
+                      const Icon(Icons.warehouse_outlined, color: Colors.white, size: 28),
                       const SizedBox(width: 10),
-                      Text('Bulk Buying,\nBetter Prices',
+                      const Text('Bulk Buying,\nBetter Prices',
                         style: TextStyle(
                           fontSize: 22,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.bold,
                           color: Colors.white,
                           height: 1.2,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text('Buy in bulk from verified suppliers.\nTiered pricing, MOQ & RFQ available.',
+                  const Text('Buy in bulk from verified suppliers.\nTiered pricing, MOQ & RFQ available.',
                     style: TextStyle(
                       fontSize: 13,
                       height: 1.5,
-                      color: Colors.white.withValues(alpha: 0.95),
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withValues(alpha: 0.25),
-                          blurRadius: 6,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -195,153 +162,106 @@ class _WholesalePageState extends State<WholesalePage> {
   }
 
   Widget _buildHeroTag(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(label,
-        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white.withValues(alpha: 0.95)),
-      ),
+    return Text(label,
+      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
     );
   }
 
   Widget _buildInfoBanner(ColorScheme cs) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF00A651).withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF00A651).withValues(alpha: 0.15)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40, height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0xFF00A651),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Uicons.checkCircle, color: Colors.white, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Bulk Orders Available',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF00A651),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text('Browse wholesale products below and enjoy tiered pricing!',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: cs.onSurface.withValues(alpha: 0.6),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTieredPricingCard(ColorScheme cs) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cs.onSurface.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Row(
+      children: [
+        const Icon(Icons.check_circle_outline, color: Color(0xFF00A651), size: 18),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Uicons.tags, size: 20, color: cs.primary),
-              const SizedBox(width: 8),
-              Text('Tiered Pricing',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface),
+              const Text('Bulk Orders Available',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF00A651),
+                ),
               ),
-              const Spacer(),
-              GestureDetector(
-                onTap: () => _showTieredPricingDrawer(cs),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: cs.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('Details',
-                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: cs.primary),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(Uicons.arrowForward, size: 12, color: cs.primary),
-                    ],
-                  ),
+              const SizedBox(height: 2),
+              Text('Browse wholesale products below and enjoy tiered pricing!',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: cs.onSurface.withValues(alpha: 0.6),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: _tiers.map((tier) {
-              final color = tier['color'] as Color;
-              return Expanded(
-                child: Container(
-                  margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: color.withValues(alpha: 0.15)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTieredPricingCard(ColorScheme cs) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.local_offer_outlined, size: 20, color: cs.primary),
+            const SizedBox(width: 8),
+            Text('Tiered Pricing',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface),
+            ),
+            const Spacer(),
+            TextButton(
+              onPressed: () => _showTieredPricingDrawer(cs),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Details',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: cs.primary),
                   ),
-                  child: Column(
-                    children: [
-                      Text(tier['discount'] as String,
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: color),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(tier['label'] as String,
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: cs.onSurface.withValues(alpha: 0.7)),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(tier['range'] as String,
-                        style: TextStyle(fontSize: 8, color: cs.onSurface.withValues(alpha: 0.4)),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_forward, size: 12, color: cs.primary),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: _tiers.map((tier) {
+            final color = tier['color'] as Color;
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Column(
+                  children: [
+                    Text(tier['discount'] as String,
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(tier['label'] as String,
+                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: cs.onSurface.withValues(alpha: 0.7)),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(tier['range'] as String,
+                      style: TextStyle(fontSize: 8, color: cs.onSurface.withValues(alpha: 0.4)),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
   void _showTieredPricingDrawer(ColorScheme cs) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: cs.surface,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.65,
         minChildSize: 0.4,
@@ -352,19 +272,9 @@ class _WholesalePageState extends State<WholesalePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  width: 40, height: 4,
-                  decoration: BoxDecoration(
-                    color: cs.onSurface.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
               Row(
                 children: [
-                  Icon(Uicons.tags, size: 24, color: cs.primary),
+                  Icon(Icons.local_offer_outlined, size: 24, color: cs.primary),
                   const SizedBox(width: 10),
                   Text('Tiered Pricing',
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: cs.onSurface),
@@ -385,56 +295,32 @@ class _WholesalePageState extends State<WholesalePage> {
                     final tier = _tiers[index];
                     final color = tier['color'] as Color;
 
-                    return Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.04),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: color.withValues(alpha: 0.15)),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48, height: 48,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [color, color.withValues(alpha: 0.7)],
+                    return Row(
+                      children: [
+                        Icon(Icons.inventory_2_outlined, size: 22, color: color),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(tier['label'] as String,
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface),
                               ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(Uicons.box, size: 22, color: Colors.white),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(tier['label'] as String,
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(tier['range'] as String,
-                                  style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: color,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(tier['discount'] as String,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
+                              const SizedBox(height: 2),
+                              Text(tier['range'] as String,
+                                style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        Text(tier['discount'] as String,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
@@ -445,13 +331,7 @@ class _WholesalePageState extends State<WholesalePage> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: cs.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    elevation: 0,
-                  ),
-                  child: const Text('Got it', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                  child: const Text('Got it', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -470,23 +350,15 @@ class _WholesalePageState extends State<WholesalePage> {
         const Spacer(),
         GestureDetector(
           onTap: () => _showSortSheet(cs),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: cs.onSurface.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-            ),
-            child: Row(
-              children: [
-                Icon(Uicons.filter, size: 14, color: cs.onSurface.withValues(alpha: 0.5)),
-                const SizedBox(width: 6),
-                Text(
-                  _sortBy == 'popular' ? 'Popular' : _sortBy == 'price_low' ? 'Price ↓' : 'Price ↑',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.7)),
-                ),
-              ],
-            ),
+          child: Row(
+            children: [
+              Icon(Icons.sort, size: 14, color: cs.onSurface.withValues(alpha: 0.5)),
+              const SizedBox(width: 6),
+              Text(
+                _sortBy == 'popular' ? 'Popular' : _sortBy == 'price_low' ? 'Price ↓' : 'Price ↑',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.7)),
+              ),
+            ],
           ),
         ),
       ],
@@ -495,15 +367,13 @@ class _WholesalePageState extends State<WholesalePage> {
 
   void _showSortSheet(ColorScheme cs) {
     final options = [
-      {'value': 'popular', 'label': 'Most Popular', 'icon': Uicons.flame},
-      {'value': 'price_low', 'label': 'Price: Low to High', 'icon': Uicons.arrowTrendDown},
-      {'value': 'price_high', 'label': 'Price: High to Low', 'icon': Uicons.arrowTrendUp},
+      {'value': 'popular', 'label': 'Most Popular', 'icon': Icons.local_fire_department_outlined},
+      {'value': 'price_low', 'label': 'Price: Low to High', 'icon': Icons.trending_down},
+      {'value': 'price_high', 'label': 'Price: High to Low', 'icon': Icons.trending_up},
     ];
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: cs.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -514,42 +384,23 @@ class _WholesalePageState extends State<WholesalePage> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface),
             ),
             const SizedBox(height: 16),
-            ...options.map((opt) => GestureDetector(
+            ...options.map((opt) => ListTile(
+              leading: Icon(opt['icon'] as IconData, size: 18,
+                color: _sortBy == opt['value'] ? cs.primary : cs.onSurface.withValues(alpha: 0.5)),
+              title: Text(opt['label'] as String,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: _sortBy == opt['value'] ? FontWeight.bold : FontWeight.normal,
+                  color: _sortBy == opt['value'] ? cs.primary : cs.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+              trailing: _sortBy == opt['value']
+                  ? Icon(Icons.check, size: 18, color: cs.primary)
+                  : null,
               onTap: () {
                 setState(() => _sortBy = opt['value'] as String);
                 Navigator.pop(context);
               },
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: _sortBy == opt['value']
-                      ? cs.primary.withValues(alpha: 0.08)
-                      : cs.onSurface.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _sortBy == opt['value'] ? cs.primary.withValues(alpha: 0.3) : Colors.transparent,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(opt['icon'] as IconData, size: 18,
-                      color: _sortBy == opt['value'] ? cs.primary : cs.onSurface.withValues(alpha: 0.5)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(opt['label'] as String,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: _sortBy == opt['value'] ? FontWeight.w700 : FontWeight.w500,
-                          color: _sortBy == opt['value'] ? cs.primary : cs.onSurface.withValues(alpha: 0.7),
-                        ),
-                      ),
-                    ),
-                    if (_sortBy == opt['value'])
-                      Icon(Uicons.check, size: 18, color: cs.primary),
-                  ],
-                ),
-              ),
             )),
             const SizedBox(height: 20),
           ],
@@ -559,8 +410,6 @@ class _WholesalePageState extends State<WholesalePage> {
   }
 
   Widget _buildProductsSection(ColorScheme cs) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return BlocProvider(
       create: (_) => sl<ProductsCubit>()..loadAll(),
       child: BlocBuilder<ProductsCubit, ProductsState>(
@@ -587,31 +436,19 @@ class _WholesalePageState extends State<WholesalePage> {
               ),
               itemCount: 6,
               itemBuilder: (_, _) => Container(
-                decoration: BoxDecoration(
-                  color: cs.onSurface.withValues(alpha: 0.04),
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                color: cs.surfaceContainerHighest,
               ),
             );
           }
 
           if (products.isEmpty) {
-            return Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: cs.onSurface.withValues(alpha: 0.03),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  Icon(Uicons.box, size: 40, color: cs.onSurface.withValues(alpha: 0.2)),
-                  const SizedBox(height: 12),
-                  Text('No products available yet',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.4)),
-                  ),
-                ],
-              ),
+            return Column(
+              children: [
+                const SizedBox(height: 12),
+                Text('No products available yet',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.4)),
+                ),
+              ],
             );
           }
 
@@ -627,14 +464,14 @@ class _WholesalePageState extends State<WholesalePage> {
               childAspectRatio: 0.62,
             ),
             itemCount: displayProducts.length,
-            itemBuilder: (context, index) => _buildWholesaleCard(cs, displayProducts[index], isDark),
+            itemBuilder: (context, index) => _buildWholesaleCard(cs, displayProducts[index]),
           );
         },
       ),
     );
   }
 
-  Widget _buildWholesaleCard(ColorScheme cs, ProductModel product, bool isDark) {
+  Widget _buildWholesaleCard(ColorScheme cs, ProductModel product) {
     final bulkPrice = product.price * 0.9;
 
     return GestureDetector(
@@ -642,155 +479,118 @@ class _WholesalePageState extends State<WholesalePage> {
         'product': product,
         'category': product.categoryName ?? 'All',
       }),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF252525) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                  child: product.thumbnailUrl != null
-                      ? Image.network(
-                          product.thumbnailUrl!,
-                          height: 130,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, progress) {
-                            if (progress == null) return child;
-                            return Container(
-                              height: 130,
-                              color: cs.primary.withValues(alpha: 0.06),
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: cs.primary,
-                                ),
-                              ),
-                            );
-                          },
-                          errorBuilder: (_, _, _) => Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                child: product.thumbnailUrl != null
+                    ? Image.network(
+                        product.thumbnailUrl!,
+                        height: 130,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return Container(
                             height: 130,
-                            color: cs.primary.withValues(alpha: 0.06),
-                            child: Icon(Uicons.box, size: 28, color: cs.primary.withValues(alpha: 0.3)),
-                          ),
-                        )
-                      : Container(
+                            color: cs.surfaceContainerHighest,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: cs.primary,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (_, _, _) => Container(
                           height: 130,
-                          color: cs.primary.withValues(alpha: 0.06),
-                          child: Icon(Uicons.box, size: 28, color: cs.primary.withValues(alpha: 0.3)),
+                          color: cs.surfaceContainerHighest,
+                          child: Icon(Icons.inventory_2_outlined, size: 28, color: cs.primary.withValues(alpha: 0.3)),
                         ),
+                      )
+                    : Container(
+                        height: 130,
+                        color: cs.surfaceContainerHighest,
+                        child: Icon(Icons.inventory_2_outlined, size: 28, color: cs.primary.withValues(alpha: 0.3)),
+                      ),
+              ),
+              const Positioned(
+                top: 8, left: 8,
+                child: Text('WHOLESALE',
+                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFFF59E0B)),
                 ),
-                Positioned(
-                  top: 8, left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B),
-                      borderRadius: BorderRadius.circular(8),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(product.name,
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: cs.onSurface),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.inventory_2_outlined, size: 11, color: cs.onSurface.withValues(alpha: 0.4)),
+                    const SizedBox(width: 3),
+                    Text('MOQ: 10',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
                     ),
-                    child: const Text('WHOLESALE',
-                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white),
-                    ),
-                  ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(product.formattedPrice,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.primary),
+                ),
+                const SizedBox(height: 2),
+                Text('Bulk: ${product.currency} ${bulkPrice.toStringAsFixed(0)}',
+                  style: TextStyle(fontSize: 10, color: const Color(0xFF00A651), fontWeight: FontWeight.w600),
                 ),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(product.name,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: cs.onSurface),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Uicons.box, size: 11, color: cs.onSurface.withValues(alpha: 0.4)),
-                      const SizedBox(width: 3),
-                      Text('MOQ: 10',
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(product.formattedPrice,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.primary),
-                  ),
-                  const SizedBox(height: 2),
-                  Text('Bulk: ${product.currency} ${bulkPrice.toStringAsFixed(0)}',
-                    style: TextStyle(fontSize: 10, color: const Color(0xFF00A651), fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildRfqSection(ColorScheme cs) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [const Color(0xFFF59E0B).withValues(alpha: 0.08), const Color(0xFFF59E0B).withValues(alpha: 0.02)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.15)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Uicons.tags, size: 22, color: const Color(0xFFF59E0B)),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text('Request for Quotation (RFQ)',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text('Can\'t find what you need in bulk? Send a request and suppliers will respond with quotes.',
-            style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.6)),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton.icon(
-              onPressed: () => _showRfqForm(cs),
-              icon: const Icon(Uicons.edit, size: 18),
-              label: const Text('Submit RFQ', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF59E0B),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.local_offer_outlined, size: 22, color: Color(0xFFF59E0B)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text('Request for Quotation (RFQ)',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface),
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text('Can\'t find what you need in bulk? Send a request and suppliers will respond with quotes.',
+          style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.6)),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton.icon(
+            onPressed: () => _showRfqForm(cs),
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            label: const Text('Submit RFQ', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -802,8 +602,6 @@ class _WholesalePageState extends State<WholesalePage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: cs.surface,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (sheetContext) => Padding(
         padding: EdgeInsets.only(
           left: 20, right: 20, top: 20,
@@ -823,54 +621,27 @@ class _WholesalePageState extends State<WholesalePage> {
             const SizedBox(height: 20),
             TextField(
               controller: productCtrl,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Product name / category',
-                labelStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: cs.primary, width: 1.5),
-                ),
+                border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: qtyCtrl,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Quantity needed',
-                labelStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: cs.primary, width: 1.5),
-                ),
+                border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: notesCtrl,
               maxLines: 3,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Additional notes (specifications, target price, etc.)',
-                labelStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: cs.primary, width: 1.5),
-                ),
+                border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 20),
@@ -881,21 +652,12 @@ class _WholesalePageState extends State<WholesalePage> {
                 onPressed: () {
                   Navigator.pop(sheetContext);
                   ScaffoldMessenger.of(sheetContext).showSnackBar(
-                    SnackBar(
-                      content: const Text('RFQ submitted! Suppliers will respond soon.'),
-                      backgroundColor: cs.primary,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    const SnackBar(
+                      content: Text('RFQ submitted! Suppliers will respond soon.'),
                     ),
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: cs.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                  elevation: 0,
-                ),
-                child: const Text('Submit Request', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                child: const Text('Submit Request', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
           ],

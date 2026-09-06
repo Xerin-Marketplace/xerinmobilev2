@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/notifications/notification_service.dart';
-import '../../../../core/theme/uicons.dart';
 import '../../presentation/cubit/support_cubit.dart';
 import '../../presentation/cubit/support_state.dart';
 
@@ -64,7 +63,7 @@ class _SupportTicketCreatePageState extends State<SupportTicketCreatePage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Uicons.angleLeft),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         title: const Text('New Support Ticket'),
@@ -212,22 +211,7 @@ class _SupportTicketCreatePageState extends State<SupportTicketCreatePage> {
       {bool multiline = false}) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.35)),
-      filled: true,
-      fillColor: cs.onSurface.withValues(alpha: 0.04),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.08)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.primary, width: 1.5),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
 }

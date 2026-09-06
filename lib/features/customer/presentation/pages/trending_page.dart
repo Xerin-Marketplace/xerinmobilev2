@@ -7,7 +7,6 @@ import '../cubit/recommendation_cubit.dart';
 import '../cubit/recommendation_state.dart';
 import '../../data/models/product_model.dart';
 import '../../data/models/recommendation_model.dart';
-import '../../../../core/theme/uicons.dart';
 
 class TrendingPage extends StatefulWidget {
   const TrendingPage({super.key});
@@ -33,7 +32,6 @@ class _TrendingPageState extends State<TrendingPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: BlocBuilder<RecommendationCubit, RecommendationState>(
           builder: (context, state) {
@@ -45,49 +43,71 @@ class _TrendingPageState extends State<TrendingPage> {
             }
 
             if (state is RecommendationLoaded) {
+              final flashDeals = state.flashDeals;
+              final trending = state.trending;
+
               return CustomScrollView(
                 slivers: [
-                  SliverAppBar(
-                    pinned: true,
-                    expandedHeight: 120,
-                    backgroundColor: colorScheme.surface,
-                    surfaceTintColor: Colors.transparent,
-                    flexibleSpace: FlexibleSpaceBar(
-                      title: Text('Trending & Deals',
-                          style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface)),
-                      titlePadding: const EdgeInsets.only(left: 20, bottom: 14),
-                    ),
-                    leading: IconButton(
-                      icon: Icon(Uicons.arrowBack,
-                          color: colorScheme.onSurface),
-                      onPressed: () => context.pop(),
+                  // Header
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            onPressed: () => context.pop(),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Flash Deals & Trending',
+                                    style: TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        color: colorScheme.onSurface)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${flashDeals.length} deals · ${trending.length} trending',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: colorScheme.onSurface.withValues(alpha: 0.45)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  if (state.flashDeals.isNotEmpty) ...[
+                  // Flash deals — horizontal cards at top
+                  if (flashDeals.isNotEmpty) ...[
                     SliverToBoxAdapter(
-                      child: _buildFlashDealsBanner(colorScheme),
+                      child: _buildFlashDealsHeader(colorScheme),
                     ),
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) =>
-                              _buildFlashDealCard(state.flashDeals[index], colorScheme),
-                          childCount: state.flashDeals.length,
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: 210,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          itemCount: flashDeals.length,
+                          separatorBuilder: (_, _) => const SizedBox(width: 12),
+                          itemBuilder: (context, index) =>
+                              _buildFlashDealCard(flashDeals[index], colorScheme),
                         ),
                       ),
                     ),
                   ],
-                  if (state.trending.isNotEmpty) ...[
+                  // Trending — grid below
+                  if (trending.isNotEmpty) ...[
                     SliverToBoxAdapter(
-                      child: _buildSectionHeader(
-                          'Trending Now', Uicons.flame, colorScheme),
+                      child: _buildSectionHeader('Trending Now', colorScheme),
                     ),
                     SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                       sliver: SliverGrid(
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
@@ -97,12 +117,21 @@ class _TrendingPageState extends State<TrendingPage> {
                         ),
                         delegate: SliverChildBuilderDelegate(
                           (context, index) => _buildProductGridCard(
-                              state.trending[index], colorScheme),
-                          childCount: state.trending.length,
+                              trending[index], colorScheme),
+                          childCount: trending.length,
                         ),
                       ),
                     ),
                   ],
+                  if (flashDeals.isEmpty && trending.isEmpty)
+                    SliverFillRemaining(
+                      child: Center(
+                        child: Text('No products available',
+                            style: TextStyle(
+                                fontSize: 15,
+                                color: colorScheme.onSurface.withValues(alpha: 0.4))),
+                      ),
+                    ),
                   const SliverToBoxAdapter(child: SizedBox(height: 32)),
                 ],
               );
@@ -115,35 +144,17 @@ class _TrendingPageState extends State<TrendingPage> {
     );
   }
 
-  Widget _buildFlashDealsBanner(ColorScheme cs) {
-    return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [const Color(0xFFE53935), const Color(0xFFFF6B35)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
+  Widget _buildFlashDealsHeader(ColorScheme cs) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
       child: Row(
         children: [
-          Icon(Uicons.bolt, color: Colors.white, size: 32),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Flash Deals',
-                    style: TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-                const SizedBox(height: 4),
-                Text('Limited time offers — grab them before they\'re gone!',
-                    style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
-              ],
-            ),
-          ),
+          Text('Flash Deals',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface)),
+          const SizedBox(width: 8),
+          const Text('HOT',
+              style: TextStyle(
+                  fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFE53935))),
         ],
       ),
     );
@@ -151,91 +162,70 @@ class _TrendingPageState extends State<TrendingPage> {
 
   Widget _buildFlashDealCard(FlashDealModel deal, ColorScheme cs) {
     final product = deal.product;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFF6B35).withValues(alpha: 0.2)),
-      ),
-      child: GestureDetector(
-        onTap: () => context.push(AppConstants.productDetailRoute,
-            extra: {'product': product, 'category': product.categoryName ?? 'All'}),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Stack(
+    return GestureDetector(
+      onTap: () => context.push(AppConstants.productDetailRoute,
+          extra: {'product': product, 'category': product.categoryName ?? 'All'}),
+      child: Container(
+        width: 260,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: product.thumbnailUrl != null
+                      ? Image.network(product.thumbnailUrl!,
+                          width: double.infinity, height: 120, fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                              width: double.infinity, height: 120,
+                              color: cs.surfaceContainerHighest))
+                      : Container(
+                          width: double.infinity, height: 120,
+                          color: cs.surfaceContainerHighest),
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Text(
+                    '-${deal.discountPercentage.toStringAsFixed(0)}%',
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFFE53935)),
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: product.thumbnailUrl != null
-                        ? Image.network(product.thumbnailUrl!,
-                            width: 80, height: 80, fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                                width: 80, height: 80,
-                                color: cs.primary.withValues(alpha: 0.08),
-                                child: Icon(Uicons.box,
-                                    color: cs.primary, size: 28)))
-                        : Container(
-                            width: 80, height: 80,
-                            color: cs.primary.withValues(alpha: 0.08),
-                            child: Icon(Uicons.box,
-                                color: cs.primary, size: 28)),
+                  Text(product.name,
+                      style: TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Text(deal.formattedDealPrice,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFE53935))),
+                      const SizedBox(width: 8),
+                      Text(deal.formattedOriginalPrice,
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: cs.onSurface.withValues(alpha: 0.35),
+                              decoration: TextDecoration.lineThrough)),
+                    ],
                   ),
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE53935),
-                        borderRadius: const BorderRadius.only(
-                          topRight: Radius.circular(12),
-                          bottomLeft: Radius.circular(8),
-                        ),
-                      ),
-                      child: Text(
-                        '-${deal.discountPercentage.toStringAsFixed(0)}%',
-                        style: const TextStyle(
-                            fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                    ),
-                  ),
+                  if (deal.remainingTime != null && deal.isActive) ...[
+                    const SizedBox(height: 8),
+                    _buildCountdown(deal.remainingTime!, cs),
+                  ],
                 ],
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(product.name,
-                        style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
-                        maxLines: 2, overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Text(deal.formattedDealPrice,
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFFE53935))),
-                        const SizedBox(width: 8),
-                        Text(deal.formattedOriginalPrice,
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: cs.onSurface.withValues(alpha: 0.4),
-                                decoration: TextDecoration.lineThrough)),
-                      ],
-                    ),
-                    if (deal.remainingTime != null && deal.isActive) ...[
-                      const SizedBox(height: 6),
-                      _buildCountdown(deal.remainingTime!, cs),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -245,40 +235,21 @@ class _TrendingPageState extends State<TrendingPage> {
     final hours = remaining.inHours;
     final minutes = remaining.inMinutes.remainder(60);
     final seconds = remaining.inSeconds.remainder(60);
-    return Row(
-      children: [
-        Icon(Uicons.stopwatch, size: 14, color: cs.onSurface.withValues(alpha: 0.5)),
-        const SizedBox(width: 4),
-        Text(
-          '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
-          style: TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
-        ),
-      ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Text(
+        '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
+        style: const TextStyle(
+            fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFE53935)),
+      ),
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon, ColorScheme cs) {
+  Widget _buildSectionHeader(String title, ColorScheme cs) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-      child: Row(
-        children: [
-          Container(
-            width: 32, height: 32,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [cs.primary, cs.primary.withValues(alpha: 0.7)],
-                begin: Alignment.topLeft, end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: Colors.white, size: 16),
-          ),
-          const SizedBox(width: 10),
-          Text(title,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface)),
-        ],
-      ),
+      child: Text(title,
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface)),
     );
   }
 
@@ -287,28 +258,19 @@ class _TrendingPageState extends State<TrendingPage> {
       onTap: () => context.push(AppConstants.productDetailRoute,
           extra: {'product': product, 'category': product.categoryName ?? 'All'}),
       child: Container(
-        decoration: BoxDecoration(
-          color: cs.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
                 child: product.thumbnailUrl != null
                     ? Image.network(product.thumbnailUrl!,
                         width: double.infinity, fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Container(
-                            color: cs.primary.withValues(alpha: 0.08),
-                            child: Icon(Uicons.box,
-                                color: cs.primary, size: 36)))
+                            color: cs.surfaceContainerHighest))
                     : Container(
-                        color: cs.primary.withValues(alpha: 0.08),
-                        child: Icon(Uicons.box,
-                            color: cs.primary, size: 36)),
+                        color: cs.surfaceContainerHighest),
               ),
             ),
             Padding(
@@ -320,22 +282,16 @@ class _TrendingPageState extends State<TrendingPage> {
                       style: TextStyle(
                           fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      if (product.rating > 0) ...[
-                        Icon(Uicons.star, size: 12, color: Colors.amber[600]),
-                        const SizedBox(width: 2),
-                        Text(product.rating.toStringAsFixed(1),
-                            style: TextStyle(
-                                fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4))),
-                      ],
-                    ],
-                  ),
+                  if (product.rating > 0) ...[
+                    const SizedBox(height: 4),
+                    Text(product.rating.toStringAsFixed(1),
+                        style: TextStyle(
+                            fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4))),
+                  ],
                   const SizedBox(height: 4),
                   Text(product.formattedPrice,
                       style: TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.bold, color: cs.primary)),
+                          fontSize: 14, fontWeight: FontWeight.bold, color: cs.primary)),
                 ],
               ),
             ),

@@ -6,9 +6,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../../../../core/notifications/notification_service.dart';
-import '../../../../shared/widgets/app_icon.dart';
 import '../../data/models/order_model.dart';
-import '../../../../core/theme/uicons.dart';
 
 class InvoicePage extends StatefulWidget {
   final OrderModel order;
@@ -417,7 +415,6 @@ class _InvoicePageState extends State<InvoicePage> {
     final statusColor = _statusColor(widget.order.status);
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Stack(
           children: [
@@ -427,24 +424,24 @@ class _InvoicePageState extends State<InvoicePage> {
                   padding: const EdgeInsets.all(20),
                   child: Row(
                     children: [
-                      BackIconButton(
+                      GestureDetector(
                         onTap: () => context.pop(),
-                        color: colorScheme.primary,
+                        child: Icon(Icons.arrow_back, size: 22, color: colorScheme.onSurface),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
                           'Invoice',
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
                         ),
                       ),
                       IconButton(
                         onPressed: _isGenerating ? null : _printPdf,
-                        icon: Icon(Uicons.file, size: 22, color: colorScheme.primary),
+                        icon: Icon(Icons.print_outlined, size: 22, color: colorScheme.primary),
                       ),
                       IconButton(
                         onPressed: _isGenerating ? null : _downloadPdf,
-                        icon: Icon(Uicons.download, size: 22, color: colorScheme.primary),
+                        icon: Icon(Icons.download_outlined, size: 22, color: colorScheme.primary),
                       ),
                     ],
                   ),
@@ -468,35 +465,8 @@ class _InvoicePageState extends State<InvoicePage> {
             if (_isGenerating)
               Container(
                 color: Colors.black54,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(28),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(
-                          width: 48,
-                          height: 48,
-                          child: CircularProgressIndicator(strokeWidth: 3),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Generating PDF...',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Please wait while we create your invoice',
-                          style: TextStyle(fontSize: 14, color: colorScheme.onSurface.withValues(alpha: 0.5)),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
+                child: const Center(
+                  child: CircularProgressIndicator(),
                 ),
               ),
           ],
@@ -506,38 +476,20 @@ class _InvoicePageState extends State<InvoicePage> {
   }
 
   Widget _buildInvoicePreview(ColorScheme cs, bool isDark, Color statusColor) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF252525) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 16, offset: const Offset(0, 6))],
-      ),
-      child: Column(
-        children: [
-          _buildPreviewHeader(cs, statusColor),
-          _buildPreviewOrderInfo(cs, isDark),
-          _buildPreviewItems(cs, isDark),
-          _buildPreviewSummary(cs, isDark),
-          _buildPreviewFooter(cs),
-        ],
-      ),
+    return Column(
+      children: [
+        _buildPreviewHeader(cs, statusColor),
+        _buildPreviewOrderInfo(cs, isDark),
+        _buildPreviewItems(cs, isDark),
+        _buildPreviewSummary(cs, isDark),
+        _buildPreviewFooter(cs),
+      ],
     );
   }
 
   Widget _buildPreviewHeader(ColorScheme cs, Color statusColor) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [cs.primary, cs.primary.withValues(alpha: 0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           Row(
@@ -548,12 +500,12 @@ class _InvoicePageState extends State<InvoicePage> {
                 children: [
                   Text(
                     'Xerin Marketplace',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: cs.onSurface),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Your trusted online shopping platform',
-                    style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.7)),
+                    style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
                   ),
                 ],
               ),
@@ -561,38 +513,23 @@ class _InvoicePageState extends State<InvoicePage> {
                 'assets/logo/mark.png',
                 width: 48,
                 height: 48,
-                errorBuilder: (_, __, ___) => Icon(Uicons.shop, color: Colors.white, size: 36),
+                errorBuilder: (_, __, ___) => Icon(Icons.store_outlined, color: cs.primary, size: 36),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'INVOICE',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    widget.order.displayStatus.toUpperCase(),
-                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'INVOICE',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface),
+              ),
+              Text(
+                widget.order.displayStatus.toUpperCase(),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: statusColor),
+              ),
+            ],
           ),
         ],
       ),
@@ -664,33 +601,22 @@ class _InvoicePageState extends State<InvoicePage> {
   }
 
   Widget _buildPreviewItemRow(OrderItemModel item, ColorScheme cs, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : cs.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(10),
-            ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
             child: item.productImage != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      item.productImage!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(Uicons.box, color: cs.primary.withValues(alpha: 0.4), size: 20),
-                    ),
+                ? Image.network(
+                    item.productImage!,
+                    width: 44, height: 44, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Icon(Icons.inventory_2_outlined, color: cs.primary.withValues(alpha: 0.4), size: 20),
                   )
-                : Icon(Uicons.box, color: cs.primary.withValues(alpha: 0.4), size: 20),
+                : SizedBox(
+                    width: 44, height: 44,
+                    child: Icon(Icons.inventory_2_outlined, color: cs.primary.withValues(alpha: 0.4), size: 20),
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -713,7 +639,7 @@ class _InvoicePageState extends State<InvoicePage> {
           ),
           Text(
             item.formattedTotal,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurface),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
           ),
         ],
       ),
@@ -722,14 +648,8 @@ class _InvoicePageState extends State<InvoicePage> {
 
   Widget _buildPreviewSummary(ColorScheme cs, bool isDark) {
     final order = widget.order;
-    return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : cs.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           _summaryRow('Subtotal', order.formattedSubtotal, cs),
@@ -754,7 +674,7 @@ class _InvoicePageState extends State<InvoicePage> {
               Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface)),
               Text(
                 order.formattedTotal,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: cs.primary),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.primary),
               ),
             ],
           ),
@@ -777,13 +697,8 @@ class _InvoicePageState extends State<InvoicePage> {
   }
 
   Widget _buildPreviewFooter(ColorScheme cs) {
-    return Container(
-      width: double.infinity,
+    return Padding(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cs.primary.withValues(alpha: 0.04),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
-      ),
       child: Column(
         children: [
           Text(
@@ -810,14 +725,14 @@ class _InvoicePageState extends State<InvoicePage> {
       children: [
         Expanded(
           child: SizedBox(
-            height: 52,
+            height: 48,
             child: OutlinedButton.icon(
               onPressed: _isGenerating ? null : _printPdf,
-              icon: Icon(Uicons.file, size: 20, color: cs.primary),
+              icon: Icon(Icons.print_outlined, size: 20, color: cs.primary),
               label: Text('Print', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: cs.primary)),
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: cs.primary.withValues(alpha: 0.3), width: 1.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                side: BorderSide(color: cs.primary.withValues(alpha: 0.3)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ),
@@ -825,15 +740,15 @@ class _InvoicePageState extends State<InvoicePage> {
         const SizedBox(width: 12),
         Expanded(
           child: SizedBox(
-            height: 52,
+            height: 48,
             child: ElevatedButton.icon(
               onPressed: _isGenerating ? null : _downloadPdf,
-              icon: const Icon(Uicons.download, size: 20, color: Colors.white),
+              icon: const Icon(Icons.download_outlined, size: 20, color: Colors.white),
               label: const Text('Download PDF', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: cs.primary,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
             ),

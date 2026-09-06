@@ -15,7 +15,6 @@ import '../cubit/cart_cubit.dart';
 import '../cubit/wishlist_cubit.dart';
 import '../cubit/wishlist_state.dart';
 import '../cubit/review_cubit.dart';
-import '../../../../core/theme/uicons.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final ProductModel product;
@@ -113,7 +112,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF8F8F8),
       body: SafeArea(
         child: Column(
           children: [
@@ -125,20 +123,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     // Image gallery card
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
-                              blurRadius: 16,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: Stack(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Stack(
                             children: [
                               // Gallery
                               GestureDetector(
@@ -178,9 +165,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                                 errorBuilder: (_, __, ___) => Container(
                                                   height: 340,
                                                   width: double.infinity,
-                                                  color: colorScheme.primary.withValues(alpha: 0.06),
+                                                  color: colorScheme.surfaceContainerHighest,
                                                   child: Icon(
-                                                    Uicons.imageSlash,
+                                                    Icons.image_outlined,
                                                     size: 64,
                                                     color: colorScheme.onSurface.withValues(alpha: 0.3),
                                                   ),
@@ -192,9 +179,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                       : Container(
                                           height: 340,
                                           width: double.infinity,
-                                          color: colorScheme.primary.withValues(alpha: 0.06),
+                                          color: colorScheme.surfaceContainerHighest,
                                           child: Icon(
-                                            Uicons.imageSlash,
+                                            Icons.image_outlined,
                                             size: 64,
                                             color: colorScheme.onSurface.withValues(alpha: 0.3),
                                           ),
@@ -228,19 +215,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 right: 12,
                                 child: GestureDetector(
                                   onTap: _toggleWishlist,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.9),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      _isWishlisted ? Icons.favorite : Icons.favorite_border,
-                                      color: _isWishlisted
-                                          ? const Color(0xFFE53935)
-                                          : colorScheme.primary,
-                                      size: 22,
-                                    ),
+                                  child: Icon(
+                                    _isWishlisted ? Icons.favorite : Icons.favorite_border,
+                                    color: _isWishlisted
+                                        ? const Color(0xFFE53935)
+                                        : colorScheme.primary,
+                                    size: 24,
                                   ),
                                 ),
                               ),
@@ -249,19 +229,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 Positioned(
                                   bottom: 12,
                                   right: 12,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.6),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      '${_currentImageIndex + 1} / ${widget.product.images.length}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                      ),
+                                  child: Text(
+                                    '${_currentImageIndex + 1} / ${widget.product.images.length}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                      shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
                                     ),
                                   ),
                                 ),
@@ -331,8 +305,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                       ApiConstants.resolveImageUrl(widget.product.images[index]) ?? '',
                                       fit: BoxFit.cover,
                                       errorBuilder: (_, __, ___) => Container(
-                                        color: colorScheme.primary.withValues(alpha: 0.06),
-                                        child: Icon(Uicons.imageSlash, size: 20, color: colorScheme.onSurface.withValues(alpha: 0.3)),
+                                        color: colorScheme.surfaceContainerHighest,
+                                        child: Icon(Icons.image_outlined, size: 20, color: colorScheme.onSurface.withValues(alpha: 0.3)),
                                       ),
                                     ),
                                   ),
@@ -355,41 +329,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 context.go(AppConstants.homeRoute);
                               }
                             },
-                            child: Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF252525) : Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                Uicons.arrowBack,
-                                color: colorScheme.onSurface,
-                                size: 20,
-                              ),
-                            ),
+                            child: Icon(Icons.arrow_back, color: colorScheme.onSurface, size: 22),
                           ),
                           const SizedBox(width: 12),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              widget.category,
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: colorScheme.primary,
-                              ),
-                            ),
+                          Text(
+                            widget.category,
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colorScheme.primary),
                           ),
                           const Spacer(),
                           BlocBuilder<ReviewCubit, ReviewState>(
@@ -399,26 +344,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               if (reviewState is ReviewsLoaded && reviewState.averageRating > 0) {
                                 rating = reviewState.averageRating;
                               }
-                              return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(Uicons.star, size: 14, color: Colors.amber.shade700),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      rating.toStringAsFixed(1),
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.amber.shade800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              return Row(
+                                children: [
+                                  Icon(Icons.star, size: 14, color: Colors.amber.shade700),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    rating.toStringAsFixed(1),
+                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.amber.shade800),
+                                  ),
+                                ],
                               );
                             },
                           ),
@@ -428,19 +362,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     // Product info card
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                      child: Container(
+                      child: Padding(
                         padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -448,7 +371,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               widget.product.name,
                               style: TextStyle(
                                 fontSize: 22,
-                                fontWeight: FontWeight.w900,
+                                fontWeight: FontWeight.bold,
                                 color: colorScheme.onSurface,
                               ),
                             ),
@@ -496,7 +419,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                       return Padding(
                                         padding: const EdgeInsets.only(right: 2),
                                         child: Icon(
-                                          Uicons.star,
+                                          Icons.star,
                                           size: 16,
                                           color: index < rating.round()
                                               ? Colors.amber.shade600
@@ -526,9 +449,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                       child: Row(
                         children: [
-                          Expanded(child: _buildXerinBadge(Uicons.shieldCheck, 'Verified Seller', 'Quality-checked', colorScheme, isDark)),
+                          Expanded(child: _buildXerinBadge(Icons.verified_outlined, 'Verified Seller', 'Quality-checked', colorScheme)),
                           const SizedBox(width: 10),
-                          Expanded(child: _buildXerinBadge(Uicons.box, 'Fulfilled by Xerin', 'Quality dispatch', colorScheme, isDark)),
+                          Expanded(child: _buildXerinBadge(Icons.inventory_2_outlined, 'Fulfilled by Xerin', 'Quality dispatch', colorScheme)),
                         ],
                       ),
                     ),
@@ -536,9 +459,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
                       child: Row(
                         children: [
-                          Expanded(child: _buildXerinBadge(Uicons.shield, 'Buyer Protection', 'Secure payment hold', colorScheme, isDark)),
+                          Expanded(child: _buildXerinBadge(Icons.shield_outlined, 'Buyer Protection', 'Secure payment hold', colorScheme)),
                           const SizedBox(width: 10),
-                          Expanded(child: _buildXerinBadge(Uicons.shippingFast, 'Xerin Express', 'Fast delivery', colorScheme, isDark)),
+                          Expanded(child: _buildXerinBadge(Icons.local_shipping_outlined, 'Xerin Express', 'Fast delivery', colorScheme)),
                         ],
                       ),
                     ),
@@ -561,15 +484,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 16,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
+                border: Border(top: BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.06))),
               ),
               child: SafeArea(
                 top: false,
@@ -606,7 +521,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             elevation: 0,
                           ),
                           icon: Icon(
-                            _added ? Uicons.check : Uicons.shoppingCart,
+                            _added ? Icons.check : Icons.shopping_cart_outlined,
                             size: 20,
                           ),
                           label: Text(
@@ -707,7 +622,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 },
                                 errorBuilder: (_, __, ___) => const Center(
                                   child: Icon(
-                                    Uicons.imageSlash,
+                                    Icons.image_outlined,
                                     size: 64,
                                     color: Colors.white30,
                                   ),
@@ -723,17 +638,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         right: 20,
                         child: GestureDetector(
                           onTap: () => Navigator.pop(context),
-                          child: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Uicons.crossSmall,
-                              color: Colors.white,
-                              size: 22,
-                            ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 24,
                           ),
                         ),
                       ),
@@ -744,19 +652,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           left: 0,
                           right: 0,
                           child: Center(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                '${fsIndex + 1} / ${widget.product.images.length}',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
+                            child: Text(
+                              '${fsIndex + 1} / ${widget.product.images.length}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -787,19 +688,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             reviews = state.reviews.take(3).toList();
           }
 
-          return Container(
+          return Padding(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -842,7 +732,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       avgRating.toStringAsFixed(1),
                       style: TextStyle(
                         fontSize: 36,
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.bold,
                         color: colorScheme.onSurface,
                       ),
                     ),
@@ -856,7 +746,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               return Padding(
                                 padding: const EdgeInsets.only(right: 2),
                                 child: Icon(
-                                  Uicons.star,
+                                  Icons.star,
                                   size: 18,
                                   color: i < avgRating.round()
                                       ? Colors.amber.shade600
@@ -879,52 +769,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                     ),
                     if (_eligibleOrderItemId != null)
-                      GestureDetector(
-                        onTap: () => _showReviewDialog(context, colorScheme),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: colorScheme.primary,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Uicons.add, size: 16, color: Colors.white),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Write Review',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      TextButton.icon(
+                        onPressed: () => _showReviewDialog(context, colorScheme),
+                        icon: const Icon(Icons.edit, size: 16),
+                        label: const Text('Write Review', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                       )
                     else if (!_checkingEligibility)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: colorScheme.onSurface.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Uicons.shoppingBag, size: 14, color: colorScheme.onSurface.withValues(alpha: 0.4)),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Buy to review',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: colorScheme.onSurface.withValues(alpha: 0.4),
-                              ),
-                            ),
-                          ],
+                      Text(
+                        'Buy to review',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.onSurface.withValues(alpha: 0.4),
                         ),
                       ),
                   ],
@@ -954,22 +810,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   Center(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Uicons.star,
-                            size: 36,
-                            color: colorScheme.onSurface.withValues(alpha: 0.15),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Be the first to review this product',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: colorScheme.onSurface.withValues(alpha: 0.4),
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        'Be the first to review this product',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.onSurface.withValues(alpha: 0.4),
+                        ),
                       ),
                     ),
                   )
@@ -1046,7 +892,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         return Padding(
                           padding: const EdgeInsets.only(right: 1),
                           child: Icon(
-                            Uicons.star,
+                            Icons.star,
                             size: 12,
                             color: i < review.rating
                                 ? Colors.amber.shade600
@@ -1084,10 +930,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) {
           return Padding(
@@ -1099,16 +941,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: colorScheme.onSurface.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
                 const SizedBox(height: 20),
                 Text(
                   'Write a Review',
@@ -1168,20 +1000,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   maxLines: 3,
                   decoration: InputDecoration(
                     hintText: 'Share your experience with this product...',
-                    hintStyle: TextStyle(
-                      fontSize: 13,
-                      color: colorScheme.onSurface.withValues(alpha: 0.3),
-                    ),
-                    filled: true,
-                    fillColor: colorScheme.onSurface.withValues(alpha: 0.04),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
-                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -1247,19 +1066,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Widget _buildDetailsCard(ColorScheme colorScheme, bool isDark) {
     final p = widget.product;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
+    return Column(
         children: [
           // Tab bar
           Padding(
@@ -1269,24 +1076,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () => setState(() => _selectedTab = 0),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _selectedTab == 0
-                            ? colorScheme.primary
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Description',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: _selectedTab == 0
-                                ? Colors.white
-                                : colorScheme.onSurface.withValues(alpha: 0.5),
-                          ),
+                    child: Center(
+                      child: Text(
+                        'Description',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: _selectedTab == 0 ? FontWeight.bold : FontWeight.w500,
+                          color: _selectedTab == 0
+                              ? colorScheme.primary
+                              : colorScheme.onSurface.withValues(alpha: 0.5),
                         ),
                       ),
                     ),
@@ -1296,24 +1094,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () => setState(() => _selectedTab = 1),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _selectedTab == 1
-                            ? colorScheme.primary
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Specifications',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: _selectedTab == 1
-                                ? Colors.white
-                                : colorScheme.onSurface.withValues(alpha: 0.5),
-                          ),
+                    child: Center(
+                      child: Text(
+                        'Specifications',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: _selectedTab == 1 ? FontWeight.bold : FontWeight.w500,
+                          color: _selectedTab == 1
+                              ? colorScheme.primary
+                              : colorScheme.onSurface.withValues(alpha: 0.5),
                         ),
                       ),
                     ),
@@ -1331,8 +1120,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 : _buildSpecificationsTab(colorScheme, p),
           ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildDescriptionTab(ColorScheme colorScheme) {
@@ -1367,18 +1155,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   Widget _buildSpecificationsTab(ColorScheme colorScheme, ProductModel p) {
     final specs = <_SpecItem>[
-      _SpecItem(Uicons.tags, 'Product ID', p.id),
-      _SpecItem(Uicons.category, 'Category', p.categoryName ?? 'N/A'),
-      _SpecItem(Uicons.box, 'SKU', p.sku.isNotEmpty ? p.sku : 'N/A'),
-      _SpecItem(Uicons.coins, 'Currency', p.currency),
-      _SpecItem(Uicons.wallet, 'Price', p.formattedPrice),
+      _SpecItem(Icons.tag_outlined, 'Product ID', p.id),
+      _SpecItem(Icons.category_outlined, 'Category', p.categoryName ?? 'N/A'),
+      _SpecItem(Icons.inventory_2_outlined, 'SKU', p.sku.isNotEmpty ? p.sku : 'N/A'),
+      _SpecItem(Icons.payments_outlined, 'Currency', p.currency),
+      _SpecItem(Icons.wallet_outlined, 'Price', p.formattedPrice),
       if (p.salePrice != null)
-        _SpecItem(Uicons.tags, 'Sale Price', '${p.currency} ${p.salePrice!.toStringAsFixed(0)}'),
+        _SpecItem(Icons.local_offer_outlined, 'Sale Price', '${p.currency} ${p.salePrice!.toStringAsFixed(0)}'),
       if (p.weight != null && p.weight!.isNotEmpty)
-        _SpecItem(Uicons.shippingFast, 'Weight', p.weight!),
-      _SpecItem(Uicons.storeAlt, 'Seller ID', p.sellerId),
-      _SpecItem(Uicons.accessTime, 'Listed Date', p.createdAt ?? 'N/A'),
-      _SpecItem(Uicons.checkCircle, 'Status', p.status.toUpperCase()),
+        _SpecItem(Icons.scale_outlined, 'Weight', p.weight!),
+      _SpecItem(Icons.store_outlined, 'Seller ID', p.sellerId),
+      _SpecItem(Icons.schedule_outlined, 'Listed Date', p.createdAt ?? 'N/A'),
+      _SpecItem(Icons.check_circle_outline, 'Status', p.status.toUpperCase()),
     ];
 
     return Column(
@@ -1386,14 +1174,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         padding: const EdgeInsets.only(bottom: 12),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(s.icon, size: 16, color: colorScheme.primary),
-            ),
+            Icon(s.icon, size: 18, color: colorScheme.primary),
             const SizedBox(width: 12),
             Text(
               s.label,
@@ -1422,36 +1203,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
-  Widget _buildXerinBadge(IconData icon, String title, String subtitle, ColorScheme cs, bool isDark) {
-    return Container(
+  Widget _buildXerinBadge(IconData icon, String title, String subtitle, ColorScheme cs) {
+    return Padding(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: cs.primary),
-          ),
+          Icon(icon, size: 20, color: cs.primary),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: cs.onSurface)),
+                Text(title, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: cs.onSurface)),
                 const SizedBox(height: 2),
                 Text(subtitle, style: TextStyle(fontSize: 9, color: cs.onSurface.withValues(alpha: 0.4))),
               ],
@@ -1468,7 +1231,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       child: Row(
         children: [
           Icon(
-            Uicons.checkCircle,
+            Icons.check_circle_outline,
             size: 18,
             color: colorScheme.primary,
           ),

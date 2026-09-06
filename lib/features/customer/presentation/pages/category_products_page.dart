@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/app_constants.dart';
 import '../../../../config/di/service_locator.dart';
-import '../../../../core/theme/uicons.dart';
 import '../../data/models/product_model.dart';
 import '../cubit/products_cubit.dart';
 import '../cubit/products_state.dart';
@@ -53,7 +52,6 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -69,19 +67,7 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                         context.go(AppConstants.categoriesRoute);
                       }
                     },
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(
-                        Uicons.arrowBack,
-                        color: colorScheme.primary,
-                        size: 22,
-                      ),
-                    ),
+                    child: Icon(Icons.arrow_back, size: 22, color: colorScheme.onSurface),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -115,7 +101,7 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Uicons.refresh, size: 20),
+                    icon: const Icon(Icons.refresh, size: 20),
                     onPressed: _loadProducts,
                   ),
                 ],
@@ -133,9 +119,6 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Uicons.circleExclamation, size: 48,
-                              color: colorScheme.onSurface.withValues(alpha: 0.2)),
-                          const SizedBox(height: 12),
                           Text(state.message,
                               style: TextStyle(fontSize: 14,
                                   color: colorScheme.onSurface.withValues(alpha: 0.5))),
@@ -151,18 +134,10 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                   final products = state is ProductsLoaded ? state.products : <ProductModel>[];
                   if (products.isEmpty) {
                     return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Uicons.box, size: 64,
-                              color: colorScheme.onSurface.withValues(alpha: 0.2)),
-                          const SizedBox(height: 16),
-                          Text('No products in this category yet',
-                              style: TextStyle(fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: colorScheme.onSurface.withValues(alpha: 0.5))),
-                        ],
-                      ),
+                      child: Text('No products in this category yet',
+                          style: TextStyle(fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.onSurface.withValues(alpha: 0.5))),
                     );
                   }
                   return GridView.builder(
@@ -195,62 +170,36 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
       }),
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF252525) : Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-                  child: product.thumbnailUrl != null
-                      ? Image.network(
-                          product.thumbnailUrl!,
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              child: product.thumbnailUrl != null
+                  ? Image.network(
+                      product.thumbnailUrl!,
+                      height: 150,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, progress) {
+                        if (progress == null) return child;
+                        return Container(
                           height: 150,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, progress) {
-                            if (progress == null) return child;
-                            return Container(
-                              height: 150,
-                              color: cs.primary.withValues(alpha: 0.06),
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: cs.primary,
-                                ),
-                              ),
-                            );
-                          },
-                          errorBuilder: (_, _, _) => _placeholder(cs),
-                        )
-                      : _placeholder(cs),
-                ),
-                if (product.salePrice != null)
-                  Positioned(
-                    top: 8, left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE53935),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '-${((1 - product.salePrice! / product.price) * 100).toInt()}%',
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.white),
-                      ),
-                    ),
-                  ),
-              ],
+                          color: cs.primary.withValues(alpha: 0.06),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: cs.primary,
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (_, _, _) => _placeholder(cs),
+                    )
+                  : _placeholder(cs),
             ),
             Expanded(
               child: Padding(
@@ -262,7 +211,7 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                       product.name,
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color: cs.onSurface,
                       ),
                       maxLines: 2,
@@ -297,20 +246,16 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(Uicons.shippingFast, size: 11, color: cs.primary.withValues(alpha: 0.5)),
-                        const SizedBox(width: 3),
-                        Text('Xerin Express', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: cs.primary.withValues(alpha: 0.5))),
-                        const Spacer(),
-                        if (product.rating > 0) ...[
-                          Icon(Uicons.star, size: 11, color: Colors.amber),
+                    if (product.rating > 0) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.star, size: 11, color: Colors.amber),
                           const SizedBox(width: 2),
                           Text(product.rating.toStringAsFixed(1), style: TextStyle(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.5))),
                         ],
-                      ],
-                    ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -326,7 +271,7 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
       height: 150,
       color: cs.primary.withValues(alpha: 0.06),
       child: Center(
-        child: Icon(Uicons.image, color: cs.primary.withValues(alpha: 0.2), size: 36),
+        child: Icon(Icons.image_outlined, color: cs.primary.withValues(alpha: 0.2), size: 36),
       ),
     );
   }

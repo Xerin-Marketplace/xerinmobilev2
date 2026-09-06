@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/coming_soon_page.dart';
-import '../../../../core/theme/uicons.dart';
 
 class BuyFromAbroadPage extends StatelessWidget {
   const BuyFromAbroadPage({super.key});
@@ -11,7 +10,7 @@ class BuyFromAbroadPage extends StatelessWidget {
     return const ComingSoonPage(
       title: 'Buy from Abroad',
       subtitle: 'Verified international suppliers',
-      icon: Uicons.globe,
+      icon: Icons.public,
       gradientColors: [Color(0xFF00A651), Color(0xFF00732F)],
       feature1: 'Verified suppliers from Dubai, China, Turkey & more',
       feature2: 'Total landed cost calculator — no hidden charges',

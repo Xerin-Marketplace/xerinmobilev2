@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../cubit/review_cubit.dart';
 import '../../data/models/review_model.dart';
-import '../../../../core/theme/uicons.dart';
 
 class ProductReviewsPage extends StatefulWidget {
   final String productId;
@@ -32,12 +31,6 @@ class _ProductReviewsPageState extends State<ProductReviewsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Reviews - ${widget.productName}'),
-        actions: [
-          IconButton(
-            icon: const Icon(Uicons.add),
-            onPressed: () => _showAddReviewDialog(context),
-          ),
-        ],
       ),
       body: BlocBuilder<ReviewCubit, ReviewState>(
         builder: (context, state) {
@@ -70,8 +63,8 @@ class _ProductReviewsPageState extends State<ProductReviewsPage> {
                               children: List.generate(5, (i) {
                                 return Icon(
                                   i < state.averageRating.round()
-                                      ? Uicons.star
-                                      : Uicons.star,
+                                      ? Icons.star
+                                      : Icons.star_border,
                                   color: Colors.amber,
                                   size: 20,
                                 );
@@ -95,73 +88,11 @@ class _ProductReviewsPageState extends State<ProductReviewsPage> {
                 ),
               ],
             );
+          } else if (state is ReviewSubmitted) {
+            context.read<ReviewCubit>().loadProductReviews(widget.productId);
           }
           return const SizedBox();
         },
-      ),
-    );
-  }
-
-  void _showAddReviewDialog(BuildContext context) {
-    int rating = 5;
-    final titleController = TextEditingController();
-    final commentController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) => AlertDialog(
-          title: const Text('Write a Review'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (i) {
-                  return IconButton(
-                    icon: Icon(
-                      i < rating ? Uicons.star : Uicons.star,
-                      color: Colors.amber,
-                    ),
-                    onPressed: () => setState(() => rating = i + 1),
-                  );
-                }),
-              ),
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(labelText: 'Title (optional)'),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: commentController,
-                decoration: const InputDecoration(labelText: 'Comment'),
-                maxLines: 3,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                context.read<ReviewCubit>().submitProductReview(
-                      productId: widget.productId,
-                      rating: rating,
-                      title: titleController.text.trim().isEmpty
-                          ? null
-                          : titleController.text.trim(),
-                      comment: commentController.text.trim().isEmpty
-                          ? null
-                          : commentController.text.trim(),
-                    );
-                Navigator.pop(ctx);
-              },
-              child: const Text('Submit'),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -198,7 +129,7 @@ class _ReviewCard extends StatelessWidget {
                       Row(
                         children: List.generate(5, (i) {
                           return Icon(
-                            i < review.rating ? Uicons.star : Uicons.star,
+                            i < review.rating ? Icons.star : Icons.star_border,
                             color: Colors.amber,
                             size: 16,
                           );
@@ -208,16 +139,8 @@ class _ReviewCard extends StatelessWidget {
                   ),
                 ),
                 if (review.verifiedPurchase)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'Verified',
-                      style: TextStyle(fontSize: 10, color: Colors.green.shade700),
-                    ),
+                  Text('Verified',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.green.shade700),
                   ),
               ],
             ),
@@ -231,24 +154,12 @@ class _ReviewCard extends StatelessWidget {
             ],
             if (review.sellerReply != null) ...[
               const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Seller Reply',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(review.sellerReply!),
-                  ],
-                ),
+              const Text(
+                'Seller Reply',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
               ),
+              const SizedBox(height: 4),
+              Text(review.sellerReply!),
             ],
           ],
         ),

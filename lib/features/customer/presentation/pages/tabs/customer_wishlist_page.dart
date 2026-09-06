@@ -8,7 +8,6 @@ import '../../../../../shared/widgets/guest_auth_gate.dart';
 import '../../../data/models/wishlist_item_model.dart';
 import '../../cubit/wishlist_cubit.dart';
 import '../../cubit/wishlist_state.dart';
-import '../../../../../core/theme/uicons.dart';
 
 class CustomerWishlistPage extends StatefulWidget {
   const CustomerWishlistPage({super.key});
@@ -80,17 +79,10 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
       children: [
         Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.favorite,
-                size: 22,
-                color: colorScheme.primary,
-              ),
+            Icon(
+              Icons.favorite,
+              size: 22,
+              color: colorScheme.primary,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -101,7 +93,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                     'Wishlist',
                     style: TextStyle(
                       fontSize: 24,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.bold,
                       color: colorScheme.onSurface,
                     ),
                   ),
@@ -116,20 +108,9 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
               ),
             ),
             if (count > 0)
-              GestureDetector(
-                onTap: () => _wishlistCubit.loadWishlist(),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.refresh,
-                    size: 18,
-                    color: colorScheme.primary,
-                  ),
-                ),
+              IconButton(
+                icon: const Icon(Icons.refresh, size: 18),
+                onPressed: () => _wishlistCubit.loadWishlist(),
               ),
           ],
         ),
@@ -139,7 +120,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
             children: [
               _buildActionChip(
                 colorScheme,
-                icon: Uicons.listCheck,
+                icon: Icons.checklist,
                 label: selected.isEmpty ? 'Select all' : 'Clear',
                 onTap: () {
                   if (selected.isEmpty) {
@@ -153,7 +134,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
               if (selected.isNotEmpty)
                 _buildActionChip(
                   colorScheme,
-                  icon: Uicons.trash,
+                  icon: Icons.delete_outline,
                   label: 'Delete (${selected.length})',
                   isDestructive: true,
                   onTap: () => context.read<WishlistCubit>().removeSelected(),
@@ -175,33 +156,24 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isDestructive
-              ? const Color(0xFFE53935).withValues(alpha: 0.08)
-              : colorScheme.primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 16,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: isDestructive ? const Color(0xFFE53935) : colorScheme.primary,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
               color: isDestructive ? const Color(0xFFE53935) : colorScheme.primary,
             ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isDestructive ? const Color(0xFFE53935) : colorScheme.primary,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -221,24 +193,17 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE53935).withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Uicons.circleExclamation,
-                    size: 36,
-                    color: const Color(0xFFE53935).withValues(alpha: 0.6),
-                  ),
+                Icon(
+                  Icons.error_outline,
+                  size: 36,
+                  color: const Color(0xFFE53935).withValues(alpha: 0.6),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Failed to load wishlist',
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.bold,
                     color: colorScheme.onSurface,
                   ),
                 ),
@@ -252,30 +217,10 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                GestureDetector(
-                  onTap: () => context.read<WishlistCubit>().loadWishlist(),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.refresh, size: 16, color: Colors.white),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Retry',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                ElevatedButton.icon(
+                  onPressed: () => context.read<WishlistCubit>().loadWishlist(),
+                  icon: const Icon(Icons.refresh, size: 16),
+                  label: const Text('Retry'),
                 ),
               ],
             ),
@@ -292,24 +237,11 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(28),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withValues(alpha: 0.06),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.favorite_border,
-                    size: 56,
-                    color: colorScheme.primary.withValues(alpha: 0.3),
-                  ),
-                ),
-                const SizedBox(height: 20),
                 Text(
                   'Your wishlist is empty',
                   style: TextStyle(
                     fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.bold,
                     color: colorScheme.onSurface,
                   ),
                 ),
@@ -324,23 +256,9 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                GestureDetector(
-                  onTap: () => context.go('/home'),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      'Browse Products',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+                ElevatedButton(
+                  onPressed: () => context.go('/home'),
+                  child: const Text('Browse Products'),
                 ),
               ],
             ),
@@ -386,78 +304,44 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
           'category': item.categoryName ?? 'All',
         },
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-          border: isSelected
-              ? Border.all(color: colorScheme.primary, width: 2)
-              : null,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             Expanded(
               child: Stack(
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withValues(alpha: 0.06),
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(16),
-                      ),
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
                     ),
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(16),
-                      ),
-                      child: item.imageUrl != null
-                          ? Image.network(
-                              item.imageUrl!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              loadingBuilder: (context, child, progress) {
-                                if (progress == null) return child;
-                                return Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: colorScheme.primary,
-                                  ),
-                                );
-                              },
-                              errorBuilder: (_, __, ___) => _buildPlaceholder(colorScheme),
-                            )
-                          : _buildPlaceholder(colorScheme),
-                    ),
+                    child: item.imageUrl != null
+                        ? Image.network(
+                            item.imageUrl!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            loadingBuilder: (context, child, progress) {
+                              if (progress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: colorScheme.primary,
+                                ),
+                              );
+                            },
+                            errorBuilder: (_, __, ___) => _buildPlaceholder(colorScheme),
+                          )
+                        : _buildPlaceholder(colorScheme),
                   ),
                   Positioned(
                     top: 8,
                     left: 8,
                     child: GestureDetector(
                       onTap: () => context.read<WishlistCubit>().toggleSelection(item.id),
-                      child: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: isSelected ? colorScheme.primary : Colors.white.withValues(alpha: 0.9),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isSelected ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.15),
-                          ),
-                        ),
-                        child: Icon(
-                          isSelected ? Uicons.check : null,
-                          size: 16,
-                          color: Colors.white,
-                        ),
+                      child: Icon(
+                        isSelected ? Icons.check_circle : Icons.circle_outlined,
+                        size: 24,
+                        color: isSelected ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.4),
                       ),
                     ),
                   ),
@@ -466,25 +350,10 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                     right: 8,
                     child: GestureDetector(
                       onTap: () => context.read<WishlistCubit>().removeItem(item.id),
-                      child: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 4,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Uicons.crossSmall,
-                          size: 16,
-                          color: colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
+                      child: Icon(
+                        Icons.close,
+                        size: 20,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ),
@@ -492,19 +361,12 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                     Positioned(
                       bottom: 8,
                       left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE53935),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '-${item.discountPercent}%',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
+                      child: Text(
+                        '-${item.discountPercent}%',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFE53935),
                         ),
                       ),
                     ),
@@ -512,20 +374,13 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                     Positioned.fill(
                       child: Container(
                         color: Colors.black.withValues(alpha: 0.4),
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE53935),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              'Out of stock',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
+                        child: const Center(
+                          child: Text(
+                            'Out of stock',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
                             ),
                           ),
                         ),
@@ -556,7 +411,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                     item.name,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.bold,
                       color: colorScheme.onSurface,
                     ),
                     maxLines: 2,
