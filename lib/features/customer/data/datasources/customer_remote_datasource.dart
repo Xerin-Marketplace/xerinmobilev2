@@ -23,6 +23,8 @@ class CustomerRemoteDataSource {
       List<dynamic> list;
       if (data is List) {
         list = data;
+      } else if (data is Map && data['results'] != null) {
+        list = data['results'] as List;
       } else if (data is Map && data['items'] != null) {
         list = data['items'] as List;
       } else if (data is Map && data['data'] != null) {

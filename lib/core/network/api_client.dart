@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
 
@@ -11,6 +13,7 @@ class ApiClient {
   final TokenStorage _tokenStorage;
   final Logger _logger;
   bool _isRefreshing = false;
+  Completer<bool>? _refreshCompleter;
   SessionExpiredCallback? _onSessionExpired;
 
   ApiClient(this._dio, this._tokenStorage, this._logger) {
@@ -52,11 +55,32 @@ class ApiClient {
           final isRefreshCall = path.contains(ApiConstants.refreshToken);
           final isAuthCall = path.contains('/auth/');
 
-          if (statusCode == 401 && !isRefreshCall && !isAuthCall && !_isRefreshing) {
+          if (statusCode == 401 && !isRefreshCall && !isAuthCall) {
+            if (_isRefreshing) {
+              final refreshed = await _refreshCompleter!.future;
+              if (refreshed) {
+                final newToken = _tokenStorage.accessToken;
+                err.requestOptions.headers[ApiConstants.authorizationHeader] =
+                    '${ApiConstants.bearerPrefix} $newToken';
+                try {
+                  final response = await _dio.fetch(err.requestOptions);
+                  handler.resolve(response);
+                  return;
+                } catch (e) {
+                  handler.next(e is DioException ? e : err);
+                  return;
+                }
+              }
+              handler.next(err);
+              return;
+            }
+
             _isRefreshing = true;
+            _refreshCompleter = Completer<bool>();
             try {
               final refreshed = await _refreshToken();
               _isRefreshing = false;
+              _refreshCompleter!.complete(refreshed);
               if (refreshed) {
                 final newToken = _tokenStorage.accessToken;
                 err.requestOptions.headers[ApiConstants.authorizationHeader] =
@@ -69,6 +93,7 @@ class ApiClient {
               }
             } catch (e) {
               _isRefreshing = false;
+              _refreshCompleter!.complete(false);
               _logger.e('❌ Token refresh failed: $e');
               _notifySessionExpired();
             }

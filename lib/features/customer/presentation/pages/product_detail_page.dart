@@ -268,7 +268,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           ),
                         ),
                       ),
-                    ),
                     // Thumbnail strip
                     if (widget.product.images.length > 1)
                       Padding(

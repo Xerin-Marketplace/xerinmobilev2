@@ -16,7 +16,6 @@ import '../../cubit/home_cubit.dart';
 import '../../cubit/home_state.dart';
 import '../../cubit/recommendation_cubit.dart';
 import '../../cubit/recommendation_state.dart';
-import '../../../../../core/theme/uicons.dart';
 import '../../../../../core/theme/country_data.dart';
 import '../../../../../shared/widgets/shimmer_skeleton.dart';
 import '../../../../../shared/widgets/voice_search_button.dart';
@@ -168,7 +167,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                       'Featured',
                       'See all',
                       colorScheme,
-                      icon: Uicons.star,
+                      icon: Icons.star_outline,
                       onActionTap: () {
                         HapticUtils.selection();
                         context.push(AppConstants.exploreProductsRoute);
@@ -235,7 +234,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         GestureDetector(
           onTap: () => sl<AppThemeCubit>().toggleTheme(),
           child: Icon(
-            isDark ? Uicons.sun : Uicons.darkMode,
+            isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
             color: colorScheme.onSurface.withValues(alpha: 0.75),
             size: 22,
           ),
@@ -308,24 +307,16 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
       context: context,
       colorScheme: colorScheme,
       title: 'Notifications',
-      icon: Uicons.bell,
+      icon: Icons.notifications_outlined,
       items: notifications,
       itemBuilder: (notification) => ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: colorScheme.primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(Uicons.bell, color: colorScheme.primary, size: 18),
-        ),
+        leading: Icon(Icons.notifications_outlined, color: colorScheme.primary, size: 20),
         title: Text(
           notification['title']!,
           style: TextStyle(
             fontSize: 13,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.bold,
             color: colorScheme.onSurface,
           ),
         ),
@@ -353,24 +344,16 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
       context: context,
       colorScheme: colorScheme,
       title: 'Wishlist',
-      icon: Uicons.heart,
+      icon: Icons.favorite_outline,
       items: items,
       itemBuilder: (item) => ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE53935).withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Icon(Uicons.heart, color: Color(0xFFE53935), size: 18),
-        ),
+        leading: const Icon(Icons.favorite_outline, color: Color(0xFFE53935), size: 20),
         title: Text(
           item['name']!,
           style: TextStyle(
             fontSize: 13,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.bold,
             color: colorScheme.onSurface,
           ),
         ),
@@ -456,20 +439,13 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                             ),
                           ],
                         ),
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: colorScheme.onSurface.withValues(alpha: 0.06),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Uicons.crossSmall,
-                              size: 20,
-                              color: colorScheme.onSurface.withValues(alpha: 0.5),
-                            ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.close,
+                            size: 20,
+                            color: colorScheme.onSurface.withValues(alpha: 0.5),
                           ),
+                          onPressed: () => Navigator.pop(context),
                         ),
                       ],
                     ),
@@ -492,19 +468,11 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                       height: 54,
                       child: ElevatedButton(
                         onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          elevation: 0,
-                        ),
                         child: const Text(
                           'See all',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
@@ -663,7 +631,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         children: [
           const SizedBox(width: 14),
           Icon(
-            Uicons.search,
+            Icons.search,
             color: _searchNode.hasFocus
                 ? colorScheme.primary
                 : colorScheme.onSurface.withValues(alpha: 0.35),
@@ -708,7 +676,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
               child: Padding(
                 padding: const EdgeInsets.all(4),
                 child: Icon(
-                  Uicons.crossSmall,
+                  Icons.close,
                   color: colorScheme.onSurface.withValues(alpha: 0.4),
                   size: 16,
                 ),
@@ -745,20 +713,13 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
     }
 
     if (results.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: colorScheme.onSurface.withValues(alpha: 0.06),
-          ),
-        ),
-        child: Center(
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 40),
           child: Column(
             children: [
               Icon(
-                Uicons.searchAlt,
+                Icons.search_off,
                 size: 48,
                 color: colorScheme.onSurface.withValues(alpha: 0.2),
               ),
@@ -815,13 +776,6 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
               child: Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: colorScheme.onSurface.withValues(alpha: 0.06),
-                  ),
-                ),
                 child: Row(
                   children: [
                     ClipRRect(
@@ -968,7 +922,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                                 ),
                               ],
                             ),
-                            child: Icon(Uicons.settingsSliders,
+                            child: Icon(Icons.tune,
                                 color: Colors.white, size: 18),
                           ),
                           const SizedBox(width: 12),
@@ -1126,9 +1080,9 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
-                title.contains('Category') ? Uicons.category
-                  : title.contains('Region') ? Uicons.mapPin
-                  : Uicons.attachMoney,
+                title.contains('Category') ? Icons.category_outlined
+                  : title.contains('Region') ? Icons.location_on_outlined
+                  : Icons.attach_money,
                 color: Colors.white, size: 14,
               ),
             ),
@@ -1198,28 +1152,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
         Row(
           children: [
             if (icon != null) ...[
-              Container(
-                width: 28, height: 28,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      colorScheme.primary,
-                      colorScheme.primary.withValues(alpha: 0.6),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.primary.withValues(alpha: 0.15),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(icon, color: Colors.white, size: 14),
-              ),
+              Icon(icon, color: colorScheme.primary, size: 16),
               const SizedBox(width: 8),
             ],
             Text(
@@ -1386,7 +1319,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: const Icon(
-                        Uicons.storeAlt,
+                        Icons.store_outlined,
                         color: Colors.white,
                         size: 26,
                       ),
@@ -1422,17 +1355,17 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 const SizedBox(height: 18),
                 Row(
                   children: [
-                    _sellerBenefit(Uicons.arrowTrendUp, 'Reach thousands of buyers'),
+                    _sellerBenefit(Icons.trending_up, 'Reach thousands of buyers'),
                     const SizedBox(width: 12),
-                    _sellerBenefit(Uicons.wallet, 'Easy payouts & low fees'),
+                    _sellerBenefit(Icons.account_balance_wallet_outlined, 'Easy payouts & low fees'),
                   ],
                 ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    _sellerBenefit(Uicons.boxOpen, 'Manage orders easily'),
+                    _sellerBenefit(Icons.inventory_2_outlined, 'Manage orders easily'),
                     const SizedBox(width: 12),
-                    _sellerBenefit(Uicons.star, 'Grow your brand'),
+                    _sellerBenefit(Icons.star_outline, 'Grow your brand'),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -1457,7 +1390,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(
-                          Uicons.comment,
+                          Icons.chat_outlined,
                           color: Colors.white,
                           size: 20,
                         ),
@@ -1466,13 +1399,13 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                           'Contact us on WhatsApp',
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Icon(
-                          Uicons.arrowRight,
+                          Icons.arrow_forward,
                           color: Colors.white.withValues(alpha: 0.8),
                           size: 16,
                         ),
@@ -1513,9 +1446,9 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   }
 
   static const _mainMarkets = [
-    {'key': 'all', 'label': 'All Products', 'subtitle': 'Local and global stores', 'icon': Uicons.globe, 'color': Color(0xFF6C5CE7)},
-    {'key': 'local', 'label': 'Local · Tanzania', 'subtitle': 'Products registered in Tanzania', 'icon': Uicons.storeAlt, 'color': Color(0xFF3B82F6)},
-    {'key': 'global', 'label': 'Global', 'subtitle': 'All countries outside Tanzania', 'icon': Uicons.globe, 'color': Color(0xFF00A651)},
+    {'key': 'all', 'label': 'All Products', 'subtitle': 'Local and global stores', 'icon': Icons.public, 'color': Color(0xFF6C5CE7)},
+    {'key': 'local', 'label': 'Local · Tanzania', 'subtitle': 'Products registered in Tanzania', 'icon': Icons.store_outlined, 'color': Color(0xFF3B82F6)},
+    {'key': 'global', 'label': 'Global', 'subtitle': 'All countries outside Tanzania', 'icon': Icons.public, 'color': Color(0xFF00A651)},
   ];
 
   String? _selectedCountry;
@@ -1603,7 +1536,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                   ),
                 ],
               ),
-              child: Icon(Uicons.globe, size: 20, color: Colors.white),
+              child: Icon(Icons.public, size: 20, color: Colors.white),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1647,7 +1580,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    Icon(Uicons.arrowRight, size: 14, color: cs.primary),
+                    Icon(Icons.arrow_forward, size: 14, color: cs.primary),
                   ],
                 ),
               ),
@@ -1676,7 +1609,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
   Widget _buildMarketFilterDropdown(ColorScheme cs, bool isDark, List<ProductModel> featured) {
     final selectedMarket = _mainMarkets.where((m) => m['key'] == _selectedMarket).firstOrNull;
     final selectedLabel = selectedMarket?['label'] as String ?? 'All Products';
-    final selectedIcon = selectedMarket?['icon'] as IconData ?? Uicons.globe;
+    final selectedIcon = selectedMarket?['icon'] as IconData ?? Icons.public;
     final selectedColor = selectedMarket?['color'] as Color ?? cs.primary;
 
     final allCount = featured.length;
@@ -1737,7 +1670,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(Uicons.angleDown, size: 16, color: cs.onSurface.withValues(alpha: 0.4)),
+              Icon(Icons.expand_more, size: 16, color: cs.onSurface.withValues(alpha: 0.4)),
             ],
           ),
         ),
@@ -1804,7 +1737,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 ),
                 if (isSelected) ...[
                   const SizedBox(width: 8),
-                  Icon(Uicons.check, size: 16, color: cs.primary),
+                  Icon(Icons.check, size: 16, color: cs.primary),
                 ],
               ],
             ),
@@ -1901,11 +1834,11 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                     color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Uicons.xmark, size: 12, color: Colors.white.withValues(alpha: 0.9)),
+                  child: Icon(Icons.close, size: 12, color: Colors.white.withValues(alpha: 0.9)),
                 ),
               ),
             ] else ...[
-              Icon(Uicons.globe, size: 18, color: cs.onSurface.withValues(alpha: 0.5)),
+              Icon(Icons.public, size: 18, color: cs.onSurface.withValues(alpha: 0.5)),
               const SizedBox(width: 10),
               Text(
                 'Filter by Country',
@@ -1978,7 +1911,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                             color: cs.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Icon(Uicons.globe, color: cs.primary, size: 18),
+                          child: Icon(Icons.public, color: cs.primary, size: 18),
                         ),
                         const SizedBox(width: 12),
                         Text('Select Country',
@@ -1993,7 +1926,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                               color: cs.onSurface.withValues(alpha: 0.06),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Uicons.xmark, size: 16, color: cs.onSurface.withValues(alpha: 0.5)),
+                            child: Icon(Icons.close, size: 16, color: cs.onSurface.withValues(alpha: 0.5)),
                           ),
                         ),
                       ],
@@ -2015,7 +1948,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                       },
                       decoration: InputDecoration(
                         hintText: 'Search country...',
-                        prefixIcon: Icon(Uicons.search, size: 20, color: cs.onSurface.withValues(alpha: 0.4)),
+                        prefixIcon: Icon(Icons.search, size: 20, color: cs.onSurface.withValues(alpha: 0.4)),
                         filled: true,
                         fillColor: cs.onSurface.withValues(alpha: 0.04),
                         border: OutlineInputBorder(
@@ -2049,7 +1982,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                             ),
                           ),
                           trailing: isSelected
-                              ? Icon(Uicons.checkCircle, size: 18, color: cs.primary)
+                              ? Icon(Icons.check_circle, size: 18, color: cs.primary)
                               : null,
                           onTap: () {
                             HapticUtils.selection();
@@ -2142,7 +2075,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
       label = mainMarket['label'] as String;
     } else {
       color = cs.primary;
-      icon = Uicons.globe;
+      icon = Icons.public;
       label = _selectedMarket;
     }
 
@@ -2262,15 +2195,15 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                             height: 130,
                             color: cs.primary.withValues(alpha: 0.06),
                             child: Center(
-                              child: Icon(Uicons.box, size: 28, color: cs.primary.withValues(alpha: 0.3)),
+                              child: Icon(Icons.inventory_2_outlined, size: 28, color: cs.primary.withValues(alpha: 0.3)),
                             ),
                           ),
                         )
                       : Container(
                           height: 130,
-                          color: cs.primary.withValues(alpha: 0.06),
+                          color: cs.surfaceContainerHighest,
                           child: Center(
-                            child: Icon(Uicons.box, size: 28, color: cs.primary.withValues(alpha: 0.3)),
+                            child: Icon(Icons.inventory_2_outlined, size: 28, color: cs.primary.withValues(alpha: 0.3)),
                           ),
                         ),
                 ),
@@ -2340,7 +2273,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                         if (product.rating > 0)
                           Row(
                             children: [
-                              Icon(Uicons.star, size: 10, color: Colors.amber.shade700),
+                              Icon(Icons.star, size: 10, color: Colors.amber.shade700),
                               const SizedBox(width: 2),
                               Text(
                                 product.rating.toStringAsFixed(1),
@@ -2399,7 +2332,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'Discover Mix',
                 'See all',
                 colorScheme,
-                icon: Uicons.compass,
+                icon: Icons.explore_outlined,
                 onActionTap: () =>
                     context.push(AppConstants.exploreProductsRoute),
               ),
@@ -2436,7 +2369,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
               'Discover Mix',
               'See all',
               colorScheme,
-              icon: Uicons.compass,
+              icon: Icons.explore_outlined,
               onActionTap: () =>
                   context.push(AppConstants.exploreProductsRoute),
             ),
@@ -2577,7 +2510,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                         if (product.rating > 0)
                           Row(
                             children: [
-                              Icon(Uicons.star,
+                              Icon(Icons.star,
                                   size: 10, color: Colors.amber.shade700),
                               const SizedBox(width: 2),
                               Text(
@@ -2609,7 +2542,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
       color: colorScheme.primary.withValues(alpha: 0.06),
       child: Center(
         child: Icon(
-          Uicons.tags,
+          Icons.local_offer_outlined,
           size: 28,
           color: colorScheme.primary.withValues(alpha: 0.3),
         ),
@@ -2663,7 +2596,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                   children: [
                     Row(
                       children: [
-                        Icon(Uicons.bolt, color: Colors.white, size: 22),
+                        Icon(Icons.bolt_outlined, color: Colors.white, size: 22),
                         const SizedBox(width: 8),
                         Text(
                           'FLASH SALE',
@@ -2727,7 +2660,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                           ),
                           const SizedBox(width: 6),
                           Icon(
-                            Uicons.arrowRight,
+                            Icons.arrow_forward,
                             size: 16,
                             color: colorScheme.primary,
                           ),
@@ -2877,7 +2810,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      Uicons.heart,
+                      Icons.favorite_outline,
                       size: 16,
                       color: colorScheme.primary,
                     ),
@@ -2924,7 +2857,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Uicons.star,
+                              Icon(Icons.star,
                                   size: 11,
                                   color: Colors.amber.shade700),
                               const SizedBox(width: 2),
@@ -2984,7 +2917,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'Flash Deals',
                 'See all',
                 colorScheme,
-                icon: Uicons.bolt,
+                icon: Icons.bolt_outlined,
                 onActionTap: () => context.push(AppConstants.flashDealsRoute),
               ),
               const SizedBox(height: 14),
@@ -2997,7 +2930,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'For You',
                 'See all',
                 colorScheme,
-                icon: Uicons.autoAwesome,
+                icon: Icons.auto_awesome_outlined,
                 onActionTap: () => context.push(AppConstants.forYouRoute),
               ),
               const SizedBox(height: 14),
@@ -3010,7 +2943,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'Top Stores',
                 'See all',
                 colorScheme,
-                icon: Uicons.storeAlt,
+                icon: Icons.store_outlined,
                 onActionTap: () => context.push(AppConstants.storesRoute),
               ),
               const SizedBox(height: 14),
@@ -3023,7 +2956,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'Trending Now',
                 'See all',
                 colorScheme,
-                icon: Uicons.flame,
+                icon: Icons.local_fire_department_outlined,
                 onActionTap: () => context.push(AppConstants.trendingRoute),
               ),
               const SizedBox(height: 14),
@@ -3036,7 +2969,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'Available Coupons',
                 'See all',
                 colorScheme,
-                icon: Uicons.hashtag,
+                icon: Icons.local_offer_outlined,
                 onActionTap: () => context.push(AppConstants.couponsRoute),
               ),
               const SizedBox(height: 14),
@@ -3049,7 +2982,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'New Arrivals',
                 'See all',
                 colorScheme,
-                icon: Uicons.bolt,
+                icon: Icons.bolt_outlined,
                 onActionTap: () => context.push(AppConstants.newArrivalsRoute),
               ),
               const SizedBox(height: 14),
@@ -3062,7 +2995,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                 'Recently Viewed',
                 'See all',
                 colorScheme,
-                icon: Uicons.orderHistory,
+                icon: Icons.history_outlined,
                 onActionTap: () => context.push(AppConstants.recentlyViewedRoute),
               ),
               const SizedBox(height: 14),
@@ -3109,12 +3042,12 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                                 errorBuilder: (_, __, ___) => Container(
                                     width: 140, height: 100,
                                     color: cs.primary.withValues(alpha: 0.08),
-                                    child: Icon(Uicons.box,
+                                    child: Icon(Icons.inventory_2_outlined,
                                         color: cs.primary, size: 28)))
                             : Container(
                                 width: 140, height: 100,
                                 color: cs.primary.withValues(alpha: 0.08),
-                                child: Icon(Uicons.box,
+                                child: Icon(Icons.inventory_2_outlined,
                                     color: cs.primary, size: 28)),
                       ),
                       Positioned(
@@ -3194,12 +3127,12 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                             errorBuilder: (_, __, ___) => Container(
                                 width: 140, height: 110,
                                 color: cs.primary.withValues(alpha: 0.08),
-                                child: Icon(Uicons.box,
+                                child: Icon(Icons.inventory_2_outlined,
                                     color: cs.primary, size: 32)))
                         : Container(
                             width: 140, height: 110,
                             color: cs.primary.withValues(alpha: 0.08),
-                            child: Icon(Uicons.box,
+                            child: Icon(Icons.inventory_2_outlined,
                                 color: cs.primary, size: 32)),
                   ),
                   Padding(
@@ -3214,7 +3147,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Icon(Uicons.autoAwesome, size: 10, color: cs.primary),
+                            Icon(Icons.auto_awesome_outlined, size: 10, color: cs.primary),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(item.reason,
@@ -3269,12 +3202,12 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                             errorBuilder: (_, __, ___) => Container(
                                 width: 130, height: 100,
                                 color: cs.primary.withValues(alpha: 0.08),
-                                child: Icon(Uicons.box,
+                                child: Icon(Icons.inventory_2_outlined,
                                     color: cs.primary, size: 28)))
                         : Container(
                             width: 130, height: 100,
                             color: cs.primary.withValues(alpha: 0.08),
-                            child: Icon(Uicons.box,
+                            child: Icon(Icons.inventory_2_outlined,
                                 color: cs.primary, size: 28)),
                   ),
                   Padding(
@@ -3290,7 +3223,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                         if (product.rating > 0)
                           Row(
                             children: [
-                              Icon(Uicons.star, size: 12, color: Colors.amber[600]),
+                              Icon(Icons.star, size: 12, color: Colors.amber[600]),
                               const SizedBox(width: 2),
                               Text(product.rating.toStringAsFixed(1),
                                   style: TextStyle(
@@ -3344,9 +3277,9 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                         ? ClipOval(
                             child: Image.network(store.logoUrl!, fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) =>
-                                    Icon(Uicons.shop, color: cs.primary)),
+                                    Icon(Icons.store_outlined, color: cs.primary)),
                           )
-                        : Icon(Uicons.shop, color: cs.primary),
+                        : Icon(Icons.store_outlined, color: cs.primary),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -3363,14 +3296,14 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
                                   maxLines: 1, overflow: TextOverflow.ellipsis),
                             ),
                             if (store.isVerified)
-                              Icon(Uicons.badgeCheck, size: 14, color: cs.primary),
+                              Icon(Icons.verified, size: 14, color: cs.primary),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
                             if (store.rating > 0) ...[
-                              Icon(Uicons.star, size: 12, color: Colors.amber[600]),
+                              Icon(Icons.star, size: 12, color: Colors.amber[600]),
                               const SizedBox(width: 2),
                               Text(store.rating.toStringAsFixed(1),
                                   style: TextStyle(
@@ -3417,7 +3350,7 @@ class _CustomerHomePageState extends State<CustomerHomePage> {
             ),
             child: Row(
               children: [
-                Icon(Uicons.hashtag, color: cs.primary, size: 24),
+                Icon(Icons.local_offer_outlined, color: cs.primary, size: 24),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(

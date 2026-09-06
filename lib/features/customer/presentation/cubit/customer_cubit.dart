@@ -33,27 +33,23 @@ class CustomerCubit extends Cubit<CustomerState> {
     try {
       final ordersFuture = _dataSource.getOrders(pageSize: 50).then<dynamic>((v) => v).catchError((e) => null);
       final addressesFuture = _dataSource.getAddresses().then<dynamic>((v) => v).catchError((e) => null);
-      final paymentsFuture = _dataSource.getPaymentMethods().then<dynamic>((v) => v).catchError((e) => null);
       final notifFuture = _dataSource.getNotifications().then<dynamic>((v) => v).catchError((e) => null);
 
-      final results = await Future.wait([ordersFuture, addressesFuture, paymentsFuture, notifFuture]);
+      final results = await Future.wait([ordersFuture, addressesFuture, notifFuture]);
 
       final orders = results[0] is List ? (results[0] as List).whereType<OrderModel>().toList() : <OrderModel>[];
       final addresses = results[1] is List ? (results[1] as List).whereType<AddressModel>().toList() : <AddressModel>[];
-      final paymentMethods = results[2] is List ? (results[2] as List).whereType<PaymentMethodModel>().toList() : <PaymentMethodModel>[];
-      final notifications = results[3] is List ? (results[3] as List).whereType<NotificationModel>().toList() : <NotificationModel>[];
+      final notifications = results[2] is List ? (results[2] as List).whereType<NotificationModel>().toList() : <NotificationModel>[];
 
       _logger.i(
         '✅ Customer data loaded — orders: ${orders.length}, '
         'addresses: ${addresses.length}, '
-        'payments: ${paymentMethods.length}, '
         'notifications: ${notifications.length}',
       );
 
       emit(CustomerLoaded(
         orders: orders,
         addresses: addresses,
-        paymentMethods: paymentMethods,
         notifications: notifications,
       ));
     } catch (e) {
@@ -101,19 +97,8 @@ class CustomerCubit extends Cubit<CustomerState> {
   }
 
   Future<void> refreshPaymentMethods() async {
-    try {
-      final methods = await _dataSource.getPaymentMethods();
-      final current = state;
-      if (current is CustomerLoaded) {
-        emit(current.copyWith(paymentMethods: methods));
-      } else {
-        emit(CustomerLoaded(paymentMethods: methods));
-      }
-    } on ServerException catch (e) {
-      _logger.e('❌ Failed to refresh payment methods: ${e.message}');
-    } catch (e) {
-      _logger.e('❌ Failed to refresh payment methods: $e');
-    }
+    // TODO: Re-enable when backend /payment-methods endpoint is available
+    return;
   }
 
   Future<void> refreshNotifications() async {
@@ -132,7 +117,7 @@ class CustomerCubit extends Cubit<CustomerState> {
     }
   }
 
-  Future<void> addAddress({
+  Future<AddressModel?> addAddress({
     required String country,
     required String region,
     required String city,
@@ -148,7 +133,6 @@ class CustomerCubit extends Cubit<CustomerState> {
     double? longitude,
     bool isDefault = false,
   }) async {
-    emit(const CustomerActionInProgress());
     try {
       final address = await _dataSource.createAddress(
         country: country,
@@ -168,11 +152,13 @@ class CustomerCubit extends Cubit<CustomerState> {
       );
       _logger.i('✅ Address added: ${address.id}');
       await refreshAddresses();
-      emit(const CustomerActionSuccess('Address added successfully'));
+      return address;
     } on ServerException catch (e) {
       emit(CustomerActionError(e.message));
+      return null;
     } catch (e) {
       emit(CustomerActionError('Failed to add address: $e'));
+      return null;
     }
   }
 
@@ -193,7 +179,6 @@ class CustomerCubit extends Cubit<CustomerState> {
     double? longitude,
     bool isDefault = false,
   }) async {
-    emit(const CustomerActionInProgress());
     try {
       await _dataSource.updateAddress(
         addressId: addressId,
@@ -214,7 +199,6 @@ class CustomerCubit extends Cubit<CustomerState> {
       );
       _logger.i('✅ Address updated: $addressId');
       await refreshAddresses();
-      emit(const CustomerActionSuccess('Address updated successfully'));
     } on ServerException catch (e) {
       emit(CustomerActionError(e.message));
     } catch (e) {
@@ -223,12 +207,10 @@ class CustomerCubit extends Cubit<CustomerState> {
   }
 
   Future<void> deleteAddress(String addressId) async {
-    emit(const CustomerActionInProgress());
     try {
       await _dataSource.deleteAddress(addressId);
       _logger.i('✅ Address deleted: $addressId');
       await refreshAddresses();
-      emit(const CustomerActionSuccess('Address deleted successfully'));
     } on ServerException catch (e) {
       emit(CustomerActionError(e.message));
     } catch (e) {

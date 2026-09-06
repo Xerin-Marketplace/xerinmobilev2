@@ -52,7 +52,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CustomerCubit>().loadAll();
+      context.read<CustomerCubit>().refreshAddresses();
     });
   }
 
@@ -97,6 +97,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     setState(() => _isDetectingMode = true);
     try {
       final result = await context.read<CustomerCubit>().detectDeliveryMode(_selectedAddressId!);
+      if (!mounted) return;
       setState(() {
         _detectedMode = result;
         _isDetectingMode = false;
@@ -112,8 +113,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
       });
       if (mounted && result != null) _fetchEligibleLogistics();
     } catch (e) {
-      setState(() => _isDetectingMode = false);
-      if (mounted) NotificationService().error('Failed to detect delivery mode: $e');
+      if (!mounted) return;
+      setState(() {
+        _isDetectingMode = false;
+        _detectedMode = null;
+      });
     }
   }
 
@@ -141,8 +145,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
         }
       });
     } catch (e) {
-      setState(() => _isLoadingLogistics = false);
-      if (mounted) NotificationService().error('Failed to load logistics companies: $e');
+      if (!mounted) return;
+      setState(() {
+        _isLoadingLogistics = false;
+        _logisticsCompanies = [];
+      });
     }
   }
 
@@ -306,7 +313,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
               if (_recipientPhoneController.text.isEmpty && addr.recipientPhone != null) {
                 _recipientPhoneController.text = addr.recipientPhone!;
               }
-              _detectDeliveryMode();
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) _detectDeliveryMode();
+              });
+            }
+
+            final validSelectedId = addresses.any((a) => a.id == _selectedAddressId)
+                ? _selectedAddressId
+                : (addresses.isNotEmpty ? addresses.first.id : null);
+            if (_selectedAddressId != validSelectedId) {
+              _selectedAddressId = validSelectedId;
             }
 
             if (cartItems.isEmpty) {
@@ -402,27 +418,33 @@ class _CheckoutPageState extends State<CheckoutPage> {
             _buildHeader(cs),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildItemsSection(cs, isDark, cartItems),
-                      const SizedBox(height: 12),
-                      _buildDeliverySection(cs, isDark, addresses),
-                      const SizedBox(height: 12),
-                      _buildCustomerSection(cs, isDark, addresses),
-                      const SizedBox(height: 12),
-                      _buildDeliveryModeSection(cs, isDark),
-                      const SizedBox(height: 12),
-                      _buildLogisticsSection(cs, isDark),
-                      const SizedBox(height: 12),
-                      _buildPaymentSection(cs, isDark),
-                      const SizedBox(height: 12),
-                      _buildNotesSection(cs, isDark),
-                      const SizedBox(height: 12),
-                      _buildSummarySection(cs, isDark, cartTotal),
-                    ],
-                  ),
+                    _buildSectionTitle('Items', cs),
+                    ...cartItems.map((item) => _buildCartItemRow(item, cs)),
+                    _buildDivider(cs),
+                    _buildSectionTitle('Delivery Address', cs),
+                    _buildDeliverySection(cs, isDark, addresses),
+                    _buildDivider(cs),
+                    _buildSectionTitle('Customer', cs),
+                    _buildCustomerSection(cs, isDark, addresses),
+                    _buildDivider(cs),
+                    _buildSectionTitle('Delivery Route', cs),
+                    _buildDeliveryModeSection(cs, isDark),
+                    _buildDivider(cs),
+                    _buildSectionTitle('Delivery Service', cs),
+                    _buildLogisticsSection(cs, isDark),
+                    _buildDivider(cs),
+                    _buildSectionTitle('Payment', cs),
+                    _buildPaymentSection(cs, isDark),
+                    _buildDivider(cs),
+                    _buildSectionTitle('Notes', cs),
+                    _buildNotesSection(cs, isDark),
+                    _buildDivider(cs),
+                    _buildSummaryContent(cartTotal, cs),
+                  ],
                 ),
               ),
             ),
@@ -434,111 +456,100 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _buildSection({
-    required String title,
-    required ColorScheme cs,
-    required bool isDark,
-    required Widget child,
-  }) {
+  Widget _buildSectionTitle(String title, ColorScheme cs) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface)),
-          const SizedBox(height: 12),
-          child,
-        ],
+      padding: const EdgeInsets.only(top: 4, bottom: 8),
+      child: Text(title,
+        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: cs.onSurface.withValues(alpha: 0.6)),
       ),
     );
   }
 
-  Widget _buildItemsSection(ColorScheme cs, bool isDark, List<CartItemModel> cartItems) {
-    return _buildSection(
-      title: 'Order Items',
-      cs: cs,
-      isDark: isDark,
-      child: Column(
-        children: cartItems.map((item) => _buildCartItemRow(item, cs)).toList(),
-      ),
+  Widget _buildDivider(ColorScheme cs) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
     );
   }
 
   Widget _buildDeliverySection(ColorScheme cs, bool isDark, List<AddressModel> addresses) {
-    final selectedAddr = addresses.where((a) => a.id == _selectedAddressId).firstOrNull;
-
-    return _buildSection(
-      title: 'Delivery Address',
-      cs: cs,
-      isDark: isDark,
-      child: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (selectedAddr != null) ...[
-            if (selectedAddr.label != null && selectedAddr.label!.isNotEmpty)
-              Text(selectedAddr.label!,
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary),
-              ),
-            Text(selectedAddr.street,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
-            ),
-            Text('${selectedAddr.city}, ${selectedAddr.region}, ${selectedAddr.country}',
-              style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
-              maxLines: 2, overflow: TextOverflow.ellipsis,
-            ),
-            if (selectedAddr.recipientName != null && selectedAddr.recipientName!.isNotEmpty)
-              Text('${selectedAddr.recipientName}${selectedAddr.recipientPhone != null && selectedAddr.recipientPhone!.isNotEmpty ? ' · ${selectedAddr.recipientPhone}' : ''}',
-                style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
-              ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: () => _showAddressPicker(cs, isDark, addresses),
-                  child: Text('Change address',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.primary),
-                  ),
-                ),
-                const SizedBox(width: 20),
-                GestureDetector(
-                  onTap: () => _showAddAddressDrawer(cs, isDark),
-                  child: Text('Add new',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.primary),
-                  ),
-                ),
-              ],
-            ),
-          ] else if (addresses.isEmpty) ...[
+          if (addresses.isEmpty) ...[
             Text('No delivery address yet',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.7)),
+              style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
             ),
-            const SizedBox(height: 4),
-            Text('Add an address to proceed with checkout',
-              style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
-            ),
-            const SizedBox(height: 14),
-            ElevatedButton(
+            const SizedBox(height: 8),
+            TextButton.icon(
               onPressed: () => _showAddAddressDrawer(cs, isDark),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: cs.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
-              ),
-              child: const Text('Add Address', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+              icon: const Icon(Icons.add_location_alt_outlined, size: 18),
+              label: const Text('Add Address', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             ),
           ] else ...[
-            ...addresses.map((addr) => _buildAddressSelector(addr, cs, isDark)),
-            const SizedBox(height: 10),
-            GestureDetector(
-              onTap: () => _showAddAddressDrawer(cs, isDark),
-              child: Text('Add new address',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.primary),
+            DropdownButtonFormField<String>(
+              value: _selectedAddressId,
+              isExpanded: true,
+              decoration: InputDecoration(
+                prefixIcon: Icon(Icons.location_on_outlined, size: 18, color: cs.primary),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.08)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.08)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(color: cs.primary, width: 1.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+              items: addresses.map((addr) {
+                final label = addr.label != null && addr.label!.isNotEmpty ? '${addr.label} · ' : '';
+                return DropdownMenuItem(
+                  value: addr.id,
+                  child: Text(
+                    '$label${addr.street}, ${addr.city}, ${addr.region}',
+                    style: TextStyle(fontSize: 13, color: cs.onSurface),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value == null) return;
+                final addr = addresses.where((a) => a.id == value).first;
+                setState(() {
+                  _selectedAddressId = value;
+                  if (_recipientNameController.text.isEmpty && addr.recipientName != null) {
+                    _recipientNameController.text = addr.recipientName!;
+                  }
+                  if (_recipientPhoneController.text.isEmpty && addr.recipientPhone != null) {
+                    _recipientPhoneController.text = addr.recipientPhone!;
+                  }
+                  _logisticsCompanies = [];
+                  _selectedCompanyId = null;
+                  _pricingOptions = [];
+                  _selectedRate = null;
+                  _frozenQuote = null;
+                });
+                _detectDeliveryMode();
+              },
+            ),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: () => _showAddAddressDrawer(cs, isDark),
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('Add new address', style: TextStyle(fontSize: 12)),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),
           ],
         ],
-      ),
     );
   }
 
@@ -552,44 +563,55 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ? selectedAddr!.recipientPhone!
         : (user?.phone?.isNotEmpty == true ? user!.phone! : 'Not configured');
 
-    return _buildSection(
-      title: 'Customer',
-      cs: cs,
-      isDark: isDark,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(displayName,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: cs.onSurface),
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: cs.primary.withValues(alpha: 0.1),
+              child: Text(
+                displayName.isNotEmpty && displayName != 'Not configured'
+                    ? displayName.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
+                    : '?',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.primary),
               ),
-              GestureDetector(
-                onTap: () => context.push(AppConstants.profileInfoRoute),
-                child: Text('Edit profile',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary),
-                ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(displayName,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurface),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(displayEmail,
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildCustomerInfoRow(label: 'Email', value: displayEmail, cs: cs, isMissing: displayEmail == 'Not configured'),
-          const SizedBox(height: 8),
-          _buildCustomerInfoRow(label: 'Phone', value: displayPhone, cs: cs, isMissing: displayPhone == 'Not configured'),
-          const SizedBox(height: 8),
-          _buildCustomerInfoRow(
-            label: 'Delivery address',
-            value: selectedAddr != null
-                ? '${selectedAddr.street}, ${selectedAddr.city}, ${selectedAddr.region}'
-                : 'Select a delivery address above',
-            cs: cs,
-            isMissing: selectedAddr == null,
-          ),
-        ],
-      ),
+            ),
+            GestureDetector(
+              onTap: () => context.push(AppConstants.profileInfoRoute),
+              child: Icon(Icons.edit_outlined, size: 18, color: cs.primary),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        _buildCustomerInfoRow(label: 'Phone', value: displayPhone, cs: cs, isMissing: displayPhone == 'Not configured'),
+        const SizedBox(height: 6),
+        _buildCustomerInfoRow(
+          label: 'Address',
+          value: selectedAddr != null
+              ? '${selectedAddr.street}, ${selectedAddr.city}, ${selectedAddr.region}'
+              : 'Select delivery address',
+          cs: cs,
+          isMissing: selectedAddr == null,
+        ),
+      ],
     );
   }
 
@@ -599,16 +621,25 @@ class _CheckoutPageState extends State<CheckoutPage> {
     required ColorScheme cs,
     bool isMissing = false,
   }) {
+    IconData icon;
+    switch (label) {
+      case 'Phone': icon = Icons.phone_outlined; break;
+      case 'Address': icon = Icons.location_on_outlined; break;
+      case 'Recipient': icon = Icons.person_outline; break;
+      default: icon = Icons.info_outline;
+    }
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        Icon(icon, size: 16, color: cs.onSurface.withValues(alpha: 0.4)),
+        const SizedBox(width: 8),
         Text(label,
-          style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
+          style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
         ),
+        const Spacer(),
         Flexible(
           child: Text(value,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
               color: isMissing
                   ? const Color(0xFFE53935).withValues(alpha: 0.6)
@@ -632,11 +663,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text('Select Address',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                children: [
+                  Text('Select Address',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(ctx),
+                    child: Icon(Icons.close, size: 20, color: cs.onSurface.withValues(alpha: 0.5)),
+                  ),
+                ],
               ),
             ),
+            Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
             ...addresses.map((addr) => GestureDetector(
               onTap: () {
                 setState(() {
@@ -657,33 +698,32 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 Navigator.pop(ctx);
               },
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: Row(
                   children: [
+                    Icon(Icons.location_on_outlined, size: 16, color: _selectedAddressId == addr.id ? cs.primary : cs.onSurface.withValues(alpha: 0.3)),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (addr.label != null && addr.label!.isNotEmpty)
-                            Text(addr.label!,
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary),
-                            ),
-                          Text(addr.street,
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
-                          ),
-                          Text(addr.fullAddress,
-                            style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
-                            maxLines: 2, overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                      child: Text(
+                        '${addr.street}, ${addr.city}, ${addr.region}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: _selectedAddressId == addr.id ? FontWeight.w600 : FontWeight.w500,
+                          color: _selectedAddressId == addr.id ? cs.primary : cs.onSurface,
+                        ),
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    _buildRadioDot(_selectedAddressId == addr.id, cs.primary),
+                    Icon(
+                      _selectedAddressId == addr.id ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                      size: 18,
+                      color: _selectedAddressId == addr.id ? cs.primary : cs.onSurface.withValues(alpha: 0.3),
+                    ),
                   ],
                 ),
               ),
             )),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
           ],
         ),
       ),
@@ -692,68 +732,102 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   Widget _buildDeliveryModeSection(ColorScheme cs, bool isDark) {
     final isCrossBorder = _deliveryMode == 'international';
-    return _buildSection(
-      title: 'Delivery Route',
-      cs: cs,
-      isDark: isDark,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final originCount = (_detectedMode != null && _detectedMode!['origins'] is List)
+        ? (_detectedMode!['origins'] as List).length
+        : 0;
+
+    if (_isDetectingMode) {
+      return Row(
         children: [
-          if (_isDetectingMode)
-            Row(
-              children: [
-                SizedBox(
-                  width: 14, height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary),
-                ),
-                const SizedBox(width: 8),
-                Text('Detecting delivery route...',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
-                ),
-              ],
-            )
-          else ...[
-            Text(
-              isCrossBorder ? 'International / Cross-border' : 'Domestic / Local',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurface),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              isCrossBorder
-                ? 'Products ship from a different country'
-                : 'All products ship within the same country',
-              style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
-            ),
-            if (_detectedMode != null && _detectedMode!['origins'] is List && (_detectedMode!['origins'] as List).isNotEmpty) ...[
-              const SizedBox(height: 4),
+          SizedBox(
+            width: 14, height: 14,
+            child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary),
+          ),
+          const SizedBox(width: 8),
+          Text('Detecting delivery route...',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Container(
+          width: 36, height: 36,
+          decoration: BoxDecoration(
+            color: (isCrossBorder ? const Color(0xFFE53935) : const Color(0xFF22C55E)).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            isCrossBorder ? Icons.flight_takeoff : Icons.local_shipping_outlined,
+            size: 18,
+            color: isCrossBorder ? const Color(0xFFE53935) : const Color(0xFF22C55E),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                '${(_detectedMode!['origins'] as List).length} store route${(_detectedMode!['origins'] as List).length == 1 ? '' : 's'} detected',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.4)),
+                isCrossBorder ? 'International' : 'Domestic / Local',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: cs.onSurface),
+              ),
+              Text(
+                isCrossBorder
+                  ? 'Ships from a different country'
+                  : 'Ships within the same country',
+                style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
               ),
             ],
-          ],
-        ],
-      ),
+          ),
+        ),
+        if (originCount > 0)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: cs.onSurface.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              '$originCount route${originCount == 1 ? '' : 's'}',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+          ),
+      ],
     );
   }
 
   Widget _buildLogisticsSection(ColorScheme cs, bool isDark) {
-    return _buildSection(
-      title: 'Delivery Service',
-      cs: cs,
-      isDark: isDark,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (_isLoadingLogistics) ...[
-            const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator())),
-          ] else if (_logisticsCompanies.isEmpty) ...[
-            Text('No logistics available',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
-            ),
-            Text(_selectedAddressId == null ? 'Select an address first' : 'No companies cover this route',
-              style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.3)),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_isLoadingLogistics) ...[
+          Row(
+            children: [
+              SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary)),
+              const SizedBox(width: 8),
+              Text('Finding delivery services...',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
+              ),
+            ],
+          ),
+        ] else if (_logisticsCompanies.isEmpty) ...[
+          Row(
+            children: [
+              Icon(Icons.local_shipping_outlined, size: 18, color: cs.onSurface.withValues(alpha: 0.3)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _selectedAddressId == null
+                    ? 'Select a delivery address to see available services'
+                    : 'No delivery services available for this route',
+                  style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
+                ),
+              ),
+            ],
+          ),
           ] else ...[
             Text('Logistics Company',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
@@ -783,9 +857,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   child: Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))),
                 ),
             ],
+            ],
           ],
-        ],
-      ),
     );
   }
 
@@ -864,61 +937,39 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildPaymentSection(ColorScheme cs, bool isDark) {
-    return _buildSection(
-      title: 'Payment Method',
-      cs: cs,
-      isDark: isDark,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Mobile Money',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF22C55E)),
-          ),
-          Text('Pay via M-Pesa, Airtel Money, HaloPesa or Mixx',
-            style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
-          ),
-          const SizedBox(height: 12),
-          _buildPhoneInput(cs),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Mobile Money',
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF22C55E)),
+        ),
+        const SizedBox(height: 8),
+        _buildPhoneInput(cs),
+      ],
     );
   }
 
   Widget _buildNotesSection(ColorScheme cs, bool isDark) {
-    return _buildSection(
-      title: 'Order Notes',
-      cs: cs,
-      isDark: isDark,
-      child: TextField(
-        controller: _notesController,
-        maxLines: 3,
-        decoration: InputDecoration(
-          hintText: 'Any special instructions for delivery...',
-          hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.3)),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: cs.primary, width: 1.5),
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    return TextField(
+      controller: _notesController,
+      maxLines: 2,
+      decoration: InputDecoration(
+        hintText: 'Special instructions for delivery...',
+        hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.3)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.08)),
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.08)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: cs.primary, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       ),
-    );
-  }
-
-  Widget _buildSummarySection(ColorScheme cs, bool isDark, double cartTotal) {
-    return _buildSection(
-      title: 'Order Summary',
-      cs: cs,
-      isDark: isDark,
-      child: _buildSummaryContent(cartTotal, cs),
     );
   }
 
@@ -1072,22 +1123,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   void _showAddAddressDrawer(ColorScheme cs, bool isDark) {
+    final user = GetIt.instance<TokenStorage>().currentUser;
     final labelCtrl = TextEditingController();
-    final recipientNameCtrl = TextEditingController();
-    final recipientPhoneCtrl = TextEditingController();
-    final countryCtrl = TextEditingController(text: 'Tanzania');
-    final regionCtrl = TextEditingController();
-    final districtCtrl = TextEditingController();
-    final wardCtrl = TextEditingController();
-    final cityCtrl = TextEditingController();
-    final streetCtrl = TextEditingController();
-    final landmarkCtrl = TextEditingController();
-    final postalCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
     double? savedLatitude;
     double? savedLongitude;
+    String? savedCountry;
+    String? savedRegion;
+    String? savedCity;
+    String? savedStreet;
     bool isFetchingLocation = false;
-    bool isDefault = false;
+    bool locationFetched = false;
 
     showModalBottomSheet(
       context: context,
@@ -1096,181 +1142,202 @@ class _CheckoutPageState extends State<CheckoutPage> {
         return StatefulBuilder(
           builder: (ctx, setModalState) {
             return SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    child: Row(
-                      children: [
-                        Text('Add Delivery Address',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface),
-                        ),
-                        const Spacer(),
-                        GestureDetector(
-                          onTap: () => Navigator.pop(ctx),
-                          child: Icon(Icons.close, size: 22, color: cs.onSurface.withValues(alpha: 0.5)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
-                  Flexible(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(ctx).viewInsets.bottom,
-                        left: 20, right: 20, top: 16,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(ctx).viewInsets.bottom,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      child: Row(
+                        children: [
+                          Text('Add Address',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface),
+                          ),
+                          const Spacer(),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(ctx),
+                            child: Icon(Icons.close, size: 20, color: cs.onSurface.withValues(alpha: 0.5)),
+                          ),
+                        ],
                       ),
+                    ),
+                    Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                       child: Form(
                         key: formKey,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            OutlinedButton.icon(
-                              onPressed: isFetchingLocation ? null : () async {
-                                setModalState(() => isFetchingLocation = true);
-                                try {
-                                  final location = await GetIt.instance<LocationService>().getCurrentLocation();
-                                  setModalState(() {
-                                    if (location.country != null) countryCtrl.text = location.country!;
-                                    if (location.region != null) regionCtrl.text = location.region!;
-                                    if (location.city != null) cityCtrl.text = location.city!;
-                                    if (location.district != null) districtCtrl.text = location.district!;
-                                    if (location.ward != null) wardCtrl.text = location.ward!;
-                                    if (location.street != null) streetCtrl.text = location.street!;
-                                    if (location.postalCode != null) postalCtrl.text = location.postalCode!;
-                                    if (location.landmark != null) landmarkCtrl.text = location.landmark!;
-                                    savedLatitude = location.latitude;
-                                    savedLongitude = location.longitude;
-                                    isFetchingLocation = false;
-                                  });
-                                  if (ctx.mounted) {
-                                    ScaffoldMessenger.of(ctx).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Location detected: ${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}'),
-                                        backgroundColor: const Color(0xFF22C55E),
-                                        duration: const Duration(seconds: 2),
-                                      ),
-                                    );
-                                  }
-                                } catch (e) {
-                                  setModalState(() => isFetchingLocation = false);
-                                  if (ctx.mounted) {
-                                    ScaffoldMessenger.of(ctx).showSnackBar(
-                                      SnackBar(
-                                        content: Text(e.toString().replaceFirst('Exception: ', '')),
-                                        backgroundColor: const Color(0xFFE53935),
-                                        duration: const Duration(seconds: 3),
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
-                              icon: isFetchingLocation
-                                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                                  : const Icon(Icons.my_location, size: 18),
-                              label: Text(isFetchingLocation ? 'Detecting location...' : 'Use My Current Location'),
-                            ),
-                            const SizedBox(height: 16),
-                            _drawerField(label: 'Address label', hint: 'e.g. Home, Work', controller: labelCtrl, cs: cs, required: false),
-                            const SizedBox(height: 12),
-                            _drawerField(label: 'Recipient name', hint: 'Person receiving delivery', controller: recipientNameCtrl, cs: cs, required: false),
-                            const SizedBox(height: 12),
-                            _drawerField(label: 'Recipient phone', hint: '+255...', controller: recipientPhoneCtrl, cs: cs, required: false, keyboardType: TextInputType.phone),
-                            const SizedBox(height: 12),
-                            _drawerField(label: 'Country', hint: 'Tanzania', controller: countryCtrl, cs: cs, required: true, readOnly: true),
-                            const SizedBox(height: 12),
-                            _drawerDropdown(label: 'Region (official)', hint: 'Select official region', controller: regionCtrl, items: _tzRegions, cs: cs, required: true),
-                            const SizedBox(height: 12),
-                            _drawerField(label: 'District', hint: 'e.g. Kinondoni', controller: districtCtrl, cs: cs, required: false),
-                            const SizedBox(height: 12),
-                            _drawerField(label: 'Ward', hint: 'e.g. Mikocheni', controller: wardCtrl, cs: cs, required: false),
-                            const SizedBox(height: 12),
-                            _drawerField(label: 'City', hint: 'e.g. Dar es Salaam', controller: cityCtrl, cs: cs, required: true),
-                            const SizedBox(height: 12),
-                            _drawerField(label: 'Street / address line', hint: 'Street, building and house number', controller: streetCtrl, cs: cs, required: true),
-                            const SizedBox(height: 12),
-                            _drawerField(label: 'Landmark', hint: 'Near...', controller: landmarkCtrl, cs: cs, required: false),
-                            const SizedBox(height: 12),
-                            _drawerField(label: 'Postal code', hint: 'Optional', controller: postalCtrl, cs: cs, required: false, keyboardType: TextInputType.number),
-                            const SizedBox(height: 16),
-                            CheckboxListTile(
-                              value: isDefault,
-                              onChanged: (v) => setModalState(() => isDefault = v ?? false),
-                              title: Text('Use as default delivery address',
-                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
-                              ),
-                              subtitle: Text('Checkout will prefer this address.',
-                                style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
-                              ),
-                              contentPadding: EdgeInsets.zero,
-                              dense: true,
-                            ),
-                            const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: SizedBox(
-                                    height: 48,
-                                    child: OutlinedButton(
-                                      onPressed: () => Navigator.pop(ctx),
-                                      style: OutlinedButton.styleFrom(
-                                        side: BorderSide(color: cs.onSurface.withValues(alpha: 0.15)),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                      ),
-                                      child: Text('Cancel',
-                                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
-                                      ),
-                                    ),
+                            if (!locationFetched) ...[
+                              SizedBox(
+                                width: double.infinity,
+                                height: 48,
+                                child: OutlinedButton.icon(
+                                  onPressed: isFetchingLocation ? null : () async {
+                                    setModalState(() => isFetchingLocation = true);
+                                    try {
+                                      final location = await GetIt.instance<LocationService>().getCurrentLocation();
+                                      setModalState(() {
+                                        savedCountry = location.country ?? 'Tanzania';
+                                        savedRegion = location.region;
+                                        savedCity = location.city;
+                                        savedStreet = location.street;
+                                        savedLatitude = location.latitude;
+                                        savedLongitude = location.longitude;
+                                        isFetchingLocation = false;
+                                        locationFetched = true;
+                                      });
+                                    } catch (e) {
+                                      setModalState(() => isFetchingLocation = false);
+                                      if (ctx.mounted) {
+                                        ScaffoldMessenger.of(ctx).showSnackBar(
+                                          SnackBar(
+                                            content: Text(e.toString().replaceFirst('Exception: ', '')),
+                                            backgroundColor: const Color(0xFFE53935),
+                                            duration: const Duration(seconds: 3),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    side: BorderSide(color: cs.primary.withValues(alpha: 0.3)),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                  icon: isFetchingLocation
+                                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                                      : Icon(Icons.my_location, size: 20, color: cs.primary),
+                                  label: Text(
+                                    isFetchingLocation ? 'Detecting location...' : 'Use My Current Location',
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.primary),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: SizedBox(
-                                    height: 48,
-                                    child: ElevatedButton(
-                                      onPressed: () {
-                                        if (formKey.currentState!.validate()) {
-                                          Navigator.pop(ctx);
-                                          context.read<CustomerCubit>().addAddress(
-                                            country: countryCtrl.text.trim(),
-                                            region: regionCtrl.text.trim(),
-                                            city: cityCtrl.text.trim(),
-                                            street: streetCtrl.text.trim(),
-                                            postalCode: postalCtrl.text.trim().isEmpty ? null : postalCtrl.text.trim(),
-                                            label: labelCtrl.text.trim().isEmpty ? null : labelCtrl.text.trim(),
-                                            recipientName: recipientNameCtrl.text.trim().isEmpty ? null : recipientNameCtrl.text.trim(),
-                                            recipientPhone: recipientPhoneCtrl.text.trim().isEmpty ? null : recipientPhoneCtrl.text.trim(),
-                                            district: districtCtrl.text.trim().isEmpty ? null : districtCtrl.text.trim(),
-                                            ward: wardCtrl.text.trim().isEmpty ? null : wardCtrl.text.trim(),
-                                            landmark: landmarkCtrl.text.trim().isEmpty ? null : landmarkCtrl.text.trim(),
-                                            latitude: savedLatitude,
-                                            longitude: savedLongitude,
-                                            isDefault: isDefault,
-                                          ).then((_) {
-                                            NotificationService().success('Address added successfully');
-                                          });
-                                        }
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: cs.primary,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                        elevation: 0,
-                                      ),
-                                      child: const Text('Add Address', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                                    ),
-                                  ),
+                              ),
+                            ] else ...[
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: cs.primary.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: cs.primary.withValues(alpha: 0.15)),
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.check_circle, size: 18, color: cs.primary),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        '${savedStreet ?? 'Unknown street'}, ${savedCity ?? ''}, ${savedRegion ?? ''}',
+                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: cs.onSurface),
+                                        maxLines: 2, overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () => setModalState(() {
+                                        locationFetched = false;
+                                        savedStreet = null;
+                                        savedCity = null;
+                                        savedRegion = null;
+                                      }),
+                                      child: Icon(Icons.refresh, size: 16, color: cs.onSurface.withValues(alpha: 0.4)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              _drawerField(label: 'Label (optional)', hint: 'Home, Work...', controller: labelCtrl, cs: cs, required: false),
+                              const SizedBox(height: 10),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: cs.onSurface.withValues(alpha: 0.03),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.person_outline, size: 16, color: cs.onSurface.withValues(alpha: 0.4)),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      user?.fullName ?? 'Unknown',
+                                      style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.7)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: cs.onSurface.withValues(alpha: 0.03),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.phone_outlined, size: 16, color: cs.onSurface.withValues(alpha: 0.4)),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      user?.phone ?? 'No phone',
+                                      style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.7)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 44,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                    context.read<CustomerCubit>().addAddress(
+                                      country: savedCountry ?? 'Tanzania',
+                                      region: savedRegion ?? '',
+                                      city: savedCity ?? '',
+                                      street: savedStreet ?? '',
+                                      label: labelCtrl.text.trim().isEmpty ? null : labelCtrl.text.trim(),
+                                      recipientName: user?.fullName,
+                                      recipientPhone: user?.phone,
+                                      latitude: savedLatitude,
+                                      longitude: savedLongitude,
+                                    ).then((addr) {
+                                      if (addr != null) {
+                                        NotificationService().success('Address added');
+                                        setState(() {
+                                          _selectedAddressId = addr.id;
+                                          _logisticsCompanies = [];
+                                          _selectedCompanyId = null;
+                                          _pricingOptions = [];
+                                          _selectedRate = null;
+                                          _frozenQuote = null;
+                                        });
+                                        _detectDeliveryMode();
+                                      }
+                                    });
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: cs.primary,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    elevation: 0,
+                                  ),
+                                  child: const Text('Save Address', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 16),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
@@ -1371,33 +1438,43 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Widget _buildCartItemRow(CartItemModel item, ColorScheme cs) {
     final imageUrl = item.product?.thumbnailUrl;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          if (imageUrl != null)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(imageUrl, width: 48, height: 48, fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => SizedBox(
-                  width: 48, height: 48,
-                  child: Icon(Icons.inventory_2_outlined, color: cs.onSurface.withValues(alpha: 0.3), size: 22),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: imageUrl != null
+              ? Image.network(imageUrl, width: 44, height: 44, fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 44, height: 44,
+                    color: cs.onSurface.withValues(alpha: 0.05),
+                    child: Icon(Icons.inventory_2_outlined, color: cs.onSurface.withValues(alpha: 0.3), size: 20),
+                  ),
+                )
+              : Container(
+                  width: 44, height: 44,
+                  color: cs.onSurface.withValues(alpha: 0.05),
+                  child: Icon(Icons.inventory_2_outlined, color: cs.onSurface.withValues(alpha: 0.3), size: 20),
                 ),
-              ),
-            )
-          else
-            Icon(Icons.inventory_2_outlined, color: cs.onSurface.withValues(alpha: 0.3), size: 22),
-          const SizedBox(width: 12),
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.product?.name ?? 'Product', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
-                  maxLines: 1, overflow: TextOverflow.ellipsis),
-                Text('Qty: ${item.quantity}', style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4))),
+                Text(item.product?.name ?? 'Product',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                ),
+                Text('Qty ${item.quantity} · ${item.formattedPrice}',
+                  style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4)),
+                ),
               ],
             ),
           ),
-          Text(item.formattedTotal, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurface)),
+          Text(item.formattedTotal,
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: cs.onSurface),
+          ),
         ],
       ),
     );
@@ -1432,24 +1509,27 @@ class _CheckoutPageState extends State<CheckoutPage> {
         _detectDeliveryMode();
       },
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.only(bottom: 6),
         child: Row(
           children: [
+            Icon(Icons.location_on_outlined, size: 16, color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.3)),
+            const SizedBox(width: 6),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (address.label != null && address.label!.isNotEmpty)
-                    Text(address.label!,
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary),
-                    ),
-                  Text(address.street, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface)),
-                  Text(address.fullAddress, style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
-                    maxLines: 2, overflow: TextOverflow.ellipsis),
-                ],
+              child: Text(
+                '${address.street}, ${address.city}, ${address.region}',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected ? cs.primary : cs.onSurface,
+                ),
+                maxLines: 1, overflow: TextOverflow.ellipsis,
               ),
             ),
-            _buildRadioDot(isSelected, cs.primary),
+            Icon(
+              isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+              size: 18,
+              color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.3),
+            ),
           ],
         ),
       ),

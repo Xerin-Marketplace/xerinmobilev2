@@ -9,7 +9,6 @@ import '../../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../../../core/storage/token_storage.dart';
 import '../../cubit/home_cubit.dart';
 import '../../cubit/home_state.dart';
-import '../../../../../core/theme/uicons.dart';
 
 class CustomerProfilePage extends StatelessWidget {
   const CustomerProfilePage({super.key});
@@ -20,13 +19,13 @@ class CustomerProfilePage extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final menuItems = [
-      {'icon': Uicons.user, 'label': 'Personal Info', 'route': AppConstants.profileInfoRoute},
-      {'icon': Uicons.shoppingBag, 'label': 'Order History', 'route': AppConstants.orderHistoryRoute},
-      {'icon': Uicons.mapPin, 'label': 'Addresses', 'route': AppConstants.addressesRoute},
-      {'icon': Uicons.creditCard, 'label': 'Payment Methods', 'route': AppConstants.paymentMethodsRoute},
-      {'icon': Uicons.lock, 'label': 'Security', 'route': AppConstants.customerSecurityRoute},
-      {'icon': Uicons.settings, 'label': 'Settings', 'route': AppConstants.settingsRoute},
-      {'icon': Uicons.circleQuestion, 'label': 'Help & Support', 'route': AppConstants.helpSupportRoute},
+      {'icon': Icons.person_outline, 'label': 'Personal info', 'route': AppConstants.profileInfoRoute},
+      {'icon': Icons.shopping_bag_outlined, 'label': 'Order History', 'route': AppConstants.orderHistoryRoute},
+      {'icon': Icons.location_on_outlined, 'label': 'Addresses', 'route': AppConstants.addressesRoute},
+      {'icon': Icons.credit_card_outlined, 'label': 'Payment Methods', 'route': AppConstants.paymentMethodsRoute},
+      {'icon': Icons.lock_outline, 'label': 'Security', 'route': AppConstants.customerSecurityRoute},
+      {'icon': Icons.settings_outlined, 'label': 'Settings', 'route': AppConstants.settingsRoute},
+      {'icon': Icons.help_outline, 'label': 'Help & Support', 'route': AppConstants.helpSupportRoute},
     ];
 
     final tokenStorage = GetIt.instance<TokenStorage>();
@@ -56,46 +55,22 @@ class CustomerProfilePage extends StatelessWidget {
             // Menu items
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF252525) : Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(14),
-                  clipBehavior: Clip.antiAlias,
-                  child: Column(
-                    children: List.generate(menuItems.length, (index) {
-                      return Column(
-                        children: [
-                          _buildMenuTile(context, menuItems[index], colorScheme),
-                          if (index < menuItems.length - 1) _buildDivider(colorScheme),
-                        ],
-                      );
-                    }),
-                  ),
-                ),
+              child: Column(
+                children: List.generate(menuItems.length, (index) {
+                  return Column(
+                    children: [
+                      _buildMenuTile(context, menuItems[index], colorScheme),
+                      if (index < menuItems.length - 1) _buildDivider(colorScheme),
+                    ],
+                  );
+                }),
               ),
             ),
             // Logout
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF252525) : Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE53935).withValues(alpha: 0.15)),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(14),
-                  clipBehavior: Clip.antiAlias,
-                  child: _buildLogoutTile(context, colorScheme, isDark),
-                ),
-              ),
+              child: _buildLogoutTile(context, colorScheme, isDark),
             ),
             const SizedBox(height: 24),
           ],
@@ -132,18 +107,11 @@ class CustomerProfilePage extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: (isVerified ? const Color(0xFF22C55E) : const Color(0xFFF59E0B)).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(isVerified ? 'Verified' : 'Pending',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: isVerified ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
-              ),
+          Text(isVerified ? 'Verified' : 'Pending',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: isVerified ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
             ),
           ),
         ],
@@ -158,17 +126,10 @@ class CustomerProfilePage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         child: Row(
           children: [
-            Container(
-              width: 34, height: 34,
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                item['icon'] as IconData,
-                color: colorScheme.primary,
-                size: 16,
-              ),
+            Icon(
+              item['icon'] as IconData,
+              color: colorScheme.primary,
+              size: 20,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -182,8 +143,8 @@ class CustomerProfilePage extends StatelessWidget {
               ),
             ),
             Icon(
-              Uicons.arrowForwardIos,
-              size: 12,
+              Icons.chevron_right,
+              size: 20,
               color: colorScheme.onSurface.withValues(alpha: 0.25),
             ),
           ],
@@ -195,23 +156,14 @@ class CustomerProfilePage extends StatelessWidget {
   Widget _buildLogoutTile(BuildContext context, ColorScheme colorScheme, bool isDark) {
     return InkWell(
       onTap: () => _showLogoutConfirmation(context),
-      borderRadius: BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE53935).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Uicons.rightFromBracket,
-                color: Color(0xFFE53935),
-                size: 18,
-              ),
+            const Icon(
+              Icons.logout,
+              color: Color(0xFFE53935),
+              size: 22,
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -225,8 +177,8 @@ class CustomerProfilePage extends StatelessWidget {
               ),
             ),
             Icon(
-              Uicons.arrowForwardIos,
-              size: 14,
+              Icons.chevron_right,
+              size: 18,
               color: const Color(0xFFE53935).withValues(alpha: 0.4),
             ),
           ],
@@ -261,14 +213,7 @@ class CustomerProfilePage extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () => context.go(AppConstants.signInRoute),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: cs.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
-                ),
-                child: const Text('Sign In', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                child: const Text('Sign In', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 12),
@@ -306,23 +251,13 @@ class CustomerProfilePage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE53935).withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Uicons.rightFromBracket,
-                color: Color(0xFFE53935),
-                size: 32,
-              ),
+            const Icon(
+              Icons.logout,
+              color: Color(0xFFE53935),
+              size: 32,
             ),
             const SizedBox(height: 20),
             Text(
@@ -364,14 +299,6 @@ class CustomerProfilePage extends StatelessWidget {
                 context.go(AppConstants.signInRoute);
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE53935),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-            ),
             child: const Text(
               'Logout',
               style: TextStyle(

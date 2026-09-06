@@ -454,8 +454,7 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildPlaceholder(ColorScheme colorScheme) {

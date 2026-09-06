@@ -37,6 +37,13 @@ class AddressModel {
 
   String get summary => '$street, $city';
 
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
   factory AddressModel.fromJson(Map<String, dynamic> json) => AddressModel(
         id: json['id']?.toString() ?? '',
         label: json['label'] as String?,
@@ -50,8 +57,8 @@ class AddressModel {
         street: json['street'] as String? ?? '',
         landmark: json['landmark'] as String?,
         postalCode: json['postal_code'] as String?,
-        latitude: (json['latitude'] as num?)?.toDouble(),
-        longitude: (json['longitude'] as num?)?.toDouble(),
+        latitude: _parseDouble(json['latitude']),
+        longitude: _parseDouble(json['longitude']),
         isDefault: json['is_default'] as bool? ?? false,
       );
 

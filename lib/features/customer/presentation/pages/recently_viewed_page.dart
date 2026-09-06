@@ -145,7 +145,6 @@ class _RecentlyViewedPageState extends State<RecentlyViewedPage> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }

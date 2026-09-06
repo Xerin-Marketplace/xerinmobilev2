@@ -355,8 +355,7 @@ class _CustomerExplorePageState extends State<CustomerExplorePage> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _placeholder(ColorScheme colorScheme) {
