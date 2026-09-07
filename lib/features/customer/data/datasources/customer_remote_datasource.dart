@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:dio/dio.dart';
 
 import '../../../../config/constants/api_constants.dart';
@@ -148,6 +150,10 @@ class CustomerRemoteDataSource {
         },
       );
       final data = response.data;
+      developer.log('getOrders response type: ${data.runtimeType}', name: 'orders');
+      if (data is Map) {
+        developer.log('getOrders response keys: ${data.keys.toList()}', name: 'orders');
+      }
       List<dynamic> list;
       if (data is List) {
         list = data;
@@ -160,9 +166,17 @@ class CustomerRemoteDataSource {
       } else {
         list = [];
       }
-      return list
-          .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
-          .toList();
+      developer.log('getOrders parsed list length: ${list.length}', name: 'orders');
+      final orders = <OrderModel>[];
+      for (final e in list) {
+        try {
+          orders.add(OrderModel.fromJson(e as Map<String, dynamic>));
+        } catch (err) {
+          developer.log('Failed to parse order: $err', name: 'orders', error: err);
+        }
+      }
+      developer.log('getOrders successfully parsed: ${orders.length} orders', name: 'orders');
+      return orders;
     } on DioException catch (e) {
       throw ServerException(_client.getErrorMessage(e));
     }

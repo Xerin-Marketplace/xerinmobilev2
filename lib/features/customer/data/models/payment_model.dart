@@ -9,6 +9,7 @@ class PaymentModel {
   final String status;
   final String? providerTransactionId;
   final String? paidAt;
+  final String? failureReason;
   final Map<String, dynamic>? providerResponse;
   final List<PaymentTransactionModel> transactions;
   final String? createdAt;
@@ -25,6 +26,7 @@ class PaymentModel {
     required this.status,
     this.providerTransactionId,
     this.paidAt,
+    this.failureReason,
     this.providerResponse,
     this.transactions = const [],
     this.createdAt,
@@ -58,6 +60,7 @@ class PaymentModel {
       status: json['status'] as String? ?? 'pending',
       providerTransactionId: json['provider_transaction_id'] as String?,
       paidAt: json['paid_at'] as String?,
+      failureReason: json['failure_reason'] as String?,
       providerResponse: json['provider_response'] as Map<String, dynamic>?,
       transactions: txList
           .map((e) => PaymentTransactionModel.fromJson(e as Map<String, dynamic>))

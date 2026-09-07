@@ -20,6 +20,8 @@ import 'features/customer/presentation/cubit/recommendation_cubit.dart';
 import 'features/customer/presentation/cubit/search_cubit.dart';
 import 'features/customer/presentation/cubit/support_cubit.dart';
 import 'features/customer/presentation/cubit/delivery_verification_cubit.dart';
+import 'features/customer/presentation/cubit/review_cubit.dart';
+import 'features/customer/presentation/cubit/product_qa_cubit.dart';
 import 'features/customer/presentation/cubit/wishlist_cubit.dart';
 import 'features/seller/presentation/cubit/seller_cubit.dart';
 import 'features/broker/presentation/cubit/broker_cubit.dart';
@@ -61,6 +63,8 @@ class _XerinAppState extends State<XerinApp> {
         BlocProvider(create: (_) => sl<SearchCubit>()),
         BlocProvider(create: (_) => sl<SupportCubit>()),
         BlocProvider(create: (_) => sl<DeliveryVerificationCubit>()),
+        BlocProvider(create: (_) => sl<ReviewCubit>()),
+        BlocProvider(create: (_) => sl<ProductQaCubit>()),
         BlocProvider(create: (_) => sl<SellerCubit>()),
         BlocProvider(create: (_) => sl<BrokerCubit>()),
         BlocProvider(create: (_) => sl<AdminCubit>()),

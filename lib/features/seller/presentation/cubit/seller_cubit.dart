@@ -126,6 +126,12 @@ class SellerKycLoaded extends SellerState {
   });
 }
 
+class SellerPayoutAccountsLoaded extends SellerState {
+  final List<PayoutAccountModel> accounts;
+
+  const SellerPayoutAccountsLoaded({required this.accounts});
+}
+
 class SellerProfileLoaded extends SellerState {
   final SellerModel seller;
   final SellerBusinessProfileModel? profile;
@@ -613,13 +619,46 @@ class SellerCubit extends Cubit<SellerState> {
     }
   }
 
+  Future<void> bulkUploadKycDocuments({required List<Map<String, String>> files}) async {
+    try {
+      await _dataSource.bulkUploadKycDocuments(files: files);
+      emit(const SellerActionSuccess('Business documents uploaded successfully'));
+      await loadKyc();
+    } catch (e) {
+      _logger.e('SellerCubit.bulkUploadKycDocuments error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> deleteKycDocument(String id) async {
+    try {
+      await _dataSource.deleteKycDocument(id);
+      emit(const SellerActionSuccess('KYC document deleted'));
+      await loadKyc();
+    } catch (e) {
+      _logger.e('SellerCubit.deleteKycDocument error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
   Future<void> createPayoutAccount(Map<String, dynamic> data) async {
     try {
       await _dataSource.createPayoutAccount(data);
       emit(const SellerActionSuccess('Payout account created successfully'));
-      await loadKyc();
+      await loadPayoutAccounts();
     } catch (e) {
       _logger.e('SellerCubit.createPayoutAccount error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> updatePayoutAccount({required String id, required Map<String, dynamic> data}) async {
+    try {
+      await _dataSource.updatePayoutAccount(id: id, data: data);
+      emit(const SellerActionSuccess('Payout account updated successfully'));
+      await loadPayoutAccounts();
+    } catch (e) {
+      _logger.e('SellerCubit.updatePayoutAccount error: $e');
       emit(SellerError(e.toString()));
     }
   }
@@ -628,9 +667,19 @@ class SellerCubit extends Cubit<SellerState> {
     try {
       await _dataSource.deletePayoutAccount(id);
       emit(const SellerActionSuccess('Payout account deleted'));
-      await loadKyc();
+      await loadPayoutAccounts();
     } catch (e) {
       _logger.e('SellerCubit.deletePayoutAccount error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> loadPayoutAccounts() async {
+    try {
+      final accounts = await _dataSource.getPayoutAccounts();
+      emit(SellerPayoutAccountsLoaded(accounts: accounts));
+    } catch (e) {
+      _logger.e('SellerCubit.loadPayoutAccounts error: $e');
       emit(SellerError(e.toString()));
     }
   }
@@ -682,6 +731,17 @@ class SellerCubit extends Cubit<SellerState> {
       emit(SellerStoreLoaded(store: store));
     } catch (e) {
       _logger.e('SellerCubit.loadStore error: $e');
+      emit(SellerError(e.toString()));
+    }
+  }
+
+  Future<void> createStore(Map<String, dynamic> data) async {
+    try {
+      await _dataSource.createStore(data);
+      emit(const SellerActionSuccess('Store created successfully'));
+      await loadStore();
+    } catch (e) {
+      _logger.e('SellerCubit.createStore error: $e');
       emit(SellerError(e.toString()));
     }
   }

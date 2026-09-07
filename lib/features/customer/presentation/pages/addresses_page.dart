@@ -23,7 +23,8 @@ class _AddressesPageState extends State<AddressesPage> {
     });
   }
 
-  void _showAddEditSheet({AddressModel? address}) {
+  void _showForm({AddressModel? address}) {
+    final isEdit = address != null;
     final countryCtrl = TextEditingController(text: address?.country ?? 'Tanzania');
     final regionCtrl = TextEditingController(text: address?.region ?? '');
     final cityCtrl = TextEditingController(text: address?.city ?? '');
@@ -34,21 +35,27 @@ class _AddressesPageState extends State<AddressesPage> {
     final recipientPhoneCtrl = TextEditingController(text: address?.recipientPhone ?? '');
     final landmarkCtrl = TextEditingController(text: address?.landmark ?? '');
     final formKey = GlobalKey<FormState>();
-    double? savedLatitude = address?.latitude;
-    double? savedLongitude = address?.longitude;
-    bool isFetchingLocation = false;
+    double? savedLat = address?.latitude;
+    double? savedLng = address?.longitude;
+    bool isLocating = false;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (ctx, setModalState) {
-            final cs = Theme.of(context).colorScheme;
+            final cs = Theme.of(ctx).colorScheme;
             return Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(ctx).viewInsets.bottom,
-                left: 20, right: 20, top: 20,
+                left: 20,
+                right: 20,
+                top: 12,
               ),
               child: Form(
                 key: formKey,
@@ -57,122 +64,172 @@ class _AddressesPageState extends State<AddressesPage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(address == null ? 'Add Address' : 'Edit Address',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: cs.onSurface),
-                      ),
-                      const SizedBox(height: 16),
-                      OutlinedButton.icon(
-                        onPressed: isFetchingLocation ? null : () async {
-                          setModalState(() => isFetchingLocation = true);
-                          try {
-                            final location = await GetIt.instance<LocationService>().getCurrentLocation();
-                            setModalState(() {
-                              if (location.country != null) countryCtrl.text = location.country!;
-                              if (location.region != null) regionCtrl.text = location.region!;
-                              if (location.city != null) cityCtrl.text = location.city!;
-                              if (location.street != null) streetCtrl.text = location.street!;
-                              if (location.postalCode != null) postalCtrl.text = location.postalCode!;
-                              if (location.landmark != null) landmarkCtrl.text = location.landmark!;
-                              savedLatitude = location.latitude;
-                              savedLongitude = location.longitude;
-                              isFetchingLocation = false;
-                            });
-                            if (ctx.mounted) {
-                              ScaffoldMessenger.of(ctx).showSnackBar(
-                                SnackBar(
-                                  content: Text('Location found: ${location.latitude.toStringAsFixed(4)}, ${location.longitude.toStringAsFixed(4)}'),
-                                  backgroundColor: const Color(0xFF22C55E),
-                                  duration: const Duration(seconds: 2),
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            setModalState(() => isFetchingLocation = false);
-                            if (ctx.mounted) {
-                              ScaffoldMessenger.of(ctx).showSnackBar(
-                                SnackBar(
-                                  content: Text(e.toString().replaceFirst('Exception: ', '')),
-                                  backgroundColor: const Color(0xFFE53935),
-                                  duration: const Duration(seconds: 3),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                        icon: isFetchingLocation
-                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Icon(Icons.my_location, size: 18),
-                        label: Text(isFetchingLocation ? 'Detecting location...' : 'Use My Current Location'),
-                      ),
-                      const SizedBox(height: 16),
-                      _bottomField('Label (e.g. Home, Work)', labelCtrl, cs, required: false),
-                      const SizedBox(height: 12),
-                      _bottomField('Recipient Name', recipientNameCtrl, cs, required: false),
-                      const SizedBox(height: 12),
-                      _bottomField('Recipient Phone', recipientPhoneCtrl, cs, required: false),
-                      const SizedBox(height: 12),
-                      _bottomField('Country', countryCtrl, cs),
-                      const SizedBox(height: 12),
-                      _bottomField('Region', regionCtrl, cs),
-                      const SizedBox(height: 12),
-                      _bottomField('City', cityCtrl, cs),
-                      const SizedBox(height: 12),
-                      _bottomField('Street', streetCtrl, cs),
-                      const SizedBox(height: 12),
-                      _bottomField('Landmark (optional)', landmarkCtrl, cs, required: false),
-                      const SizedBox(height: 12),
-                      _bottomField('Postal Code (optional)', postalCtrl, cs, required: false),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity, height: 48,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (formKey.currentState!.validate()) {
-                              Navigator.pop(ctx);
-                              if (address != null) {
-                                context.read<CustomerCubit>().updateAddress(
-                                  addressId: address.id,
-                                  country: countryCtrl.text.trim(),
-                                  region: regionCtrl.text.trim(),
-                                  city: cityCtrl.text.trim(),
-                                  street: streetCtrl.text.trim(),
-                                  postalCode: postalCtrl.text.trim().isEmpty ? null : postalCtrl.text.trim(),
-                                  label: labelCtrl.text.trim().isEmpty ? null : labelCtrl.text.trim(),
-                                  recipientName: recipientNameCtrl.text.trim().isEmpty ? null : recipientNameCtrl.text.trim(),
-                                  recipientPhone: recipientPhoneCtrl.text.trim().isEmpty ? null : recipientPhoneCtrl.text.trim(),
-                                  landmark: landmarkCtrl.text.trim().isEmpty ? null : landmarkCtrl.text.trim(),
-                                  latitude: savedLatitude,
-                                  longitude: savedLongitude,
-                                  isDefault: address.isDefault,
-                                );
-                              } else {
-                                context.read<CustomerCubit>().addAddress(
-                                  country: countryCtrl.text.trim(),
-                                  region: regionCtrl.text.trim(),
-                                  city: cityCtrl.text.trim(),
-                                  street: streetCtrl.text.trim(),
-                                  postalCode: postalCtrl.text.trim().isEmpty ? null : postalCtrl.text.trim(),
-                                  label: labelCtrl.text.trim().isEmpty ? null : labelCtrl.text.trim(),
-                                  recipientName: recipientNameCtrl.text.trim().isEmpty ? null : recipientNameCtrl.text.trim(),
-                                  recipientPhone: recipientPhoneCtrl.text.trim().isEmpty ? null : recipientPhoneCtrl.text.trim(),
-                                  landmark: landmarkCtrl.text.trim().isEmpty ? null : landmarkCtrl.text.trim(),
-                                  latitude: savedLatitude,
-                                  longitude: savedLongitude,
-                                  isDefault: false,
-                                );
-                              }
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: cs.primary,
-                            foregroundColor: cs.onPrimary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            elevation: 0,
-                          ),
-                          child: Text(address == null ? 'Add Address' : 'Save Changes',
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: cs.onSurface.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
+                      ),
+                      Text(
+                        isEdit ? 'Edit Address' : 'Add Address',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: cs.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      if (!isLocating)
+                        Align(
+                          child: TextButton.icon(
+                            onPressed: () async {
+                              setModalState(() => isLocating = true);
+                              try {
+                                final loc = await GetIt.instance<LocationService>().getCurrentLocation();
+                                setModalState(() {
+                                  if (loc.country != null) countryCtrl.text = loc.country!;
+                                  if (loc.region != null) regionCtrl.text = loc.region!;
+                                  if (loc.city != null) cityCtrl.text = loc.city!;
+                                  if (loc.street != null) streetCtrl.text = loc.street!;
+                                  if (loc.postalCode != null) postalCtrl.text = loc.postalCode!;
+                                  if (loc.landmark != null) landmarkCtrl.text = loc.landmark!;
+                                  savedLat = loc.latitude;
+                                  savedLng = loc.longitude;
+                                  isLocating = false;
+                                });
+                                if (ctx.mounted) {
+                                  ScaffoldMessenger.of(ctx).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Location detected'),
+                                      backgroundColor: const Color(0xFF22C55E),
+                                      duration: const Duration(seconds: 1),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                setModalState(() => isLocating = false);
+                                if (ctx.mounted) {
+                                  ScaffoldMessenger.of(ctx).showSnackBar(
+                                    SnackBar(
+                                      content: Text(e.toString().replaceFirst('Exception: ', '')),
+                                      backgroundColor: const Color(0xFFE53935),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            icon: const Icon(Icons.my_location, size: 18),
+                            label: const Text('Use current location'),
+                          ),
+                        ),
+                      if (isLocating)
+                        const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        ),
+                      const SizedBox(height: 8),
+                      _field('Label (e.g. Home, Work)', labelCtrl, cs, required: false),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(child: _field('Recipient Name', recipientNameCtrl, cs, required: false)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _field('Recipient Phone', recipientPhoneCtrl, cs, required: false)),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _field('Country', countryCtrl, cs),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(child: _field('Region', regionCtrl, cs)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _field('City', cityCtrl, cs)),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _field('Street', streetCtrl, cs),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(child: _field('Landmark', landmarkCtrl, cs, required: false)),
+                          const SizedBox(width: 12),
+                          Expanded(child: _field('Postal Code', postalCtrl, cs, required: false)),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Cancel'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (formKey.currentState!.validate()) {
+                                  Navigator.pop(ctx);
+                                  final cubit = context.read<CustomerCubit>();
+                                  if (isEdit) {
+                                    cubit.updateAddress(
+                                      addressId: address.id,
+                                      country: countryCtrl.text.trim(),
+                                      region: regionCtrl.text.trim(),
+                                      city: cityCtrl.text.trim(),
+                                      street: streetCtrl.text.trim(),
+                                      postalCode: postalCtrl.text.trim().isEmpty ? null : postalCtrl.text.trim(),
+                                      label: labelCtrl.text.trim().isEmpty ? null : labelCtrl.text.trim(),
+                                      recipientName: recipientNameCtrl.text.trim().isEmpty ? null : recipientNameCtrl.text.trim(),
+                                      recipientPhone: recipientPhoneCtrl.text.trim().isEmpty ? null : recipientPhoneCtrl.text.trim(),
+                                      landmark: landmarkCtrl.text.trim().isEmpty ? null : landmarkCtrl.text.trim(),
+                                      latitude: savedLat,
+                                      longitude: savedLng,
+                                      isDefault: address.isDefault,
+                                    );
+                                  } else {
+                                    cubit.addAddress(
+                                      country: countryCtrl.text.trim(),
+                                      region: regionCtrl.text.trim(),
+                                      city: cityCtrl.text.trim(),
+                                      street: streetCtrl.text.trim(),
+                                      postalCode: postalCtrl.text.trim().isEmpty ? null : postalCtrl.text.trim(),
+                                      label: labelCtrl.text.trim().isEmpty ? null : labelCtrl.text.trim(),
+                                      recipientName: recipientNameCtrl.text.trim().isEmpty ? null : recipientNameCtrl.text.trim(),
+                                      recipientPhone: recipientPhoneCtrl.text.trim().isEmpty ? null : recipientPhoneCtrl.text.trim(),
+                                      landmark: landmarkCtrl.text.trim().isEmpty ? null : landmarkCtrl.text.trim(),
+                                      latitude: savedLat,
+                                      longitude: savedLng,
+                                      isDefault: false,
+                                    );
+                                  }
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: cs.primary,
+                                foregroundColor: cs.onPrimary,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(isEdit ? 'Save' : 'Add'),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 20),
                     ],
@@ -186,132 +243,126 @@ class _AddressesPageState extends State<AddressesPage> {
     );
   }
 
-  Widget _bottomField(String label, TextEditingController controller, ColorScheme cs, {bool required = true}) {
+  Widget _field(String label, TextEditingController controller, ColorScheme cs, {bool required = true}) {
     return TextFormField(
       controller: controller,
       validator: required ? (v) => (v == null || v.trim().isEmpty) ? 'Required' : null : null,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Addresses')),
+      appBar: AppBar(
+        title: const Text('Addresses'),
+        actions: [
+          IconButton(
+            onPressed: () => _showForm(),
+            icon: const Icon(Icons.add),
+          ),
+        ],
+      ),
       body: BlocBuilder<CustomerCubit, CustomerState>(
         builder: (context, state) {
-          final addresses = state is CustomerLoaded ? state.addresses : <AddressModel>[];
-          final isLoading = state is CustomerLoading;
-
-          if (isLoading) {
+          if (state is CustomerLoading) {
             return const Center(child: CircularProgressIndicator());
           }
+
+          final addresses = state is CustomerLoaded ? state.addresses : <AddressModel>[];
+
           if (addresses.isEmpty) {
-            return _buildEmptyState(colorScheme);
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.location_off_outlined, size: 48, color: cs.onSurface.withValues(alpha: 0.2)),
+                  const SizedBox(height: 12),
+                  Text('No addresses yet', style: TextStyle(fontSize: 16, color: cs.onSurface.withValues(alpha: 0.5))),
+                  const SizedBox(height: 4),
+                  Text('Tap + to add a delivery address', style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.3))),
+                ],
+              ),
+            );
           }
-          return ListView.builder(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 80),
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
             itemCount: addresses.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
-              final address = addresses[index];
-              return _buildAddressCard(address, colorScheme, isDark);
+              final a = addresses[index];
+              return ListTile(
+                leading: Icon(
+                  a.label?.toLowerCase() == 'home' ? Icons.home_outlined : Icons.location_on_outlined,
+                  color: cs.primary,
+                ),
+                title: Row(
+                  children: [
+                    if (a.label != null && a.label!.isNotEmpty)
+                      Text(a.label!, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    if (a.isDefault) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF22C55E).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text('Default', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF22C55E))),
+                      ),
+                    ],
+                  ],
+                ),
+                subtitle: Text(a.fullAddress, style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5))),
+                trailing: PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      _showForm(address: a);
+                    } else if (value == 'delete') {
+                      _confirmDelete(a);
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                    const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Color(0xFFE53935)))),
+                  ],
+                ),
+              );
             },
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddEditSheet(),
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
-  Widget _buildEmptyState(ColorScheme cs) {
-    return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('No addresses yet',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface.withValues(alpha: 0.5)),
-            ),
-            const SizedBox(height: 8),
-            Text('Add a delivery address to get started',
-              style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3)),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => _showAddEditSheet(),
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Add Address', style: TextStyle(fontWeight: FontWeight.w600)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: cs.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ],
-        ),
-      );
-  }
-
-  Widget _buildAddressCard(AddressModel address, ColorScheme cs, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (address.label != null && address.label!.isNotEmpty) ...[
-                Text(address.label!,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: cs.onSurface),
-                ),
-                const SizedBox(width: 8),
-              ],
-              if (address.isDefault)
-                Text('Default',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF22C55E)),
-                ),
-            ],
+  void _confirmDelete(AddressModel address) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Address?'),
+        content: Text('Are you sure you want to delete this address?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
           ),
-          const SizedBox(height: 4),
-          Text(address.fullAddress,
-            style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
-          ),
-          if (address.recipientName != null && address.recipientName!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text('${address.recipientName}${address.recipientPhone != null && address.recipientPhone!.isNotEmpty ? ' · ${address.recipientPhone}' : ''}',
-              style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<CustomerCubit>().deleteAddress(address.id);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE53935),
+              foregroundColor: Colors.white,
             ),
-          ],
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () => _showAddEditSheet(address: address),
-                child: Text('Edit', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.4))),
-              ),
-              TextButton(
-                onPressed: () => context.read<CustomerCubit>().deleteAddress(address.id),
-                child: Text('Delete', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFFE53935))),
-              ),
-            ],
+            child: const Text('Delete'),
           ),
         ],
       ),

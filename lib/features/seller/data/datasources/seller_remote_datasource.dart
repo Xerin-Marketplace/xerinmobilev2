@@ -136,6 +136,43 @@ class SellerRemoteDataSource {
     }
   }
 
+  Future<List<SellerKycDocumentModel>> bulkUploadKycDocuments({
+    required List<Map<String, String>> files,
+  }) async {
+    try {
+      final formFiles = <MapEntry<String, MultipartFile>>[];
+      for (final f in files) {
+        formFiles.add(MapEntry(
+          'files',
+          await MultipartFile.fromFile(f['path']!, filename: f['name']),
+        ));
+      }
+      final formData = FormData.fromMap(Map.fromEntries(formFiles));
+      final response = await _client.post(
+        ApiConstants.sellerKycBulkUpload,
+        data: formData,
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
+      );
+      final data = response.data;
+      if (data is List) {
+        return data.map((e) => SellerKycDocumentModel.fromJson(e as Map<String, dynamic>)).toList();
+      } else if (data is Map && data['results'] is List) {
+        return (data['results'] as List).map((e) => SellerKycDocumentModel.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<void> deleteKycDocument(String id) async {
+    try {
+      await _client.delete(ApiConstants.sellerKycDocumentById(id));
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
   // ─── Payout Accounts ───
   Future<List<PayoutAccountModel>> getPayoutAccounts() async {
     try {
@@ -156,6 +193,15 @@ class SellerRemoteDataSource {
   Future<PayoutAccountModel> createPayoutAccount(Map<String, dynamic> data) async {
     try {
       final response = await _client.post(ApiConstants.sellerPayoutAccounts, data: data);
+      return PayoutAccountModel.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<PayoutAccountModel> updatePayoutAccount({required String id, required Map<String, dynamic> data}) async {
+    try {
+      final response = await _client.patch(ApiConstants.sellerPayoutAccountById(id), data: data);
       return PayoutAccountModel.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw ServerException(_client.getErrorMessage(e));
@@ -508,6 +554,15 @@ class SellerRemoteDataSource {
   Future<Map<String, dynamic>> getStore() async {
     try {
       final response = await _client.get(ApiConstants.sellerStore);
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> createStore(Map<String, dynamic> data) async {
+    try {
+      final response = await _client.post(ApiConstants.sellerStore, data: data);
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
       throw ServerException(_client.getErrorMessage(e));

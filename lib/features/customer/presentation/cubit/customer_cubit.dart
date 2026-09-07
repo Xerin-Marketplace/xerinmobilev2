@@ -31,7 +31,13 @@ class CustomerCubit extends Cubit<CustomerState> {
   Future<void> loadAll() async {
     emit(const CustomerLoading());
     try {
-      final ordersFuture = _dataSource.getOrders(pageSize: 50).then<dynamic>((v) => v).catchError((e) => null);
+      final ordersFuture = _dataSource.getOrders(pageSize: 50).then<dynamic>((v) {
+        _logger.i('✅ Orders future completed: ${v.length} orders');
+        return v;
+      }).catchError((e) {
+        _logger.e('❌ Orders future failed: $e');
+        return null;
+      });
       final addressesFuture = _dataSource.getAddresses().then<dynamic>((v) => v).catchError((e) => null);
       final notifFuture = _dataSource.getNotifications().then<dynamic>((v) => v).catchError((e) => null);
 
@@ -71,6 +77,38 @@ class CustomerCubit extends Cubit<CustomerState> {
       _logger.e('❌ Failed to refresh orders: ${e.message}');
     } catch (e) {
       _logger.e('❌ Failed to refresh orders: $e');
+    }
+  }
+
+  Future<OrderModel?> getOrderById(String orderId) async {
+    try {
+      return await _dataSource.getOrderById(orderId);
+    } on ServerException catch (e) {
+      _logger.e('❌ Failed to get order: ${e.message}');
+      return null;
+    } catch (e) {
+      _logger.e('❌ Failed to get order: $e');
+      return null;
+    }
+  }
+
+  Future<List<PaymentModel>> getMyPayments({
+    int page = 1,
+    int pageSize = 50,
+    String? status,
+  }) async {
+    try {
+      return await _paymentDataSource.getMyPayments(
+        page: page,
+        pageSize: pageSize,
+        paymentStatus: status,
+      );
+    } on ServerException catch (e) {
+      _logger.e('❌ Failed to get payments: ${e.message}');
+      return [];
+    } catch (e) {
+      _logger.e('❌ Failed to get payments: $e');
+      return [];
     }
   }
 

@@ -20,6 +20,12 @@ class ProductModel {
   final bool isActive;
   final String? createdAt;
   final String? categoryName;
+  final String? brandName;
+  final String? storeName;
+  final double? basePrice;
+  final double? customerPrice;
+  final double? commissionRate;
+  final double? commissionAmount;
   final double rating;
   final List<String> images;
   final String? country;
@@ -42,6 +48,12 @@ class ProductModel {
     this.isActive = true,
     this.createdAt,
     this.categoryName,
+    this.brandName,
+    this.storeName,
+    this.basePrice,
+    this.customerPrice,
+    this.commissionRate,
+    this.commissionAmount,
     this.rating = 0.0,
     this.images = const [],
     this.country,
@@ -56,6 +68,30 @@ class ProductModel {
   }
 
   String get displayPrice => formattedPrice;
+
+  String _formatAmount(double amount) {
+    final formatted = amount.toStringAsFixed(0).replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]},',
+    );
+    return formatted;
+  }
+
+  String get formattedBasePrice {
+    final amt = basePrice ?? price;
+    return '$currency ${_formatAmount(amt)}';
+  }
+
+  String get formattedCustomerPrice {
+    final amt = customerPrice ?? salePrice ?? price;
+    return '$currency ${_formatAmount(amt)}';
+  }
+
+  String get formattedCommission {
+    final amt = commissionAmount ?? 0.0;
+    final rate = commissionRate ?? 0.0;
+    return 'Commission: ${rate.toStringAsFixed(0)}% · $currency ${_formatAmount(amt)}';
+  }
 
   String? get thumbnailUrl => images.isNotEmpty ? ApiConstants.resolveImageUrl(images.first) : null;
 
@@ -98,7 +134,13 @@ class ProductModel {
       rejectionReason: json['rejection_reason'] as String?,
       isActive: json['is_active'] as bool? ?? true,
       createdAt: json['created_at'] as String?,
-      categoryName: json['category_name'] as String?,
+      categoryName: json['category_name'] as String? ?? json['category']?['name'] as String?,
+      brandName: json['brand_name'] as String? ?? json['brand']?['name'] as String?,
+      storeName: json['store_name'] as String? ?? json['store']?['name'] as String?,
+      basePrice: json['base_price'] != null ? _parsePrice(json['base_price']) : null,
+      customerPrice: json['customer_price'] != null ? _parsePrice(json['customer_price']) : null,
+      commissionRate: json['commission_rate'] != null ? _pd(json['commission_rate']) : null,
+      commissionAmount: json['commission_amount'] != null ? _parsePrice(json['commission_amount']) : null,
       rating: _pd(json['rating']),
       images: imageUrls,
       country: json['country'] as String? ?? json['origin_country'] as String?,

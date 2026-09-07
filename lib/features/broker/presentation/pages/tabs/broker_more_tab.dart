@@ -4,12 +4,14 @@ import 'package:go_router/go_router.dart';
 import '../../../../../config/constants/app_constants.dart';
 import '../../../../../core/theme/uicons.dart';
 
+const _mawingaPrimary = Color(0xFF6D28D9);
+
 class BrokerMoreTab extends StatelessWidget {
   const BrokerMoreTab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
 
     final sections = [
       _BrokerSection('KYC', Uicons.shieldCheck, const Color(0xFF795548), AppConstants.brokerKycRoute),
@@ -26,34 +28,19 @@ class BrokerMoreTab extends StatelessWidget {
     ];
 
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
-        const SizedBox(height: 8),
-        Text(
-          'All Features',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface,
-          ),
-        ),
+        Text('All Features',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: cs.onSurface)),
         const SizedBox(height: 4),
-        Text(
-          '${sections.length} sections available',
-          style: TextStyle(
-            fontSize: 13,
-            color: colorScheme.onSurface.withValues(alpha: 0.4),
-          ),
-        ),
-        const SizedBox(height: 20),
+        Text('${sections.length} sections available',
+            style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4))),
+        const SizedBox(height: 16),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 0.88,
+            crossAxisCount: 3, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 0.82,
           ),
           itemCount: sections.length,
           itemBuilder: (context, index) {
@@ -63,41 +50,31 @@ class BrokerMoreTab extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: colorScheme.surface,
+                  color: cs.surface,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.08)),
+                  border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 40,
-                      height: 40,
+                      width: 42, height: 42,
                       decoration: BoxDecoration(
                         color: s.color.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(s.icon, color: s.color, size: 20),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      s.title,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    Text(s.title,
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: cs.onSurface),
+                        textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),
             );
           },
         ),
-        const SizedBox(height: 32),
       ],
     );
   }

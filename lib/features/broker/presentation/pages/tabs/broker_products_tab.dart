@@ -22,7 +22,7 @@ class _BrokerProductsTabState extends State<BrokerProductsTab> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
 
     return BlocConsumer<BrokerCubit, BrokerState>(
       listener: (context, state) {
@@ -37,22 +37,26 @@ class _BrokerProductsTabState extends State<BrokerProductsTab> {
           return const Center(child: CircularProgressIndicator());
         }
         if (state is BrokerProductsLoaded) {
-          return _buildList(context, state.products, colorScheme);
+          return _buildList(context, state.products, cs);
         }
         if (state is BrokerError) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Uicons.circleExclamation, size: 48, color: Colors.red),
-                const SizedBox(height: 16),
-                Text(state.message, textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => context.read<BrokerCubit>().loadProducts(),
-                  child: const Text('Retry'),
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Uicons.triangleWarning, size: 48, color: cs.onSurface.withValues(alpha: 0.2)),
+                  const SizedBox(height: 16),
+                  Text(state.message, textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.5))),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () => context.read<BrokerCubit>().loadProducts(),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -61,11 +65,7 @@ class _BrokerProductsTabState extends State<BrokerProductsTab> {
     );
   }
 
-  Widget _buildList(
-    BuildContext context,
-    List<BrokerProductModel> products,
-    ColorScheme colorScheme,
-  ) {
+  Widget _buildList(BuildContext context, List<BrokerProductModel> products, ColorScheme cs) {
     if (products.isEmpty) {
       return Center(
         child: Padding(
@@ -73,29 +73,19 @@ class _BrokerProductsTabState extends State<BrokerProductsTab> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Uicons.box, size: 48,
-                  color: colorScheme.onSurface.withValues(alpha: 0.2)),
+              Icon(Uicons.box, size: 48, color: cs.onSurface.withValues(alpha: 0.2)),
               const SizedBox(height: 16),
-              Text(
-                'No products yet.\nCreate 24-hour listings to sell directly.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colorScheme.onSurface.withValues(alpha: 0.4),
-                ),
-              ),
+              Text('No products yet.\nCreate 24-hour listings to sell directly.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.4))),
               const SizedBox(height: 20),
-              ElevatedButton.icon(
+              FilledButton.icon(
                 onPressed: () {
                   NotificationService().info(
                       'Product creation will be available in the next update. Please use the web dashboard.');
                 },
                 icon: const Icon(Uicons.plus, size: 18),
                 label: const Text('Create Product'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: Colors.white,
-                ),
               ),
             ],
           ),
@@ -106,119 +96,77 @@ class _BrokerProductsTabState extends State<BrokerProductsTab> {
     return RefreshIndicator(
       onRefresh: () => context.read<BrokerCubit>().loadProducts(),
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         itemCount: products.length,
         itemBuilder: (context, index) {
           final product = products[index];
           return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.08)),
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: product.primaryImageUrl != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            product.primaryImageUrl!,
+            child: Row(children: [
+              Container(
+                width: 52, height: 52,
+                decoration: BoxDecoration(
+                  color: cs.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: product.primaryImageUrl != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(product.primaryImageUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                Icon(Uicons.image, color: colorScheme.primary),
-                          ),
-                        )
-                      : Icon(Uicons.image, color: colorScheme.primary),
+                            errorBuilder: (_, __, ___) => Icon(Uicons.image, color: cs.primary, size: 24)),
+                      )
+                    : Icon(Uicons.image, color: cs.primary, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(product.name,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurface),
+                    maxLines: 2, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 4),
+                Text('${product.currency} ${product.price}',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: cs.primary)),
+                const SizedBox(height: 4),
+                Row(children: [
+                  _statusBadge(product.status, cs),
+                  const SizedBox(width: 8),
+                  Text('Qty: ${product.availableQuantity}',
+                      style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5))),
+                ]),
+              ])),
+              if (product.status == 'draft')
+                IconButton(
+                  icon: Icon(Uicons.upload, color: cs.primary, size: 18),
+                  onPressed: () => context.read<BrokerCubit>().publishProduct(product.id),
+                  tooltip: 'Publish',
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.name,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: colorScheme.onSurface,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${product.currency} ${product.price}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          _statusBadge(product.status, colorScheme),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Qty: ${product.availableQuantity}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colorScheme.onSurface.withValues(alpha: 0.5),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                if (product.status == 'draft')
-                  IconButton(
-                    icon: Icon(Uicons.upload, color: colorScheme.primary, size: 20),
-                    onPressed: () {
-                      context.read<BrokerCubit>().publishProduct(product.id);
-                    },
-                    tooltip: 'Publish',
-                  ),
-              ],
-            ),
+            ]),
           );
         },
       ),
     );
   }
 
-  Widget _statusBadge(String status, ColorScheme colorScheme) {
+  Widget _statusBadge(String status, ColorScheme cs) {
     final colors = {
-      'active': Colors.green,
-      'draft': Colors.grey,
-      'expired': Colors.red,
-      'rejected': Colors.red,
-      'pending': Colors.orange,
+      'active': const Color(0xFF22C55E),
+      'draft': const Color(0xFF9CA3AF),
+      'expired': const Color(0xFFEF4444),
+      'rejected': const Color(0xFFEF4444),
+      'pending': const Color(0xFFF59E0B),
     };
-    final color = colors[status] ?? Colors.grey;
+    final color = colors[status] ?? const Color(0xFF9CA3AF);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        status,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: color,
-        ),
-      ),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+      child: Text(status,
+          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color)),
     );
   }
 }

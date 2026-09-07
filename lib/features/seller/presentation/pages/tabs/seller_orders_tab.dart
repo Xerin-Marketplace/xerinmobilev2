@@ -51,25 +51,41 @@ class _SellerOrdersTabState extends State<SellerOrdersTab> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Search orders...',
-              prefixIcon: const Icon(Uicons.search),
+              hintStyle: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.4)),
+              prefixIcon: Icon(Uicons.search, size: 18, color: cs.onSurface.withValues(alpha: 0.4)),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Uicons.crossSmall),
+                      icon: Icon(Uicons.crossSmall, size: 16, color: cs.onSurface.withValues(alpha: 0.4)),
                       onPressed: () {
                         _searchController.clear();
                         _onSearch();
                       },
                     )
                   : null,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              filled: true,
+              fillColor: cs.onSurface.withValues(alpha: 0.04),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: cs.primary, width: 1.5),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             ),
             onSubmitted: (_) => _onSearch(),
           ),
@@ -114,10 +130,10 @@ class _SellerOrdersTabState extends State<SellerOrdersTab> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildSummaryChip('Total', '${s.totalOrders}'),
-                    _buildSummaryChip('New', '${s.newOrders}'),
-                    _buildSummaryChip('Gross', _formatMoney(s.grossSales)),
-                    _buildSummaryChip('Units', '${s.unitsSold}'),
+                    _buildSummaryChip(cs, 'Total', '${s.totalOrders}'),
+                    _buildSummaryChip(cs, 'New', '${s.newOrders}'),
+                    _buildSummaryChip(cs, 'Gross', _formatMoney(s.grossSales)),
+                    _buildSummaryChip(cs, 'Units', '${s.unitsSold}'),
                   ],
                 ),
               );
@@ -145,9 +161,9 @@ class _SellerOrdersTabState extends State<SellerOrdersTab> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Uicons.box, size: 48, color: Colors.grey),
+                        Icon(Uicons.box, size: 48, color: cs.onSurface.withValues(alpha: 0.2)),
                         const SizedBox(height: 16),
-                        Text('No orders found', style: Theme.of(context).textTheme.titleMedium),
+                        Text('No orders found', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5))),
                       ],
                     ),
                   );
@@ -186,9 +202,9 @@ class _SellerOrdersTabState extends State<SellerOrdersTab> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Uicons.circleExclamation, size: 48, color: Colors.red),
+                      Icon(Uicons.circleExclamation, size: 48, color: cs.onSurface.withValues(alpha: 0.2)),
                       const SizedBox(height: 16),
-                      Text(state.message, textAlign: TextAlign.center),
+                      Text(state.message, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.5))),
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: () => context.read<SellerCubit>().loadOrders(),
@@ -206,79 +222,88 @@ class _SellerOrdersTabState extends State<SellerOrdersTab> {
     );
   }
 
-  Widget _buildSummaryChip(String label, String value) {
+  Widget _buildSummaryChip(ColorScheme cs, String label, String value) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+        Text(value, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: cs.onSurface)),
+        Text(label, style: TextStyle(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.4))),
       ],
     );
   }
 
   Widget _buildOrderCard(BuildContext context, SellerOrderModel order) {
+    final cs = Theme.of(context).colorScheme;
     final statusColor = _getStatusColor(order.sellerStatus);
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () async {
-          await context.push(AppConstants.sellerOrderDetailRoute, extra: {'orderId': order.id});
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      order.customerName,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _formatStatus(order.sellerStatus),
-                      style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Uicons.box, size: 14, color: Colors.grey),
-                  const SizedBox(width: 4),
-                  Text('${order.itemCount} item${order.itemCount == 1 ? '' : 's'}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                  const SizedBox(width: 16),
-                  const Icon(Uicons.coin, size: 14, color: Colors.grey),
-                  const SizedBox(width: 4),
-                  Text(_formatMoney(order.sellerSubtotal, order.currency), style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                ],
-              ),
-              if (order.shippingMethodName != null) ...[
-                const SizedBox(height: 4),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () async {
+            await context.push(AppConstants.sellerOrderDetailRoute, extra: {'orderId': order.id});
+          },
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(Uicons.truckBox, size: 14, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Text(order.shippingMethodName!, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Expanded(
+                      child: Text(
+                        order.customerName,
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: cs.onSurface),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _formatStatus(order.sellerStatus),
+                        style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w700),
+                      ),
+                    ),
                   ],
                 ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(Uicons.box, size: 14, color: cs.onSurface.withValues(alpha: 0.4)),
+                    const SizedBox(width: 4),
+                    Text('${order.itemCount} item${order.itemCount == 1 ? '' : 's'}', style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
+                    const SizedBox(width: 16),
+                    Icon(Uicons.coin, size: 14, color: cs.onSurface.withValues(alpha: 0.4)),
+                    const SizedBox(width: 4),
+                    Text(_formatMoney(order.sellerSubtotal, order.currency), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5))),
+                  ],
+                ),
+                if (order.shippingMethodName != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Uicons.truckBox, size: 14, color: cs.onSurface.withValues(alpha: 0.4)),
+                      const SizedBox(width: 4),
+                      Text(order.shippingMethodName!, style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 6),
+                Text(_formatDate(order.createdAt), style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.3))),
               ],
-              const SizedBox(height: 4),
-              Text(_formatDate(order.createdAt), style: const TextStyle(fontSize: 11, color: Colors.grey)),
-            ],
+            ),
           ),
         ),
       ),
@@ -288,23 +313,23 @@ class _SellerOrdersTabState extends State<SellerOrdersTab> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'new':
-        return Colors.blue;
+        return const Color(0xFF3B82F6);
       case 'accepted':
-        return Colors.indigo;
+        return const Color(0xFF6366F1);
       case 'processing':
-        return Colors.orange;
+        return const Color(0xFFF59E0B);
       case 'ready_to_ship':
-        return Colors.amber.shade700;
+        return const Color(0xFFEAB308);
       case 'shipped':
-        return Colors.teal;
+        return const Color(0xFF14B8A6);
       case 'delivered':
-        return Colors.green;
+        return const Color(0xFF22C55E);
       case 'cancellation_requested':
-        return Colors.red;
+        return const Color(0xFFEF4444);
       case 'cancelled':
-        return Colors.grey;
+        return const Color(0xFF9CA3AF);
       default:
-        return Colors.grey;
+        return const Color(0xFF9CA3AF);
     }
   }
 

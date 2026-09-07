@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -30,52 +31,36 @@ class SellerHomeTab extends StatelessWidget {
     final orderSummary = state.orderSummary;
     final inventorySummary = state.inventorySummary;
     final wallet = state.wallet;
-
     final isPending = seller?.status == 'pending' || seller?.status == 'under_review';
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
         if (isPending) _buildPendingBanner(context, seller!.status),
-        _buildHero(context, seller?.businessName ?? 'Your Store', seller?.status ?? 'unknown'),
-        const SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.4,
-          children: [
-            _buildMetricCard(context, label: 'Total Products', value: '${d.productsTotal}', helper: '${d.productsApproved} approved', icon: Uicons.shoppingBag, color: Colors.orange),
-            _buildMetricCard(context, label: 'Pending Review', value: '${d.productsPendingReview}', helper: 'Awaiting approval', icon: Uicons.clock, color: Colors.amber),
-            _buildMetricCard(context, label: 'Total Orders', value: '${d.ordersTotal}', helper: '${d.ordersNew} new', icon: Uicons.box, color: Colors.blue),
-            _buildMetricCard(context, label: 'Available Balance', value: _formatMoney(d.walletAvailable, d.walletCurrency), helper: '${d.pendingPayouts} pending payout${d.pendingPayouts == 1 ? '' : 's'}', icon: Uicons.wallet, color: Colors.green),
-            _buildMetricCard(context, label: 'Avg Rating', value: '${d.ratingAverage.toStringAsFixed(2)} / 5', helper: '${d.reviewCount} review${d.reviewCount == 1 ? '' : 's'}', icon: Uicons.star, color: Colors.amber),
-            _buildMetricCard(context, label: 'Unanswered Q&A', value: '${d.unansweredQuestions}', helper: 'Customer questions', icon: Uicons.circleQuestion, color: d.unansweredQuestions > 0 ? Colors.red : Colors.green),
-          ],
-        ),
+        _buildStoreReadiness(context, seller, d),
+        const SizedBox(height: 20),
+        _buildSectionTitle(context, 'Overview'),
+        const SizedBox(height: 10),
+        _buildMetricsGrid(context, d),
         const SizedBox(height: 24),
-        if (orderSummary != null) ...[
-          _buildSectionTitle(context, 'Order Pipeline'),
-          const SizedBox(height: 8),
-          _buildOrderPipeline(context, orderSummary),
-          const SizedBox(height: 24),
-        ],
-        if (inventorySummary != null) ...[
-          _buildSectionTitle(context, 'Inventory Health'),
-          const SizedBox(height: 8),
-          _buildInventorySummary(context, inventorySummary),
-          const SizedBox(height: 24),
-        ],
-        if (wallet != null) ...[
-          _buildSectionTitle(context, 'Wallet'),
-          const SizedBox(height: 8),
-          _buildWalletSummary(context, wallet),
-          const SizedBox(height: 24),
-        ],
+        _buildSectionTitle(context, 'Orders'),
+        const SizedBox(height: 10),
+        _buildOrdersCard(context, d, orderSummary),
+        const SizedBox(height: 24),
+        _buildSectionTitle(context, 'Catalog & Inventory'),
+        const SizedBox(height: 10),
+        _buildCatalogInventoryCard(context, d, inventorySummary),
+        const SizedBox(height: 24),
+        _buildSectionTitle(context, 'Finance'),
+        const SizedBox(height: 10),
+        _buildFinanceCard(context, d, wallet),
+        const SizedBox(height: 24),
+        _buildSectionTitle(context, 'Reputation'),
+        const SizedBox(height: 10),
+        _buildReputationCard(context, d),
+        const SizedBox(height: 24),
         _buildSectionTitle(context, 'Quick Actions'),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         _buildQuickActions(context),
         const SizedBox(height: 32),
       ],
@@ -83,24 +68,24 @@ class SellerHomeTab extends StatelessWidget {
   }
 
   Widget _buildPendingBanner(BuildContext context, String status) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.amber.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.amber.shade200),
+        color: cs.onSurface.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         children: [
-          const Icon(Uicons.clock, color: Colors.amber, size: 24),
+          Icon(Uicons.clock, size: 20, color: cs.onSurface.withValues(alpha: 0.4)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               status == 'pending'
                   ? 'Your seller account is pending approval. Upload KYC documents to speed up the process.'
                   : 'Your seller account is under review. We\'ll notify you once approved.',
-              style: TextStyle(color: Colors.amber.shade900, fontSize: 13),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: cs.onSurface.withValues(alpha: 0.6)),
             ),
           ),
         ],
@@ -108,209 +93,455 @@ class SellerHomeTab extends StatelessWidget {
     );
   }
 
-  Widget _buildHero(BuildContext context, String businessName, String status) {
-    final theme = Theme.of(context);
+  Widget _buildStoreReadiness(BuildContext context, SellerModel? seller, SellerDashboardPerformanceModel d) {
+    final cs = Theme.of(context).colorScheme;
+    final checks = [
+      ('Business profile', seller?.businessName != null),
+      ('KYC documents', seller?.isVerified == true),
+      ('Payout account', d.walletAvailable > 0 || d.walletPending > 0),
+      ('Catalog started', d.productsTotal > 0),
+    ];
+    final completed = checks.where((c) => c.$2).length;
+    final percent = (completed / checks.length * 100).round();
+    final isComplete = percent == 100;
+    final progressColor = isComplete ? const Color(0xFF22C55E) : cs.primary;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: cs.surface,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(businessName, style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
-            child: Text(status.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
+          SizedBox(
+            width: 72, height: 72,
+            child: CustomPaint(
+              painter: _CircleProgressPainter(
+                progress: percent / 100,
+                color: progressColor,
+                trackColor: cs.onSurface.withValues(alpha: 0.06),
+              ),
+              child: Center(
+                child: Text('$percent%',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: progressColor),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Store readiness', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: cs.onSurface)),
+                const SizedBox(height: 2),
+                Text(isComplete ? 'All set!' : '$completed of ${checks.length} completed',
+                  style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 6, runSpacing: 6,
+                  children: checks.map((c) => _buildCheckChip(cs, c.$1, c.$2)).toList(),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMetricCard(BuildContext context, {required String label, required String value, required String helper, required IconData icon, required Color color}) {
-    final theme = Theme.of(context);
+  Widget _buildCheckChip(ColorScheme cs, String label, bool done) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.3)),
+        color: done ? const Color(0xFF22C55E).withValues(alpha: 0.08) : cs.onSurface.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 8),
-              Expanded(child: Text(label, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor), maxLines: 1, overflow: TextOverflow.ellipsis)),
-            ],
-          ),
-          const Spacer(),
-          Text(value, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 2),
-          Text(helper, style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+          Icon(done ? Icons.check : Icons.circle_outlined, size: 12, color: done ? const Color(0xFF22C55E) : cs.onSurface.withValues(alpha: 0.3)),
+          const SizedBox(width: 4),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: done ? const Color(0xFF22C55E) : cs.onSurface.withValues(alpha: 0.4))),
         ],
       ),
     );
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
-    return Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold));
+    final cs = Theme.of(context).colorScheme;
+    return Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface));
   }
 
-  Widget _buildOrderPipeline(BuildContext context, SellerOrderSummaryModel summary) {
-    final stages = [
-      ('New', summary.newOrders, Colors.blue),
-      ('Accepted', summary.acceptedOrders, Colors.indigo),
-      ('Processing', summary.processingOrders, Colors.orange),
-      ('Ready to Ship', summary.readyToShipOrders, Colors.amber),
-      ('Shipped', summary.shippedOrders, Colors.teal),
-      ('Delivered', summary.deliveredOrders, Colors.green),
-    ];
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: stages.map((s) {
-          final (label, count, color) = s;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Container(width: 4, height: 24, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
-                const SizedBox(width: 12),
-                Expanded(child: Text(label)),
-                Text('$count', style: TextStyle(fontWeight: FontWeight.bold, color: count > 0 ? color : null)),
-              ],
-            ),
-          );
-        }).toList(),
-      ),
+  Widget _buildMetricsGrid(BuildContext context, SellerDashboardPerformanceModel d) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
+      childAspectRatio: 2.2,
+      children: [
+        _buildMetricTile(context, 'Products', '${d.productsTotal}', '${d.productsApproved} approved'),
+        _buildMetricTile(context, 'Pending review', '${d.productsPendingReview}', 'Awaiting approval'),
+        _buildMetricTile(context, 'Orders', '${d.ordersTotal}', '${d.ordersNew} new'),
+        _buildMetricTile(context, 'Balance', _formatMoney(d.walletAvailable, d.walletCurrency), '${d.pendingPayouts} pending'),
+        _buildMetricTile(context, 'Avg rating', d.ratingAverage.toStringAsFixed(1), '${d.reviewCount} reviews'),
+        _buildMetricTile(context, 'Unanswered Q&A', '${d.unansweredQuestions}', 'Customer questions'),
+      ],
     );
   }
 
-  Widget _buildInventorySummary(BuildContext context, SellerInventorySummaryModel summary) {
+  Widget _buildMetricTile(BuildContext context, String label, String value, String helper) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.3)),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _buildSummaryRow('Total Products', '${summary.totalProducts}'),
-          _buildSummaryRow('Total Stock Units', '${summary.totalStockUnits}'),
-          _buildSummaryRow('Available Units', '${summary.availableUnits}'),
-          _buildSummaryRow('Reserved Units', '${summary.reservedUnits}'),
-          _buildSummaryRow('Low Stock Variants', '${summary.lowStockVariants}', highlight: summary.lowStockVariants > 0),
-          _buildSummaryRow('Out of Stock', '${summary.outOfStockVariants}', highlight: summary.outOfStockVariants > 0),
-          _buildSummaryRow('Inventory Value', _formatMoney(summary.inventoryValue, 'TZS')),
+          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: cs.onSurface), maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 1),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)), maxLines: 1, overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 1),
+          Text(helper, style: TextStyle(fontSize: 9, color: cs.onSurface.withValues(alpha: 0.35)), maxLines: 1, overflow: TextOverflow.ellipsis),
         ],
       ),
     );
   }
 
-  Widget _buildWalletSummary(BuildContext context, SellerWalletModel wallet) {
+  Widget _buildOrdersCard(BuildContext context, SellerDashboardPerformanceModel d, SellerOrderSummaryModel? summary) {
+    final cs = Theme.of(context).colorScheme;
+    final newOrders = summary?.newOrders ?? d.ordersNew;
+    final processing = summary?.processingOrders ?? d.ordersProcessing;
+    final ready = summary?.readyToShipOrders ?? d.ordersReadyToShip;
+    final total = summary?.totalOrders ?? d.ordersTotal;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.3)),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSummaryRow('Available', _formatMoney(wallet.availableBalance, wallet.currency)),
-          _buildSummaryRow('Pending', _formatMoney(wallet.pendingBalance, wallet.currency)),
-          _buildSummaryRow('Reserved', _formatMoney(wallet.reservedBalance, wallet.currency)),
-          _buildSummaryRow('Paid Out', _formatMoney(wallet.paidOutBalance, wallet.currency)),
-          if (wallet.isFrozen)
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: Row(
+          Row(
+            children: [
+              _buildOrderStage(cs, 'New', newOrders),
+              _buildDivider(cs),
+              _buildOrderStage(cs, 'Processing', processing),
+              _buildDivider(cs),
+              _buildOrderStage(cs, 'Ready', ready),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () => context.push(AppConstants.sellerOrdersRoute),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('All orders', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6))),
+                Row(
+                  children: [
+                    Text('$total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: cs.primary)),
+                    const SizedBox(width: 4),
+                    Icon(Uicons.angleRight, size: 14, color: cs.primary),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderStage(ColorScheme cs, String label, int count) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text('$count', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: count > 0 ? cs.onSurface : cs.onSurface.withValues(alpha: 0.2))),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider(ColorScheme cs) {
+    return Container(width: 1, height: 30, color: cs.onSurface.withValues(alpha: 0.06));
+  }
+
+  Widget _buildCatalogInventoryCard(BuildContext context, SellerDashboardPerformanceModel d, SellerInventorySummaryModel? summary) {
+    final cs = Theme.of(context).colorScheme;
+    final approved = d.productsApproved;
+    final pending = d.productsPendingReview;
+    final draft = d.productsTotal - approved - pending;
+    final total = d.productsTotal;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildBarRow(cs, 'Approved', approved, total, const Color(0xFF22C55E)),
+          const SizedBox(height: 10),
+          _buildBarRow(cs, 'Pending', pending, total, const Color(0xFFF59E0B)),
+          const SizedBox(height: 10),
+          _buildBarRow(cs, 'Draft', draft, total, cs.onSurface.withValues(alpha: 0.3)),
+          const SizedBox(height: 16),
+          Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
+          const SizedBox(height: 14),
+          if (summary != null) ...[
+            Row(
+              children: [
+                _buildInvStat(cs, 'Healthy', summary.totalVariants - summary.lowStockVariants - summary.outOfStockVariants, const Color(0xFF22C55E)),
+                _buildInvStat(cs, 'Low', summary.lowStockVariants, const Color(0xFFF59E0B)),
+                _buildInvStat(cs, 'Out', summary.outOfStockVariants, const Color(0xFFEF4444)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _buildInfoRow(cs, 'Total units', '${summary.totalStockUnits}'),
+            _buildInfoRow(cs, 'Inventory value', _formatMoney(summary.inventoryValue, 'TZS')),
+          ] else
+            Text('No inventory records yet', style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.3))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBarRow(ColorScheme cs, String label, int count, int total, Color color) {
+    final pct = total > 0 ? count / total : 0.0;
+    return Row(
+      children: [
+        SizedBox(width: 80, child: Text(label, style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.6)))),
+        const SizedBox(width: 8),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: pct,
+              minHeight: 6,
+              backgroundColor: cs.onSurface.withValues(alpha: 0.04),
+              valueColor: AlwaysStoppedAnimation(color),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(width: 32, child: Text('$count', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: cs.onSurface), textAlign: TextAlign.right)),
+      ],
+    );
+  }
+
+  Widget _buildInvStat(ColorScheme cs, String label, int count, Color color) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text('$count', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: count > 0 ? color : cs.onSurface.withValues(alpha: 0.2))),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.4))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFinanceCard(BuildContext context, SellerDashboardPerformanceModel d, SellerWalletModel? wallet) {
+    final cs = Theme.of(context).colorScheme;
+    final available = wallet?.availableBalance ?? d.walletAvailable;
+    final pending = wallet?.pendingBalance ?? d.walletPending;
+    final reserved = wallet?.reservedBalance ?? d.walletReserved;
+    final currency = wallet?.currency ?? d.walletCurrency;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Total wallet', style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4))),
+          const SizedBox(height: 4),
+          Text(_formatMoney(available + pending + reserved, currency),
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: cs.onSurface)),
+          const SizedBox(height: 16),
+          _buildInfoRow(cs, 'Available', _formatMoney(available, currency)),
+          _buildInfoRow(cs, 'Pending', _formatMoney(pending, currency)),
+          _buildInfoRow(cs, 'Reserved', _formatMoney(reserved, currency)),
+          if (wallet?.isFrozen == true) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Uicons.lock, size: 14, color: const Color(0xFFEF4444)),
+                const SizedBox(width: 6),
+                Text('Wallet is frozen', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFFEF4444))),
+              ],
+            ),
+          ],
+          const SizedBox(height: 12),
+          Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () => context.push(AppConstants.sellerWalletRoute),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Wallet & earnings', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6))),
+                Row(
+                  children: [
+                    Text('${d.pendingPayouts} pending payouts', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary)),
+                    const SizedBox(width: 4),
+                    Icon(Uicons.angleRight, size: 14, color: cs.primary),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReputationCard(BuildContext context, SellerDashboardPerformanceModel d) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => context.push(AppConstants.sellerReviewsRoute),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Uicons.lock, color: Colors.red, size: 16),
-                  SizedBox(width: 8),
-                  Text('Wallet is frozen', style: TextStyle(color: Colors.red, fontSize: 12)),
+                  Row(
+                    children: [
+                      Icon(Uicons.star, size: 14, color: const Color(0xFFEAB308)),
+                      const SizedBox(width: 4),
+                      Text(d.ratingAverage.toStringAsFixed(1), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: cs.onSurface)),
+                      Text(' / 5', style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.3))),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text('${d.reviewCount} reviews', style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4))),
                 ],
               ),
             ),
+          ),
+          Container(width: 1, height: 36, color: cs.onSurface.withValues(alpha: 0.06)),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: GestureDetector(
+                onTap: () => context.push(AppConstants.sellerQuestionsRoute),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${d.unansweredQuestions}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: d.unansweredQuestions > 0 ? const Color(0xFFEF4444) : cs.onSurface)),
+                    const SizedBox(height: 2),
+                    Text('Unanswered Q&A', style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4))),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Container(width: 1, height: 36, color: cs.onSurface.withValues(alpha: 0.06)),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: GestureDetector(
+                onTap: () => context.push(AppConstants.sellerPromotionsRoute),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${d.activePromotions}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: cs.onSurface)),
+                    const SizedBox(height: 2),
+                    Text('Promotions', style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4))),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryRow(String label, String value, {bool highlight = false}) {
+  Widget _buildInfoRow(ColorScheme cs, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 13, color: highlight ? Colors.red : null)),
-          Text(value, style: TextStyle(fontWeight: FontWeight.w600, color: highlight ? Colors.red : null)),
+          Text(label, style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5))),
+          Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: cs.onSurface)),
         ],
       ),
     );
   }
 
   Widget _buildQuickActions(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final actions = [
-      ('Orders', Uicons.box, AppConstants.sellerOrdersRoute),
-      ('Products', Uicons.tags, AppConstants.sellerProductsRoute),
+      ('Add product', Uicons.plus, AppConstants.sellerProductsRoute),
       ('Inventory', Uicons.warehouse, AppConstants.sellerInventoryRoute),
       ('Store', Uicons.shop, AppConstants.sellerStoreRoute),
       ('Wallet', Uicons.wallet, AppConstants.sellerWalletRoute),
-      ('KYC', Uicons.shieldCheck, AppConstants.sellerKycRoute),
       ('Analytics', Uicons.chartSimple, AppConstants.sellerAnalyticsRoute),
-      ('Promotions', Uicons.ticket, AppConstants.sellerPromotionsRoute),
-      ('Reviews', Uicons.star, AppConstants.sellerReviewsRoute),
-      ('Q&A', Uicons.circleQuestion, AppConstants.sellerQuestionsRoute),
-      ('Cancellations', Uicons.circleXmark, AppConstants.sellerCancellationsRoute),
-      ('Returns', Uicons.rotateLeft, AppConstants.sellerReturnsRoute),
+      ('KYC', Uicons.shieldCheck, AppConstants.sellerKycRoute),
     ];
 
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.85,
+        crossAxisCount: 3,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1.0,
       ),
       itemCount: actions.length,
       itemBuilder: (context, index) {
         final (label, icon, route) = actions[index];
-        final theme = Theme.of(context);
         return GestureDetector(
           onTap: () => context.push(route),
           child: Container(
-            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: theme.cardColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: theme.dividerColor.withValues(alpha: 0.3)),
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, size: 24, color: theme.colorScheme.primary),
-                const SizedBox(height: 6),
-                Text(label, style: theme.textTheme.bodySmall?.copyWith(fontSize: 11), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
+                Icon(icon, size: 22, color: cs.onSurface.withValues(alpha: 0.5)),
+                const SizedBox(height: 8),
+                Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)), textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
@@ -326,4 +557,41 @@ class SellerHomeTab extends StatelessWidget {
     );
     return '$currency $formatted';
   }
+}
+
+class _CircleProgressPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final Color trackColor;
+
+  _CircleProgressPainter({required this.progress, required this.color, required this.trackColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - 8) / 2;
+
+    canvas.drawCircle(
+      center, radius,
+      Paint()..color = trackColor..style = PaintingStyle.stroke..strokeWidth = 6,
+    );
+
+    if (progress > 0) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        -math.pi / 2,
+        progress * 2 * math.pi,
+        false,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 6
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CircleProgressPainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.color != color;
 }

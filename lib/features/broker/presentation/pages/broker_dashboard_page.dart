@@ -15,6 +15,11 @@ import 'tabs/broker_home_tab.dart';
 import 'tabs/broker_products_tab.dart';
 import 'tabs/broker_more_tab.dart';
 
+// Color palette for Mawinga Hub
+const _mawingaPrimary = Color(0xFF6D28D9);
+const _mawingaLight = Color(0xFF8B5CF6);
+const _mawingaAccent = Color(0xFFA78BFA);
+
 class BrokerDashboardPage extends StatefulWidget {
   const BrokerDashboardPage({super.key});
 
@@ -63,7 +68,7 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
     final navItems = [
       const NavItem(icon: Uicons.home, activeIcon: Uicons.home, label: 'Home'),
       const NavItem(icon: Uicons.box, activeIcon: Uicons.box, label: 'Products'),
-      const NavItem(icon: Uicons.grid, activeIcon: Uicons.grid, label: 'More'),
+      const NavItem(icon: Uicons.gear, activeIcon: Uicons.gear, label: 'More'),
     ];
 
     return BlocProvider.value(
@@ -78,8 +83,9 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
         },
         builder: (context, state) {
           return Scaffold(
-            backgroundColor: colorScheme.surface,
+            backgroundColor: isDark ? const Color(0xFF0F0F14) : const Color(0xFFF7F5FB),
             body: SafeArea(
+              bottom: false,
               child: Column(
                 children: [
                   _buildHeader(colorScheme, isDark),
@@ -93,6 +99,7 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
               selectedIndex: _selectedIndex,
               onTap: _onNavTap,
               items: navItems,
+              activeColor: _mawingaPrimary,
             ),
           );
         },
@@ -102,24 +109,50 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
 
   Widget _buildHeader(ColorScheme cs, bool isDark) {
     final user = GetIt.instance<TokenStorage>().currentUser;
+    final name = user?.fullName ?? 'Mawinga';
+    final initials = name.isNotEmpty
+        ? name.split(' ').take(2).map((e) => e[0].toUpperCase()).join()
+        : '?';
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [const Color(0xFF1A1029), const Color(0xFF0F0F14)]
+              : [const Color(0xFFEDE9FE), const Color(0xFFF7F5FB)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
       child: Row(
         children: [
           GestureDetector(
             onTap: () => _showAccountSheet(context, cs, isDark),
             child: Container(
-              width: 44,
-              height: 44,
+              width: 46,
+              height: 46,
               decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.1),
+                gradient: const LinearGradient(
+                  colors: [_mawingaPrimary, _mawingaLight],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: _mawingaPrimary.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: Icon(
-                Uicons.user,
-                color: cs.primary,
-                size: 22,
+              child: Center(
+                child: Text(initials,
+                  style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ),
@@ -128,58 +161,68 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Mawinga Hub',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: cs.onSurface,
-                  ),
+                Row(
+                  children: [
+                    const Text('Mawinga Hub',
+                      style: TextStyle(
+                        fontSize: 20, fontWeight: FontWeight.w900, color: _mawingaPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: _mawingaPrimary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text('HUB',
+                        style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: _mawingaPrimary, letterSpacing: 1),
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  user?.fullName ?? 'Mawinga',
+                const SizedBox(height: 2),
+                Text(name,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 12, fontWeight: FontWeight.w500,
                     color: cs.onSurface.withValues(alpha: 0.4),
                   ),
                 ),
               ],
             ),
           ),
-          GestureDetector(
-            onTap: () => sl<AppThemeCubit>().toggleTheme(),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: cs.onSurface.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                isDark ? Uicons.sun : Uicons.darkMode,
-                color: cs.onSurface.withValues(alpha: 0.7),
-                size: 20,
-              ),
-            ),
+          _headerAction(
+            isDark ? Uicons.sun : Uicons.darkMode,
+            () => sl<AppThemeCubit>().toggleTheme(),
+            cs, isDark,
           ),
-          const SizedBox(width: 10),
-          GestureDetector(
-            onTap: _refresh,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Uicons.refresh,
-                color: cs.primary,
-                size: 20,
-              ),
-            ),
+          const SizedBox(width: 8),
+          _headerAction(
+            Uicons.refresh, _refresh, cs, isDark,
+            accent: true,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _headerAction(IconData icon, VoidCallback onTap, ColorScheme cs, bool isDark, {bool accent = false}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: accent
+              ? _mawingaPrimary.withValues(alpha: 0.1)
+              : cs.onSurface.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          icon,
+          size: 18,
+          color: accent ? _mawingaPrimary : cs.onSurface.withValues(alpha: 0.6),
+        ),
       ),
     );
   }
@@ -270,8 +313,8 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
               Container(
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [cs.primary, cs.primary.withValues(alpha: 0.4)],
+                  gradient: const LinearGradient(
+                    colors: [_mawingaPrimary, _mawingaLight],
                   ),
                   shape: BoxShape.circle,
                 ),
@@ -279,7 +322,7 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
                   radius: 32,
                   backgroundColor: cs.surface,
                   child: Text(initials,
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: cs.primary),
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: _mawingaPrimary),
                   ),
                 ),
               ),

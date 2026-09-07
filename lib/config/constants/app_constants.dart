@@ -26,11 +26,13 @@ abstract class AppConstants {
   static const String registrationSuccessRoute = '/registration-success';
   static const String termsRoute = '/terms';
   static const String privacyRoute = '/privacy';
+  static const String privacyTermsRoute = '/privacy-terms';
 
   // Customer profile routes
   static const String profileInfoRoute = '/profile-info';
   static const String addressesRoute = '/addresses';
   static const String paymentMethodsRoute = '/payment-methods';
+  static const String myPaymentsRoute = '/my-payments';
   static const String orderHistoryRoute = '/order-history';
   static const String orderDetailRoute = '/order-detail';
   static const String invoiceRoute = '/invoice';
@@ -43,6 +45,8 @@ abstract class AppConstants {
   static const String deliveryVerificationRoute = '/delivery-verification';
   static const String customerSecurityRoute = '/customer-security';
   static const String customerReviewsRoute = '/customer-reviews';
+  static const String customerDashboardRoute = '/customer-dashboard';
+  static const String deliveryProtectionRoute = '/delivery-protection';
   static const String checkoutRoute = '/checkout';
   static const String paymentProcessingRoute = '/payment-processing';
 
@@ -85,6 +89,9 @@ abstract class AppConstants {
   static const String sellerStoreRoute = '/seller-store';
   static const String sellerKycRoute = '/seller-kyc';
   static const String sellerWalletRoute = '/seller-wallet';
+  static const String sellerPayoutsRoute = '/seller-payouts';
+  static const String sellerPayoutAccountsRoute = '/seller-payout-accounts';
+  static const String sellerSettingsRoute = '/seller-settings';
   static const String sellerAnalyticsRoute = '/seller-analytics';
   static const String sellerPromotionsRoute = '/seller-promotions';
   static const String sellerReviewsRoute = '/seller-reviews';

@@ -81,7 +81,7 @@ class _XerinExpressOptionsWidgetState extends State<XerinExpressOptionsWidget> {
                     option: option,
                     isSelected:
                         widget.selectedOption?.rateId == option.rateId,
-                    onTap: () => widget.onOptionSelected?.(option),
+                    onTap: () => widget.onOptionSelected?.call(option),
                   )),
             ],
           );

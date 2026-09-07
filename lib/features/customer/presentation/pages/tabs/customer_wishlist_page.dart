@@ -270,10 +270,10 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
     if (state is WishlistLoaded) {
       return SliverGrid(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.68,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
+          crossAxisCount: 3,
+          childAspectRatio: 0.62,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 10,
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
@@ -296,6 +296,9 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
     bool isSelected,
     bool isDark,
   ) {
+    final available = item.inStock && item.isAvailable;
+    final availColor = available ? const Color(0xFF22C55E) : const Color(0xFFE53935);
+
     return GestureDetector(
       onTap: () => context.go(
         AppConstants.productDetailRoute,
@@ -304,15 +307,24 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
           'category': item.categoryName ?? 'All',
         },
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: colorScheme.onSurface.withValues(alpha: 0.06),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image section
             Expanded(
               child: Stack(
                 children: [
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(16),
+                      top: Radius.circular(11),
                     ),
                     child: item.imageUrl != null
                         ? Image.network(
@@ -329,58 +341,74 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                                 ),
                               );
                             },
-                            errorBuilder: (_, __, ___) => _buildPlaceholder(colorScheme),
+                            errorBuilder: (_, _, _) => _buildPlaceholder(colorScheme),
                           )
                         : _buildPlaceholder(colorScheme),
                   ),
+                  // Remove button
                   Positioned(
-                    top: 8,
-                    left: 8,
-                    child: GestureDetector(
-                      onTap: () => context.read<WishlistCubit>().toggleSelection(item.id),
-                      child: Icon(
-                        isSelected ? Icons.check_circle : Icons.circle_outlined,
-                        size: 24,
-                        color: isSelected ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.4),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
+                    top: 6,
+                    right: 6,
                     child: GestureDetector(
                       onTap: () => context.read<WishlistCubit>().removeItem(item.id),
-                      child: Icon(
-                        Icons.close,
-                        size: 20,
-                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      child: Container(
+                        width: 24, height: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.close, size: 14, color: Colors.white),
                       ),
                     ),
                   ),
-                  if (item.hasDiscount)
-                    Positioned(
-                      bottom: 8,
-                      left: 8,
-                      child: Text(
-                        '-${item.discountPercent}%',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFE53935),
+                  // Selection checkbox
+                  Positioned(
+                    top: 6,
+                    left: 6,
+                    child: GestureDetector(
+                      onTap: () => context.read<WishlistCubit>().toggleSelection(item.id),
+                      child: Container(
+                        width: 24, height: 24,
+                        decoration: BoxDecoration(
+                          color: isSelected ? colorScheme.primary : Colors.black.withValues(alpha: 0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isSelected ? Icons.check : Icons.circle_outlined,
+                          size: 14,
+                          color: isSelected ? Colors.white : Colors.white,
                         ),
                       ),
                     ),
-                  if (!item.inStock)
-                    Positioned.fill(
+                  ),
+                  // Discount badge
+                  if (item.hasDiscount)
+                    Positioned(
+                      bottom: 6,
+                      left: 6,
                       child: Container(
-                        color: Colors.black.withValues(alpha: 0.4),
-                        child: const Center(
-                          child: Text(
-                            'Out of stock',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE53935),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '-${item.discountPercent}%',
+                          style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  // Out of stock overlay
+                  if (!available)
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                        child: Container(
+                          color: Colors.black.withValues(alpha: 0.45),
+                          child: const Center(
+                            child: Text(
+                              'Out of stock',
+                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white),
                             ),
                           ),
                         ),
@@ -389,72 +417,81 @@ class _CustomerWishlistPageState extends State<CustomerWishlistPage> {
                 ],
               ),
             ),
+            // Info section
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (item.storeName != null) ...[
-                    Text(
-                      item.storeName!,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.primary.withValues(alpha: 0.7),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                  ],
+                if (item.storeName != null) ...[
                   Text(
-                    item.name,
+                    item.storeName!,
                     style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.primary.withValues(alpha: 0.7),
                     ),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      if (item.hasDiscount) ...[
-                        Text(
-                          item.formattedSalePrice!,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          item.formattedPrice,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colorScheme.onSurface.withValues(alpha: 0.35),
-                            decoration: TextDecoration.lineThrough,
-                          ),
-                        ),
-                      ] else
-                        Text(
-                          item.formattedPrice,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                    ],
-                  ),
+                  const SizedBox(height: 3),
                 ],
-              ),
+                Text(
+                  item.name,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                // Price
+                Row(
+                  children: [
+                    if (item.hasDiscount) ...[
+                      Flexible(
+                        child: Text(
+                          item.formattedSalePrice!,
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colorScheme.primary),
+                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        item.formattedPrice,
+                        style: TextStyle(fontSize: 9, color: colorScheme.onSurface.withValues(alpha: 0.35), decoration: TextDecoration.lineThrough),
+                      ),
+                    ] else
+                      Flexible(
+                        child: Text(
+                          item.formattedPrice,
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colorScheme.primary),
+                          maxLines: 1, overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                // Availability badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: availColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    available ? 'Available' : 'Unavailable',
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: availColor),
+                  ),
+                ),
+              ]),
             ),
           ],
         ),
-      );
+      ),
+    );
   }
 
   Widget _buildPlaceholder(ColorScheme colorScheme) {

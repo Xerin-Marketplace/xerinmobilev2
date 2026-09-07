@@ -57,7 +57,7 @@ class SellerMoreTab extends StatelessWidget {
             crossAxisCount: 3,
             mainAxisSpacing: 12,
             crossAxisSpacing: 12,
-            childAspectRatio: 0.88,
+            childAspectRatio: 0.85,
           ),
           itemCount: sections.length,
           itemBuilder: (context, index) {
@@ -69,17 +69,17 @@ class SellerMoreTab extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.08)),
+                  border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.06)),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 40,
-                      height: 40,
+                      width: 42,
+                      height: 42,
                       decoration: BoxDecoration(
                         color: s.color.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(s.icon, color: s.color, size: 20),
                     ),

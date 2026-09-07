@@ -1,11 +1,18 @@
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import '../../../../config/constants/api_constants.dart';
 import '../../../../core/notifications/notification_service.dart';
+import '../../../../core/storage/token_storage.dart';
+import '../../../../core/utils/helpers.dart';
 import '../../data/models/order_model.dart';
 
 class InvoicePage extends StatefulWidget {
@@ -19,364 +26,158 @@ class InvoicePage extends StatefulWidget {
 
 class _InvoicePageState extends State<InvoicePage> {
   bool _isGenerating = false;
+  bool _isDownloadingBackend = false;
+  bool _isDownloadingReceipt = false;
 
-  String _formatDate(String isoDate) {
+  String _fmtDate(String? iso) {
+    if (iso == null) return '';
     try {
-      final dt = DateTime.parse(isoDate);
-      return '${dt.day}/${dt.month}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      final d = DateTime.parse(iso);
+      return '${d.day}/${d.month}/${d.year}';
     } catch (_) {
-      return isoDate;
+      return iso;
     }
   }
 
-  String _formatPrice(double amount, String currency) {
-    final formatted = amount.toStringAsFixed(0).replaceAllMapped(
+  String _fmtMoney(num amount, String currency) {
+    final f = amount.toDouble().toStringAsFixed(0).replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (m) => '${m[1]},',
     );
-    return '$currency $formatted';
+    return '$currency $f';
   }
 
-  Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-      case 'delivered':
-        return const Color(0xFF22C55E);
-      case 'processing':
-      case 'received_at_hub':
-      case 'paid':
-        return const Color(0xFF3B82F6);
-      case 'shipped':
-        return const Color(0xFF8B5CF6);
-      case 'cancelled':
-      case 'failed':
-        return const Color(0xFFE53935);
-      case 'pending':
-      default:
-        return const Color(0xFFF59E0B);
-    }
-  }
+  // =====================
+  // PDF GENERATION
+  // =====================
 
   Future<pw.Document> _generatePdf() async {
     final pdf = pw.Document();
-
     final logoBytes = await rootBundle.load('assets/logo/mark.png');
-    final logoImage = pw.MemoryImage(logoBytes.buffer.asUint8List());
-
-    final bgBytes = await rootBundle.load(
-      'assets/images/retro-style-organic-turing-lines-pattern-background-design.png',
-    );
-    final bgImage = pw.MemoryImage(bgBytes.buffer.asUint8List());
+    final logo = pw.MemoryImage(logoBytes.buffer.asUint8List());
+    final o = widget.order;
 
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.zero,
-        build: (context) {
-          return pw.Stack(
-            children: [
-              pw.Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: pw.Opacity(
-                  opacity: 0.06,
-                  child: pw.Image(bgImage, fit: pw.BoxFit.cover),
-                ),
-              ),
-              pw.Padding(
-                padding: const pw.EdgeInsets.all(40),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+        margin: const pw.EdgeInsets.all(40),
+        build: (_) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            // Header
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Row(
                   children: [
-                    _buildPdfHeader(logoImage),
-                    pw.SizedBox(height: 30),
-                    _buildPdfInvoiceTitle(),
-                    pw.SizedBox(height: 20),
-                    _buildPdfOrderInfo(),
-                    pw.SizedBox(height: 24),
-                    _buildPdfItemsTable(),
-                    pw.SizedBox(height: 20),
-                    _buildPdfSummary(),
-                    pw.Spacer(),
-                    _buildPdfFooter(),
+                    pw.Image(logo, width: 40, height: 40),
+                    pw.SizedBox(width: 10),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('Xerin Marketplace', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                        pw.Text('www.xerinmarketplace.com', style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text('INVOICE', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                    pw.Text(_fmtDate(o.createdAt), style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                  ],
+                ),
+              ],
+            ),
+            pw.Divider(height: 30),
+
+            // Order info
+            pw.Text('Order: ${o.orderRef}', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 4),
+            pw.Text('Status: ${o.displayStatus}', style: pw.TextStyle(fontSize: 11, color: PdfColors.grey700)),
+            pw.Text('Items: ${o.itemCount}', style: pw.TextStyle(fontSize: 11, color: PdfColors.grey700)),
+            pw.SizedBox(height: 20),
+
+            // Items table
+            pw.Table(
+              border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+              columnWidths: {
+                0: const pw.FlexColumnWidth(3),
+                1: const pw.FixedColumnWidth(40),
+                2: const pw.FixedColumnWidth(70),
+                3: const pw.FixedColumnWidth(70),
+              },
+              children: [
+                pw.TableRow(
+                  decoration: const pw.BoxDecoration(color: PdfColors.blue800),
+                  children: [
+                    pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('Product', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColors.white))),
+                    pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('Qty', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColors.white))),
+                    pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('Unit Price', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColors.white))),
+                    pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('Total', style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColors.white))),
+                  ],
+                ),
+                ...o.items.map((item) => pw.TableRow(
+                  children: [
+                    pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(item.productName, style: pw.TextStyle(fontSize: 9))),
+                    pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text('${item.quantity}', style: pw.TextStyle(fontSize: 9))),
+                    pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(item.formattedPrice, style: pw.TextStyle(fontSize: 9))),
+                    pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(item.formattedTotal, style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold))),
+                  ],
+                )),
+              ],
+            ),
+            pw.SizedBox(height: 20),
+
+            // Summary
+            pw.Align(
+              alignment: pw.Alignment.centerRight,
+              child: pw.SizedBox(
+                width: 220,
+                child: pw.Column(
+                  children: [
+                    _pdfRow('Subtotal', o.formattedSubtotal),
+                    if (o.shippingAmount > 0) _pdfRow('Shipping', _fmtMoney(o.shippingAmount, o.currency)),
+                    if (o.taxAmount > 0) _pdfRow('Tax', _fmtMoney(o.taxAmount, o.currency)),
+                    if (o.discountAmount > 0) _pdfRow('Discount', '- ${_fmtMoney(o.discountAmount, o.currency)}'),
+                    pw.Divider(height: 12),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text('Total', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                        pw.Text(o.formattedTotal, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                      ],
+                    ),
                   ],
                 ),
               ),
-            ],
-          );
-        },
+            ),
+            pw.Spacer(),
+
+            // Footer
+            pw.Divider(height: 1),
+            pw.SizedBox(height: 8),
+            pw.Center(child: pw.Text('Thank you for shopping with us!', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600, fontWeight: pw.FontWeight.bold))),
+            pw.Center(child: pw.Text('support@xerinmarketplace.com', style: pw.TextStyle(fontSize: 9, color: PdfColors.grey400))),
+          ],
+        ),
       ),
     );
 
     return pdf;
   }
 
-  pw.Widget _buildPdfHeader(pw.MemoryImage logoImage) {
-    return pw.Row(
-      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.center,
-          children: [
-            pw.Image(logoImage, width: 50, height: 50),
-            pw.SizedBox(width: 12),
-            pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Text(
-                  'Xerin Marketplace',
-                  style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
-                ),
-                pw.SizedBox(height: 2),
-                pw.Text(
-                  'Your trusted online shopping platform',
-                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
-                ),
-              ],
-            ),
-          ],
-        ),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.end,
-          children: [
-            pw.Text(
-              'INVOICE',
-              style: pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800),
-            ),
-            pw.SizedBox(height: 4),
-            pw.Text(
-              'Date: ${_formatDate(widget.order.createdAt ?? DateTime.now().toIso8601String())}',
-              style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  pw.Widget _buildPdfInvoiceTitle() {
-    return pw.Container(
-      width: double.infinity,
-      padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: pw.BoxDecoration(
-        color: PdfColors.blue50,
-        borderRadius: pw.BorderRadius.circular(8),
-        border: pw.Border.all(color: PdfColors.blue200, width: 0.5),
-      ),
-      child: pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-        children: [
-          pw.Text(
-            'Order Reference: ${widget.order.orderRef}',
-            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
-          ),
-          pw.Container(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: pw.BoxDecoration(
-              color: PdfColors.blue800,
-              borderRadius: pw.BorderRadius.circular(6),
-            ),
-            child: pw.Text(
-              widget.order.displayStatus.toUpperCase(),
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildPdfOrderInfo() {
-    return pw.Container(
-      width: double.infinity,
-      padding: const pw.EdgeInsets.all(16),
-      decoration: pw.BoxDecoration(
-        color: PdfColors.grey100,
-        borderRadius: pw.BorderRadius.circular(8),
-      ),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(
-            'Order Details',
-            style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, color: PdfColors.grey700),
-          ),
-          pw.SizedBox(height: 8),
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            children: [
-              pw.Text('Order Number:', style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
-              pw.Text(widget.order.orderNumber, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
-            ],
-          ),
-          pw.SizedBox(height: 4),
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            children: [
-              pw.Text('Items:', style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
-              pw.Text('${widget.order.itemCount}', style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
-            ],
-          ),
-          pw.SizedBox(height: 4),
-          pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-            children: [
-              pw.Text('Currency:', style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
-              pw.Text(widget.order.currency, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
-            ],
-          ),
-          if (widget.order.couponCode != null) ...[
-            pw.SizedBox(height: 4),
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Text('Coupon:', style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
-                pw.Text(widget.order.couponCode!, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColors.green700)),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildPdfItemsTable() {
-    return pw.Table(
-      border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-      columnWidths: {
-        0: const pw.FlexColumnWidth(3),
-        1: const pw.FixedColumnWidth(50),
-        2: const pw.FixedColumnWidth(80),
-        3: const pw.FixedColumnWidth(80),
-      },
-      children: [
-        pw.TableRow(
-          decoration: const pw.BoxDecoration(color: PdfColors.blue800),
-          children: [
-            pw.Padding(
-              padding: const pw.EdgeInsets.all(8),
-              child: pw.Text('Product', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
-            ),
-            pw.Padding(
-              padding: const pw.EdgeInsets.all(8),
-              child: pw.Text('Qty', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
-            ),
-            pw.Padding(
-              padding: const pw.EdgeInsets.all(8),
-              child: pw.Text('Unit Price', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
-            ),
-            pw.Padding(
-              padding: const pw.EdgeInsets.all(8),
-              child: pw.Text('Total', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
-            ),
-          ],
-        ),
-        ...widget.order.items.map((item) => pw.TableRow(
-          decoration: pw.BoxDecoration(color: PdfColors.grey50),
-          children: [
-            pw.Padding(
-              padding: const pw.EdgeInsets.all(8),
-              child: pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text(item.productName, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-                  if (item.variantName != null)
-                    pw.Text(item.variantName!, style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
-                ],
-              ),
-            ),
-            pw.Padding(
-              padding: const pw.EdgeInsets.all(8),
-              child: pw.Text('${item.quantity}', style: pw.TextStyle(fontSize: 10)),
-            ),
-            pw.Padding(
-              padding: const pw.EdgeInsets.all(8),
-              child: pw.Text(item.formattedPrice, style: pw.TextStyle(fontSize: 10)),
-            ),
-            pw.Padding(
-              padding: const pw.EdgeInsets.all(8),
-              child: pw.Text(item.formattedTotal, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-            ),
-          ],
-        )),
-      ],
-    );
-  }
-
-  pw.Widget _buildPdfSummary() {
-    final order = widget.order;
-    return pw.Align(
-      alignment: pw.Alignment.centerRight,
-      child: pw.SizedBox(
-        width: 250,
-        child: pw.Column(
-          children: [
-            _pdfSummaryRow('Subtotal', order.formattedSubtotal),
-            if (order.discountAmount > 0)
-              _pdfSummaryRow('Discount', '- ${_formatPrice(order.discountAmount, order.currency)}'),
-            if (order.shippingAmount > 0)
-              _pdfSummaryRow('Shipping', _formatPrice(order.shippingAmount, order.currency)),
-            if (order.taxAmount > 0)
-              _pdfSummaryRow('Tax', _formatPrice(order.taxAmount, order.currency)),
-            pw.Divider(color: PdfColors.grey400, height: 16),
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Text('Total', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-                pw.Text(
-                  order.formattedTotal,
-                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  pw.Widget _pdfSummaryRow(String label, String value) {
+  pw.Widget _pdfRow(String label, String value) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.only(bottom: 6),
+      padding: const pw.EdgeInsets.only(bottom: 4),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text(label, style: pw.TextStyle(fontSize: 11, color: PdfColors.grey600)),
-          pw.Text(value, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
+          pw.Text(label, style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+          pw.Text(value, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
         ],
       ),
-    );
-  }
-
-  pw.Widget _buildPdfFooter() {
-    return pw.Column(
-      children: [
-        pw.Divider(color: PdfColors.grey300, height: 1),
-        pw.SizedBox(height: 12),
-        pw.Center(
-          child: pw.Text(
-            'Generated by Xerin Marketplace',
-            style: pw.TextStyle(fontSize: 10, color: PdfColors.grey500, fontWeight: pw.FontWeight.bold),
-          ),
-        ),
-        pw.SizedBox(height: 4),
-        pw.Center(
-          child: pw.Text(
-            'www.xerinmarketplace.com  |  support@xerinmarketplace.com',
-            style: pw.TextStyle(fontSize: 9, color: PdfColors.grey400),
-          ),
-        ),
-        pw.SizedBox(height: 8),
-        pw.Center(
-          child: pw.Text(
-            'Thank you for shopping with us!',
-            style: pw.TextStyle(fontSize: 11, color: PdfColors.blue800, fontWeight: pw.FontWeight.bold),
-          ),
-        ),
-      ],
     );
   }
 
@@ -384,13 +185,8 @@ class _InvoicePageState extends State<InvoicePage> {
     setState(() => _isGenerating = true);
     try {
       final doc = await _generatePdf();
-      await Printing.sharePdf(
-        bytes: await doc.save(),
-        filename: 'invoice_${widget.order.orderRef}.pdf',
-      );
-    } catch (e) {
-      NotificationService().error('Failed to generate PDF: $e');
-    }
+      await Printing.sharePdf(bytes: await doc.save(), filename: 'invoice_${widget.order.orderRef}.pdf');
+    } catch (_) {}
     if (mounted) setState(() => _isGenerating = false);
   }
 
@@ -398,363 +194,331 @@ class _InvoicePageState extends State<InvoicePage> {
     setState(() => _isGenerating = true);
     try {
       final doc = await _generatePdf();
-      await Printing.layoutPdf(
-        onLayout: (format) => doc.save(),
-        name: 'invoice_${widget.order.orderRef}',
-      );
-    } catch (e) {
-      NotificationService().error('Failed to print: $e');
-    }
+      await Printing.layoutPdf(onLayout: (format) => doc.save(), name: 'invoice_${widget.order.orderRef}');
+    } catch (_) {}
     if (mounted) setState(() => _isGenerating = false);
   }
 
+  Future<void> _downloadBackendInvoice() async {
+    setState(() => _isDownloadingBackend = true);
+    try {
+      final token = GetIt.instance<TokenStorage>().accessToken;
+      final url = '${ApiConstants.baseUrl}/api/v1${ApiConstants.orderInvoice(widget.order.id)}';
+      final response = await Dio().get<List<int>>(
+        url,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {ApiConstants.authorizationHeader: '${ApiConstants.bearerPrefix} $token'},
+        ),
+      );
+      final bytes = Uint8List.fromList(response.data!);
+      await Printing.sharePdf(bytes: bytes, filename: 'Xerin-Invoice-${formatOrderRef(widget.order.id)}.pdf');
+    } catch (_) {
+      NotificationService().error('Failed to download invoice from server');
+    }
+    if (mounted) setState(() => _isDownloadingBackend = false);
+  }
+
+  Future<void> _downloadBackendReceipt() async {
+    setState(() => _isDownloadingReceipt = true);
+    try {
+      final token = GetIt.instance<TokenStorage>().accessToken;
+      final url = '${ApiConstants.baseUrl}/api/v1${ApiConstants.orderReceipt(widget.order.id)}';
+      final response = await Dio().get<List<int>>(
+        url,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {ApiConstants.authorizationHeader: '${ApiConstants.bearerPrefix} $token'},
+        ),
+      );
+      final bytes = Uint8List.fromList(response.data!);
+      await Printing.sharePdf(bytes: bytes, filename: 'Xerin-Receipt-${formatOrderRef(widget.order.id)}.pdf');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        NotificationService().warning('Receipt available after payment is confirmed');
+      } else {
+        NotificationService().error('Failed to download receipt');
+      }
+    } catch (_) {
+      NotificationService().error('Failed to download receipt');
+    }
+    if (mounted) setState(() => _isDownloadingReceipt = false);
+  }
+
+  // =====================
+  // UI
+  // =====================
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final statusColor = _statusColor(widget.order.status);
+    final o = widget.order;
 
     return Scaffold(
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.pop(),
-                        child: Icon(Icons.arrow_back, size: 22, color: colorScheme.onSurface),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          'Invoice',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: _isGenerating ? null : _printPdf,
-                        icon: Icon(Icons.print_outlined, size: 22, color: colorScheme.primary),
-                      ),
-                      IconButton(
-                        onPressed: _isGenerating ? null : _downloadPdf,
-                        icon: Icon(Icons.download_outlined, size: 22, color: colorScheme.primary),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+            _buildHeader(cs, o),
+            Expanded(
+              child: Stack(
+                children: [
+                  SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildInvoicePreview(colorScheme, isDark, statusColor),
+                        _buildInvoiceCard(cs, isDark, o),
                         const SizedBox(height: 16),
-                        _buildActionButtons(colorScheme),
-                        const SizedBox(height: 32),
+                        _buildActionButtons(cs),
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
-            if (_isGenerating)
-              Container(
-                color: Colors.black54,
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                  if (_isGenerating || _isDownloadingBackend || _isDownloadingReceipt)
+                    Container(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+                ],
               ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInvoicePreview(ColorScheme cs, bool isDark, Color statusColor) {
-    return Column(
-      children: [
-        _buildPreviewHeader(cs, statusColor),
-        _buildPreviewOrderInfo(cs, isDark),
-        _buildPreviewItems(cs, isDark),
-        _buildPreviewSummary(cs, isDark),
-        _buildPreviewFooter(cs),
-      ],
-    );
-  }
-
-  Widget _buildPreviewHeader(ColorScheme cs, Color statusColor) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
+  Widget _buildHeader(ColorScheme cs, OrderModel o) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [cs.primary, cs.primary.withValues(alpha: 0.75)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Xerin Marketplace',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: cs.onSurface),
+              GestureDetector(
+                onTap: () => context.pop(),
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Your trusted online shopping platform',
-                    style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
-                  ),
-                ],
+                  child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                ),
               ),
-              Image.asset(
-                'assets/logo/mark.png',
-                width: 48,
-                height: 48,
-                errorBuilder: (_, __, ___) => Icon(Icons.store_outlined, color: cs.primary, size: 36),
+              const Spacer(),
+              IconButton(
+                onPressed: _isGenerating ? null : _printPdf,
+                icon: const Icon(Icons.print_outlined, color: Colors.white, size: 20),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'INVOICE',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface),
-              ),
-              Text(
-                widget.order.displayStatus.toUpperCase(),
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: statusColor),
-              ),
-            ],
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.receipt_long, color: Colors.white, size: 24),
+          ),
+          const SizedBox(height: 12),
+          const Text('Invoice',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5),
+          ),
+          const SizedBox(height: 6),
+          Text(o.orderRef,
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white.withValues(alpha: 0.8), fontFamily: 'monospace'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPreviewOrderInfo(ColorScheme cs, bool isDark) {
-    final order = widget.order;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              _infoItem('Order Ref', order.orderRef, cs),
-              const SizedBox(width: 20),
-              _infoItem('Date', _formatDate(order.createdAt ?? ''), cs),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _infoItem('Items', '${order.itemCount}', cs),
-              const SizedBox(width: 20),
-              _infoItem('Currency', order.currency, cs),
-            ],
-          ),
-          if (order.couponCode != null) ...[
-            const SizedBox(height: 12),
+  Widget _buildInvoiceCard(ColorScheme cs, bool isDark, OrderModel o) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: cs.onSurface.withValues(alpha: 0.06)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _infoItem('Coupon', order.couponCode!, cs, valueColor: cs.primary),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Xerin Marketplace', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface)),
+                    Text('www.xerinmarketplace.com', style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4))),
+                  ],
+                ),
+                Image.asset('assets/logo/mark.png', width: 36, height: 36,
+                  errorBuilder: (_, _, _) => Icon(Icons.store_outlined, color: cs.primary, size: 28)),
               ],
             ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _infoItem(String label, String value, ColorScheme cs, {Color? valueColor}) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4))),
-          const SizedBox(height: 2),
-          Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: valueColor ?? cs.onSurface)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPreviewItems(ColorScheme cs, bool isDark) {
-    final order = widget.order;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Items', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurface)),
-          const SizedBox(height: 12),
-          ...order.items.map((item) => _buildPreviewItemRow(item, cs, isDark)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPreviewItemRow(OrderItemModel item, ColorScheme cs, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: item.productImage != null
-                ? Image.network(
-                    item.productImage!,
-                    width: 44, height: 44, fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Icon(Icons.inventory_2_outlined, color: cs.primary.withValues(alpha: 0.4), size: 20),
-                  )
-                : SizedBox(
-                    width: 44, height: 44,
-                    child: Icon(Icons.inventory_2_outlined, color: cs.primary.withValues(alpha: 0.4), size: 20),
+            const Divider(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('INVOICE', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.productName,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Qty: ${item.quantity} × ${item.formattedPrice}',
-                  style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4)),
+                  child: Text(o.displayStatus.toUpperCase(),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: cs.primary),
+                  ),
                 ),
               ],
             ),
-          ),
-          Text(
-            item.formattedTotal,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPreviewSummary(ColorScheme cs, bool isDark) {
-    final order = widget.order;
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          _summaryRow('Subtotal', order.formattedSubtotal, cs),
-          if (order.discountAmount > 0) ...[
+            const SizedBox(height: 16),
+            _row('Order Ref', o.orderRef, cs),
+            _row('Date', _fmtDate(o.createdAt), cs),
+            _row('Items', '${o.itemCount}', cs),
+            if (o.couponCode != null) _row('Coupon', o.couponCode!, cs),
+            const Divider(height: 24),
+            Text('Items', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.onSurface)),
             const SizedBox(height: 8),
-            _summaryRow('Discount', '- ${_formatPrice(order.discountAmount, order.currency)}', cs, valueColor: cs.primary),
-          ],
-          if (order.shippingAmount > 0) ...[
+            ...o.items.map((item) => _itemRow(item, cs)),
+            const Divider(height: 24),
+            _row('Subtotal', o.formattedSubtotal, cs),
+            if (o.shippingAmount > 0) _row('Shipping', _fmtMoney(o.shippingAmount, o.currency), cs),
+            if (o.taxAmount > 0) _row('Tax', _fmtMoney(o.taxAmount, o.currency), cs),
+            if (o.discountAmount > 0) _row('Discount', '- ${_fmtMoney(o.discountAmount, o.currency)}', cs),
             const SizedBox(height: 8),
-            _summaryRow('Shipping', _formatPrice(order.shippingAmount, order.currency), cs),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface)),
+                Text(o.formattedTotal, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.primary)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Center(child: Text('Thank you for shopping with us!', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: cs.primary))),
+            Center(child: Text('support@xerinmarketplace.com', style: TextStyle(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.4)))),
           ],
-          if (order.taxAmount > 0) ...[
-            const SizedBox(height: 8),
-            _summaryRow('Tax', _formatPrice(order.taxAmount, order.currency), cs),
-          ],
-          const SizedBox(height: 12),
-          Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.06)),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface)),
-              Text(
-                order.formattedTotal,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.primary),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryRow(String label, String value, ColorScheme cs, {Color? valueColor}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.5))),
-        Text(
-          value,
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: valueColor ?? cs.onSurface),
         ),
-      ],
-    );
-  }
-
-  Widget _buildPreviewFooter(ColorScheme cs) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          Text(
-            'Generated by Xerin Marketplace',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: cs.primary),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'www.xerinmarketplace.com  |  support@xerinmarketplace.com',
-            style: TextStyle(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.4)),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Thank you for shopping with us!',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: cs.primary),
-          ),
-        ],
       ),
     );
   }
 
   Widget _buildActionButtons(ColorScheme cs) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: SizedBox(
-            height: 48,
-            child: OutlinedButton.icon(
-              onPressed: _isGenerating ? null : _printPdf,
-              icon: Icon(Icons.print_outlined, size: 20, color: cs.primary),
-              label: Text('Print', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: cs.primary)),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: cs.primary.withValues(alpha: 0.3)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _isGenerating ? null : _printPdf,
+                icon: const Icon(Icons.print_outlined, size: 18),
+                label: const Text('Print'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
             ),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _isGenerating ? null : _downloadPdf,
+                icon: const Icon(Icons.download_outlined, size: 18),
+                label: const Text('Download'),
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: SizedBox(
-            height: 48,
-            child: ElevatedButton.icon(
-              onPressed: _isGenerating ? null : _downloadPdf,
-              icon: const Icon(Icons.download_outlined, size: 20, color: Colors.white),
-              label: const Text('Download PDF', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: cs.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _isDownloadingBackend ? null : _downloadBackendInvoice,
+                icon: _isDownloadingBackend
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.cloud_download_outlined, size: 18),
+                label: const Text('Server Invoice'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
             ),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _isDownloadingReceipt ? null : _downloadBackendReceipt,
+                icon: _isDownloadingReceipt
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.receipt_outlined, size: 18),
+                label: const Text('Receipt'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _row(String label, String value, ColorScheme cs) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5))),
+          Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface)),
+        ],
+      ),
+    );
+  }
+
+  Widget _itemRow(OrderItemModel item, ColorScheme cs) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.productName, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text('Qty ${item.quantity} × ${item.formattedPrice}', style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4))),
+              ],
+            ),
+          ),
+          Text(item.formattedTotal, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: cs.onSurface)),
+        ],
+      ),
     );
   }
 }

@@ -103,95 +103,88 @@ class _SellerDashboardPageState extends State<SellerDashboardPage> {
     );
   }
 
+  String _firstName(String? fullName) {
+    if (fullName == null || fullName.isEmpty) return 'Seller';
+    return fullName.split(' ').first;
+  }
+
   Widget _buildHeader(ColorScheme cs, bool isDark) {
     final user = GetIt.instance<TokenStorage>().currentUser;
     final state = _cubit.state;
-    final logoUrl = state is SellerDashboardLoaded ? state.storeLogoUrl : null;
     final businessName = state is SellerDashboardLoaded ? state.seller?.businessName : null;
+    final sellerStatus = state is SellerDashboardLoaded ? state.seller?.status : null;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 16, 12),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => _showAccountSheet(context, cs, isDark),
-            child: Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: cs.primary.withValues(alpha: 0.15), width: 1.5),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: AppNetworkImage(
-                  imageUrl: logoUrl,
-                  width: 46,
-                  height: 46,
-                  borderRadius: 12,
-                  placeholderIcon: Uicons.shop,
-                  iconColor: cs.primary,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  businessName ?? 'Seller Panel',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: cs.onSurface,
+            child: GestureDetector(
+              onTap: () => _showAccountSheet(context, cs, isDark),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Seller Center',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: cs.onSurface),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  user?.fullName ?? 'Seller',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: cs.onSurface.withValues(alpha: 0.4),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text('Welcome back, ${_firstName(user?.fullName)}',
+                          style: TextStyle(fontSize: 15, color: cs.onSurface.withValues(alpha: 0.5)),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (businessName != null) ...[
+                        Text(' · ', style: TextStyle(fontSize: 15, color: cs.onSurface.withValues(alpha: 0.3))),
+                        Flexible(
+                          child: Text(businessName,
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
+                            maxLines: 1, overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                      if (sellerStatus != null && sellerStatus != 'active') ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: cs.onSurface.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(sellerStatus.toUpperCase(),
+                            style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: cs.onSurface.withValues(alpha: 0.5)),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           GestureDetector(
             onTap: () => sl<AppThemeCubit>().toggleTheme(),
             child: Container(
-              width: 40,
-              height: 40,
+              width: 40, height: 40,
               decoration: BoxDecoration(
                 color: cs.onSurface.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                isDark ? Uicons.sun : Uicons.darkMode,
-                color: cs.onSurface.withValues(alpha: 0.7),
-                size: 20,
-              ),
+              child: Icon(isDark ? Uicons.sun : Uicons.darkMode, color: cs.onSurface.withValues(alpha: 0.6), size: 20),
             ),
           ),
           const SizedBox(width: 10),
           GestureDetector(
             onTap: _refresh,
             child: Container(
-              width: 40,
-              height: 40,
+              width: 40, height: 40,
               decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: 0.08),
+                color: cs.onSurface.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                Uicons.refresh,
-                color: cs.primary,
-                size: 20,
-              ),
+              child: Icon(Uicons.refresh, color: cs.onSurface.withValues(alpha: 0.6), size: 20),
             ),
           ),
         ],

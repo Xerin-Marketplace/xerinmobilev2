@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../config/di/service_locator.dart';
 import '../cubit/product_qa_cubit.dart';
 import '../../data/models/product_qa_model.dart';
 
@@ -19,15 +20,25 @@ class ProductQaPage extends StatefulWidget {
 }
 
 class _ProductQaPageState extends State<ProductQaPage> {
+  late final ProductQaCubit _cubit;
+
   @override
   void initState() {
     super.initState();
-    context.read<ProductQaCubit>().loadQuestions(widget.productId);
+    _cubit = sl<ProductQaCubit>()..loadQuestions(widget.productId);
+  }
+
+  @override
+  void dispose() {
+    _cubit.close();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocProvider.value(
+      value: _cubit,
+      child: Scaffold(
       appBar: AppBar(
         title: Text('Q&A - ${widget.productName}'),
         actions: [
@@ -76,8 +87,9 @@ class _ProductQaPageState extends State<ProductQaPage> {
           return const SizedBox();
         },
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showAskQuestionDialog(BuildContext context) {
     final controller = TextEditingController();

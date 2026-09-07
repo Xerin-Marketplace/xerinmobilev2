@@ -8,6 +8,7 @@ import '../../core/storage/token_storage.dart';
 import '../../features/auth/data/models/user_model.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/legal_page.dart';
+import '../../features/customer/presentation/pages/privacy_terms_page.dart';
 import '../../features/auth/presentation/pages/lock_screen_page.dart';
 import '../../features/auth/presentation/pages/pin_setup_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
@@ -37,6 +38,7 @@ import '../../features/customer/presentation/pages/order_history_page.dart';
 import '../../features/customer/presentation/pages/invoice_page.dart';
 import '../../features/customer/presentation/pages/order_tracking_page.dart';
 import '../../features/customer/presentation/pages/payment_methods_page.dart';
+import '../../features/customer/presentation/pages/my_payments_page.dart';
 import '../../features/customer/presentation/pages/product_detail_page.dart';
 import '../../features/customer/presentation/pages/product_reviews_page.dart';
 import '../../features/customer/presentation/pages/product_qa_page.dart';
@@ -57,6 +59,8 @@ import '../../features/customer/presentation/pages/support_ticket_create_page.da
 import '../../features/customer/presentation/pages/delivery_verification_page.dart';
 import '../../features/customer/presentation/pages/customer_security_page.dart';
 import '../../features/customer/presentation/pages/customer_reviews_page.dart';
+import '../../features/customer/presentation/pages/customer_dashboard_page.dart';
+import '../../features/customer/presentation/pages/delivery_protection_page.dart';
 import '../../features/customer/presentation/pages/trending_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/seller/presentation/pages/seller_dashboard_page.dart';
@@ -67,6 +71,9 @@ import '../../features/seller/presentation/pages/seller_inventory_page.dart';
 import '../../features/seller/presentation/pages/seller_store_page.dart';
 import '../../features/seller/presentation/pages/seller_kyc_page.dart';
 import '../../features/seller/presentation/pages/seller_wallet_page.dart';
+import '../../features/seller/presentation/pages/seller_payouts_page.dart';
+import '../../features/seller/presentation/pages/seller_payout_accounts_page.dart';
+import '../../features/seller/presentation/pages/seller_settings_page.dart';
 import '../../features/seller/presentation/pages/seller_analytics_page.dart';
 import '../../features/seller/presentation/pages/seller_promotions_page.dart';
 import '../../features/seller/presentation/pages/seller_reviews_page.dart';
@@ -281,6 +288,10 @@ class AppRouter {
         path: AppConstants.privacyRoute,
         builder: (context, state) => LegalPage.privacyPolicy(),
       ),
+      GoRoute(
+        path: AppConstants.privacyTermsRoute,
+        builder: (context, state) => const PrivacyTermsPage(),
+      ),
       // Customer profile sub-pages
       GoRoute(
         path: AppConstants.profileInfoRoute,
@@ -293,6 +304,10 @@ class AppRouter {
       GoRoute(
         path: AppConstants.paymentMethodsRoute,
         builder: (context, state) => const PaymentMethodsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.myPaymentsRoute,
+        builder: (context, state) => const MyPaymentsPage(),
       ),
       GoRoute(
         path: AppConstants.orderHistoryRoute,
@@ -364,6 +379,14 @@ class AppRouter {
       GoRoute(
         path: AppConstants.customerReviewsRoute,
         builder: (context, state) => const CustomerReviewsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.customerDashboardRoute,
+        builder: (context, state) => const CustomerDashboardPage(),
+      ),
+      GoRoute(
+        path: AppConstants.deliveryProtectionRoute,
+        builder: (context, state) => const DeliveryProtectionPage(),
       ),
       GoRoute(
         path: AppConstants.checkoutRoute,
@@ -522,6 +545,18 @@ class AppRouter {
       GoRoute(
         path: AppConstants.sellerWalletRoute,
         builder: (context, state) => const SellerWalletPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerPayoutsRoute,
+        builder: (context, state) => const SellerPayoutsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerPayoutAccountsRoute,
+        builder: (context, state) => const SellerPayoutAccountsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.sellerSettingsRoute,
+        builder: (context, state) => const SellerSettingsPage(),
       ),
       GoRoute(
         path: AppConstants.sellerAnalyticsRoute,

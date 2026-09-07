@@ -51,6 +51,12 @@ class OrderModel {
     this.shipments = const [],
   });
 
+  static double _parseNum(dynamic v) {
+    if (v == null) return 0.0;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString()) ?? 0.0;
+  }
+
   String get formattedTotal {
     final formatted = total.toStringAsFixed(0).replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
@@ -125,17 +131,17 @@ class OrderModel {
       id: json['id']?.toString() ?? '',
       orderNumber: json['order_number'] as String? ?? json['id']?.toString() ?? '',
       shippingAddressId: json['shipping_address_id']?.toString(),
-      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
-      discountAmount: (json['discount_amount'] as num?)?.toDouble() ?? 0.0,
-      shippingAmount: (json['shipping_amount'] as num?)?.toDouble() ?? 0.0,
-      taxAmount: (json['tax_amount'] as num?)?.toDouble() ?? 0.0,
-      total: (json['total'] as num?)?.toDouble() ?? 0.0,
+      subtotal: _parseNum(json['subtotal']),
+      discountAmount: _parseNum(json['discount_amount']),
+      shippingAmount: _parseNum(json['shipping_amount']),
+      taxAmount: _parseNum(json['tax_amount']),
+      total: _parseNum(json['total']),
       currency: json['currency'] as String? ?? 'TZS',
       status: json['status'] as String? ?? 'pending',
       statusLabel: json['status_label'] as String?,
       couponCode: json['coupon_code'] as String?,
       notes: json['notes'] as String?,
-      itemCount: (json['item_count'] as num?)?.toInt() ?? itemsList.length,
+      itemCount: _parseNum(json['item_count']).toInt() == 0 ? itemsList.length : _parseNum(json['item_count']).toInt(),
       createdAt: json['created_at'] as String?,
       updatedAt: json['updated_at'] as String?,
       shippingMethodName: json['shipping_method_name'] as String?,
@@ -264,6 +270,12 @@ class OrderItemModel {
   final double totalPrice;
   final String currency;
 
+  static double _parseNum(dynamic v) {
+    if (v == null) return 0.0;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString()) ?? 0.0;
+  }
+
   const OrderItemModel({
     required this.id,
     this.productId = '',
@@ -303,11 +315,9 @@ class OrderItemModel {
         productName: json['product_name'] as String? ?? json['name'] as String? ?? '',
         variantName: json['variant_name'] as String?,
         productImage: json['product_image'] as String? ?? json['image'] as String?,
-        quantity: (json['quantity'] as num?)?.toInt() ?? 1,
-        unitPrice: (json['unit_price'] as num?)?.toDouble() ??
-            (json['price'] as num?)?.toDouble() ??
-            0.0,
-        totalPrice: (json['total_price'] as num?)?.toDouble() ?? 0.0,
+        quantity: _parseNum(json['quantity']).toInt() == 0 ? 1 : _parseNum(json['quantity']).toInt(),
+        unitPrice: _parseNum(json['unit_price']) != 0.0 ? _parseNum(json['unit_price']) : _parseNum(json['price']),
+        totalPrice: _parseNum(json['total_price']),
         currency: json['currency'] as String? ?? 'TZS',
       );
 }

@@ -20,20 +20,28 @@ class _SellerKycPageState extends State<SellerKycPage> {
     context.read<SellerCubit>().loadKyc();
   }
 
+  static const _docTypes = [
+    ('tin', 'TIN Certificate', 'Valid Taxpayer Identification Number certificate.'),
+    ('business_registration', 'Business Registration / Incorporation', 'Official business registration or incorporation certificate.'),
+    ('business_licence', 'Business Licence', 'Current operating/business licence. Licence number and expiry date are required.'),
+    ('business_profile', 'Business Profile', 'Required company or business profile document.'),
+  ];
+
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('KYC & Compliance')),
+      appBar: AppBar(title: const Text('Seller Verification')),
       body: BlocConsumer<SellerCubit, SellerState>(
         listener: (context, state) {
           if (state is SellerError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+              SnackBar(content: Text(state.message), backgroundColor: const Color(0xFFEF4444)),
             );
           }
           if (state is SellerActionSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+              SnackBar(content: Text(state.message), backgroundColor: const Color(0xFF22C55E)),
             );
           }
         },
@@ -45,14 +53,19 @@ class _SellerKycPageState extends State<SellerKycPage> {
             return RefreshIndicator(
               onRefresh: () => context.read<SellerCubit>().loadKyc(),
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
                 children: [
-                  _buildStatusCard(context, state.kycStatus),
+                  _buildHeader(cs),
                   const SizedBox(height: 16),
-                  _buildDocumentsSection(context, state.documents, state.kycStatus),
+                  _buildProgressCard(cs, state.kycStatus, state.documents),
                   const SizedBox(height: 24),
-                  _buildPayoutAccountsSection(context, state.payoutAccounts),
-                  const SizedBox(height: 32),
+                  _buildSubmissionSection(cs, state.documents, state.kycStatus),
+                  const SizedBox(height: 24),
+                  _buildRequiredDocumentsSection(cs, state.documents),
+                  const SizedBox(height: 24),
+                  _buildBulkUploadSection(cs),
+                  const SizedBox(height: 24),
+                  _buildFooter(cs),
                 ],
               ),
             );
@@ -62,13 +75,14 @@ class _SellerKycPageState extends State<SellerKycPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Uicons.circleExclamation, size: 48, color: Colors.red),
+                  Icon(Uicons.circleExclamation, size: 48, color: cs.onSurface.withValues(alpha: 0.2)),
                   const SizedBox(height: 16),
-                  Text(state.message, textAlign: TextAlign.center),
+                  Text(state.message, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.5))),
                   const SizedBox(height: 16),
-                  ElevatedButton(
+                  FilledButton.tonal(
                     onPressed: () => context.read<SellerCubit>().loadKyc(),
-                    child: const Text('Retry'),
+                    style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                    child: const Text('Retry', style: TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),
@@ -80,292 +94,446 @@ class _SellerKycPageState extends State<SellerKycPage> {
     );
   }
 
-  Widget _buildStatusCard(BuildContext context, SellerKycStatusModel kyc) {
+  Widget _buildHeader(ColorScheme cs) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Seller Verification', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: cs.onSurface)),
+        const SizedBox(height: 4),
+        Text('Submit the required documents once. After submission you can view them and, until Admin starts review, replace a document if you notice a mistake.',
+          style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4))),
+      ],
+    );
+  }
+
+  Widget _buildProgressCard(ColorScheme cs, SellerKycStatusModel kyc, List<SellerKycDocumentModel> docs) {
     final sellerStatus = kyc.sellerStatus ?? 'unknown';
     final statusColor = _getStatusColor(sellerStatus);
+    final uploadedCount = docs.where((d) => d.status != 'not_uploaded').length;
+    final totalCount = _docTypes.length;
+    final percent = (uploadedCount / totalCount * 100).round();
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: statusColor.withValues(alpha: 0.1),
+        color: cs.onSurface.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Uicons.shieldCheck, color: statusColor, size: 24),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Seller Status: ${sellerStatus.toUpperCase()}',
-                  style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-              ),
+              Text('Documents complete', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.7))),
+              const Spacer(),
+              Text('$percent%', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface)),
             ],
           ),
-          if (kyc.missingDocuments.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text('Missing Documents:', style: TextStyle(color: statusColor, fontSize: 13, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 4),
-            ...kyc.missingDocuments.map((doc) => Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
-                  child: Row(
-                    children: [
-                      const Icon(Uicons.circleExclamation, size: 14, color: Colors.red),
-                      const SizedBox(width: 8),
-                      Text(doc, style: const TextStyle(fontSize: 13)),
-                    ],
-                  ),
-                )),
-          ],
-          if (kyc.canSubmitForReview) ...[
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('All documents uploaded. Admin will review.')),
-                  );
-                },
-                icon: const Icon(Uicons.check),
-                label: const Text('Ready for Review'),
-              ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: percent / 100,
+              minHeight: 8,
+              backgroundColor: cs.onSurface.withValues(alpha: 0.06),
+              valueColor: AlwaysStoppedAnimation<Color>(statusColor),
             ),
-          ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(_statusIcon(sellerStatus), size: 16, color: statusColor),
+              const SizedBox(width: 6),
+              Text('Seller status: ', style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5))),
+              Text(sellerStatus, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: statusColor)),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildDocumentsSection(
-    BuildContext context,
-    List<SellerKycDocumentModel> documents,
-    SellerKycStatusModel kyc,
-  ) {
-    final docTypes = ['tin', 'business_registration', 'business_profile'];
+  Widget _buildSubmissionSection(ColorScheme cs, List<SellerKycDocumentModel> docs, SellerKycStatusModel kyc) {
+    final canEdit = kyc.sellerStatus == 'pending' || kyc.sellerStatus == 'rejected' || kyc.sellerStatus == 'unknown';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('KYC Documents', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12),
-        ...docTypes.map((docType) {
-          final doc = documents.where((d) => d.documentType == docType).toList();
-          final hasDoc = doc.isNotEmpty;
-          final status = hasDoc ? doc.first.status : 'not_uploaded';
-          return _buildDocumentTile(context, docType, hasDoc, status, () => _uploadDocument(context, docType));
+        Text('Initial document submission', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface)),
+        const SizedBox(height: 4),
+        Text('PDF only \u00b7 maximum 10 MB per document.',
+          style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4))),
+        const SizedBox(height: 16),
+        ..._docTypes.map((doc) {
+          final existing = docs.where((d) => d.documentType == doc.$1).firstOrNull;
+          return _buildDocUploadCard(cs, doc.$1, doc.$2, doc.$3, existing, canEdit);
+        }),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('All selected documents will be submitted for review.'), backgroundColor: Color(0xFF3B82F6)),
+              );
+            },
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Submit All Documents', style: TextStyle(fontWeight: FontWeight.w600)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDocUploadCard(ColorScheme cs, String docType, String title, String desc, SellerKycDocumentModel? existing, bool canEdit) {
+    final hasDoc = existing != null && existing.status != 'not_uploaded';
+    final status = existing?.status ?? 'not_uploaded';
+    final statusColor = _getDocStatusColor(status);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface)),
+              ),
+              if (hasDoc) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                  child: Text(status, style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.w700)),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(desc, style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4))),
+
+          // Business licence extra fields
+          if (docType == 'business_licence') ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Licence number', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6))),
+                      const SizedBox(height: 4),
+                      TextFormField(
+                        decoration: InputDecoration(
+                          hintText: 'Enter licence number',
+                          hintStyle: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.3)),
+                          filled: true,
+                          fillColor: cs.onSurface.withValues(alpha: 0.03),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.08))),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.08))),
+                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Expiry date', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6))),
+                      const SizedBox(height: 4),
+                      TextFormField(
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          hintText: 'mm/dd/yyyy',
+                          hintStyle: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.3)),
+                          filled: true,
+                          fillColor: cs.onSurface.withValues(alpha: 0.03),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.08))),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.08))),
+                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                          suffixIcon: Icon(Icons.calendar_today, size: 14, color: cs.onSurface.withValues(alpha: 0.3)),
+                        ),
+                        onTap: () async {
+                          await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          const SizedBox(height: 10),
+          if (hasDoc && !canEdit) ...[
+            // View only
+            Row(
+              children: [
+                Icon(Uicons.eye, size: 14, color: cs.onSurface.withValues(alpha: 0.4)),
+                const SizedBox(width: 6),
+                Text('View only', style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4))),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => _viewDocument(existing),
+                  child: Text('View', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary)),
+                ),
+              ],
+            ),
+          ] else if (hasDoc) ...[
+            // Can replace or delete
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () => _uploadDocument(docType),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: cs.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Uicons.refresh, size: 14, color: cs.primary),
+                        const SizedBox(width: 6),
+                        Text('Replace', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => _viewDocument(existing),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    child: Text('View', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5))),
+                  ),
+                ),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => _confirmDelete(existing),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                    child: Text('Remove', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFFEF4444).withValues(alpha: 0.7))),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            // Choose file
+            GestureDetector(
+              onTap: () => _uploadDocument(docType),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  border: Border.all(color: cs.primary.withValues(alpha: 0.2), width: 1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Uicons.upload, size: 14, color: cs.primary),
+                    const SizedBox(width: 6),
+                    Text('Choose $title', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 4),
+          Text('PDF only \u00b7 max 10 MB', style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.3))),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRequiredDocumentsSection(ColorScheme cs, List<SellerKycDocumentModel> docs) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Required Documents', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface)),
+        const SizedBox(height: 16),
+        ..._docTypes.map((doc) {
+          final existing = docs.where((d) => d.documentType == doc.$1).firstOrNull;
+          return _buildRequiredDocTile(cs, doc.$1, doc.$2, existing);
         }),
       ],
     );
   }
 
-  Widget _buildDocumentTile(
-    BuildContext context,
-    String docType,
-    bool hasDoc,
-    String status,
-    VoidCallback onUpload,
-  ) {
+  Widget _buildRequiredDocTile(ColorScheme cs, String docType, String title, SellerKycDocumentModel? existing) {
+    final hasDoc = existing != null && existing.status != 'not_uploaded';
+    final status = existing?.status ?? 'not_uploaded';
     final statusColor = _getDocStatusColor(status);
-    final label = _formatDocType(docType);
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Icon(hasDoc ? Uicons.file : Uicons.upload, color: statusColor),
-        title: Text(label),
-        subtitle: Text(status.toUpperCase(), style: TextStyle(color: statusColor, fontSize: 11)),
-        trailing: hasDoc
-            ? const Icon(Uicons.checkCircle, color: Colors.green, size: 20)
-            : ElevatedButton(
-                onPressed: onUpload,
-                child: const Text('Upload'),
-              ),
+    final isMissing = !hasDoc;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: isMissing ? const Color(0xFFEF4444).withValues(alpha: 0.15) : cs.onSurface.withValues(alpha: 0.06)),
       ),
-    );
-  }
-
-  Widget _buildPayoutAccountsSection(BuildContext context, List<PayoutAccountModel> accounts) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Payout Accounts', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-            IconButton(
-              icon: const Icon(Uicons.plus),
-              onPressed: () => _showAddPayoutDialog(context),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (accounts.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Center(
-              child: Text('No payout accounts yet. Add one to receive payouts.', style: TextStyle(color: Colors.grey)),
-            ),
-          )
-        else
-          ...accounts.map((account) => _buildPayoutAccountCard(context, account)),
-      ],
-    );
-  }
-
-  Widget _buildPayoutAccountCard(BuildContext context, PayoutAccountModel account) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Icon(account.accountType == 'bank' ? Uicons.bank : Uicons.smartphone, color: Theme.of(context).colorScheme.primary),
-        title: Text(account.accountName),
-        subtitle: Text('${account.provider} - ${account.accountNumber}'),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (account.isDefault)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(4)),
-                child: const Text('DEFAULT', style: TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.w600)),
-              ),
-            IconButton(
-              icon: const Icon(Uicons.trash, size: 18, color: Colors.red),
-              onPressed: () => _confirmDelete(context, account.id),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _uploadDocument(BuildContext context, String docType) async {
-    try {
-      final picker = ImagePicker();
-      final image = await picker.pickImage(source: ImageSource.gallery);
-      if (image == null) return;
-      if (context.mounted) {
-        await context.read<SellerCubit>().uploadKycDocument(
-              documentType: docType,
-              filePath: image.path,
-              fileName: image.name,
-            );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: $e'), backgroundColor: Colors.red),
-        );
-      }
-    }
-  }
-
-  void _showAddPayoutDialog(BuildContext context) {
-    final accountType = ValueNotifier('bank');
-    final providerController = TextEditingController();
-    final nameController = TextEditingController();
-    final numberController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add Payout Account'),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
+      child: Row(
+        children: [
+          if (isMissing)
+            Icon(Uicons.circleExclamation, size: 16, color: const Color(0xFFEF4444).withValues(alpha: 0.5))
+          else
+            Icon(_statusIcon(status), size: 16, color: statusColor),
+          const SizedBox(width: 10),
+          Expanded(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ValueListenableBuilder<String>(
-                  valueListenable: accountType,
-                  builder: (context, value, _) {
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: RadioListTile<String>(
-                            title: const Text('Bank'),
-                            value: 'bank',
-                            groupValue: value,
-                            onChanged: (v) => accountType.value = v!,
-                          ),
-                        ),
-                        Expanded(
-                          child: RadioListTile<String>(
-                            title: const Text('Mobile Money'),
-                            value: 'mobile_money',
-                            groupValue: value,
-                            onChanged: (v) => accountType.value = v!,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: providerController,
-                  decoration: const InputDecoration(labelText: 'Provider *', border: OutlineInputBorder()),
-                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Account Name *', border: OutlineInputBorder()),
-                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: numberController,
-                  decoration: const InputDecoration(labelText: 'Account Number *', border: OutlineInputBorder()),
-                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                ),
+                Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface)),
+                const SizedBox(height: 2),
+                if (isMissing)
+                  Text('Not uploaded', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFEF4444).withValues(alpha: 0.6)))
+                else
+                  Text(status, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: statusColor)),
               ],
             ),
           ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.pop(ctx);
-                context.read<SellerCubit>().createPayoutAccount({
-                  'account_type': accountType.value,
-                  'provider': providerController.text.trim(),
-                  'account_name': nameController.text.trim(),
-                  'account_number': numberController.text.trim(),
-                  'currency': 'TZS',
-                });
-              }
-            },
-            child: const Text('Add'),
-          ),
+          if (hasDoc) ...[
+            GestureDetector(
+              onTap: () => _viewDocument(existing),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                child: Text('View', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary)),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text('View only', style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.3))),
+          ] else
+            Text('missing', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFEF4444).withValues(alpha: 0.5))),
         ],
       ),
     );
   }
 
-  void _confirmDelete(BuildContext context, String id) {
+  Widget _buildBulkUploadSection(ColorScheme cs) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Upload Document', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: cs.onSurface)),
+          const SizedBox(height: 4),
+          Text('Need to submit TIN, Business Licence and Business Profile together?',
+            style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4))),
+          const SizedBox(height: 4),
+          Text('Use the Business Documents workspace to select, preview and submit all required verification files in one action.',
+            style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4))),
+          const SizedBox(height: 16),
+
+          // Document type dropdown
+          Text('Document type', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.7))),
+          const SizedBox(height: 6),
+          _BulkUploadForm(cs: cs),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooter(ColorScheme cs) {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('KYC verification status page coming soon.')),
+            );
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('View KYC verification status', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.primary)),
+              const SizedBox(width: 4),
+              Icon(Icons.arrow_forward, size: 14, color: cs.primary),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text('\u00a9 2026 Xerin Market Seller Center',
+          style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.3))),
+      ],
+    );
+  }
+
+  void _uploadDocument(String docType) async {
+    try {
+      final picker = ImagePicker();
+      final file = await picker.pickImage(source: ImageSource.gallery);
+      if (file == null) return;
+      if (!mounted) return;
+      await context.read<SellerCubit>().uploadKycDocument(
+        documentType: docType,
+        filePath: file.path,
+        fileName: file.name,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: $e'), backgroundColor: const Color(0xFFEF4444)),
+        );
+      }
+    }
+  }
+
+  void _viewDocument(SellerKycDocumentModel doc) {
+    final url = doc.fileUrl ?? doc.documentUrl;
+    if (url == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Document URL not available'), backgroundColor: Color(0xFFEF4444)),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Opening document: $url'), backgroundColor: const Color(0xFF3B82F6)),
+    );
+  }
+
+  void _confirmDelete(SellerKycDocumentModel doc) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Payout Account?'),
-        content: const Text('This action cannot be undone.'),
+        title: const Text('Remove Document?'),
+        content: Text('Remove this ${_formatDocType(doc.documentType)}? You can re-upload it before Admin review.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.read<SellerCubit>().deletePayoutAccount(id);
-            },
-            child: const Text('Delete'),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEF4444), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            onPressed: () { Navigator.pop(ctx); context.read<SellerCubit>().deleteKycDocument(doc.id); },
+            child: const Text('Remove'),
           ),
         ],
       ),
@@ -374,21 +542,31 @@ class _SellerKycPageState extends State<SellerKycPage> {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'approved': return Colors.green;
-      case 'pending': return Colors.amber;
-      case 'under_review': return Colors.blue;
-      case 'rejected': return Colors.red;
-      default: return Colors.grey;
+      case 'approved': return const Color(0xFF22C55E);
+      case 'pending': return const Color(0xFFF59E0B);
+      case 'under_review': return const Color(0xFF3B82F6);
+      case 'rejected': return const Color(0xFFEF4444);
+      default: return const Color(0xFF9CA3AF);
     }
   }
 
   Color _getDocStatusColor(String status) {
     switch (status) {
-      case 'approved': return Colors.green;
-      case 'pending': return Colors.amber;
-      case 'under_review': return Colors.blue;
-      case 'rejected': return Colors.red;
-      default: return Colors.grey;
+      case 'approved': return const Color(0xFF22C55E);
+      case 'pending': return const Color(0xFFF59E0B);
+      case 'under_review': return const Color(0xFF3B82F6);
+      case 'rejected': return const Color(0xFFEF4444);
+      default: return const Color(0xFF9CA3AF);
+    }
+  }
+
+  IconData _statusIcon(String status) {
+    switch (status) {
+      case 'approved': return Uicons.circleCheck;
+      case 'pending': return Uicons.clock;
+      case 'under_review': return Uicons.eye;
+      case 'rejected': return Uicons.circleExclamation;
+      default: return Uicons.circleInfo;
     }
   }
 
@@ -396,8 +574,157 @@ class _SellerKycPageState extends State<SellerKycPage> {
     switch (type) {
       case 'tin': return 'TIN Certificate';
       case 'business_registration': return 'Business Registration';
+      case 'business_licence': return 'Business Licence';
       case 'business_profile': return 'Business Profile';
       default: return type;
     }
+  }
+}
+
+// ─── Bulk Upload Form ───
+class _BulkUploadForm extends StatefulWidget {
+  final ColorScheme cs;
+
+  const _BulkUploadForm({required this.cs});
+
+  @override
+  State<_BulkUploadForm> createState() => _BulkUploadFormState();
+}
+
+class _BulkUploadFormState extends State<_BulkUploadForm> {
+  String _docType = 'tin';
+  String? _fileName;
+  String? _filePath;
+  bool _isUploading = false;
+
+  static const _docOptions = [
+    ('tin', 'TIN'),
+    ('business_registration', 'Business Registration'),
+    ('business_licence', 'Business License'),
+    ('business_profile', 'Business Profile'),
+  ];
+
+  Future<void> _pickFile() async {
+    try {
+      final picker = ImagePicker();
+      final file = await picker.pickImage(source: ImageSource.gallery);
+      if (file == null) return;
+      setState(() {
+        _fileName = file.name;
+        _filePath = file.path;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('File selection failed: $e'), backgroundColor: const Color(0xFFEF4444)),
+        );
+      }
+    }
+  }
+
+  Future<void> _upload() async {
+    if (_filePath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please choose a file first'), backgroundColor: Color(0xFFEF4444)),
+      );
+      return;
+    }
+    setState(() => _isUploading = true);
+    try {
+      await context.read<SellerCubit>().uploadKycDocument(
+        documentType: _docType,
+        filePath: _filePath!,
+        fileName: _fileName,
+      );
+      if (mounted) {
+        setState(() {
+          _fileName = null;
+          _filePath = null;
+          _isUploading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isUploading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: $e'), backgroundColor: const Color(0xFFEF4444)),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = widget.cs;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Document type dropdown
+        DropdownButtonFormField<String>(
+          initialValue: _docType,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: cs.onSurface.withValues(alpha: 0.03),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.08))),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.08))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: cs.primary, width: 1.5)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          ),
+          items: _docOptions.map((opt) => DropdownMenuItem(value: opt.$1, child: Text(opt.$2, style: const TextStyle(fontSize: 14)))).toList(),
+          onChanged: (v) => setState(() => _docType = v!),
+        ),
+        const SizedBox(height: 12),
+
+        // File picker
+        Text('File (PDF, JPG, PNG)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.7))),
+        const SizedBox(height: 6),
+        GestureDetector(
+          onTap: _isUploading ? null : _pickFile,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: cs.onSurface.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: cs.onSurface.withValues(alpha: 0.08)),
+            ),
+            child: Row(
+              children: [
+                Icon(Uicons.upload, size: 16, color: cs.onSurface.withValues(alpha: 0.4)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _fileName ?? 'No file chosen',
+                    style: TextStyle(fontSize: 13, color: _fileName != null ? cs.onSurface : cs.onSurface.withValues(alpha: 0.3)),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (_fileName != null)
+                  GestureDetector(
+                    onTap: () => setState(() { _fileName = null; _filePath = null; }),
+                    child: Icon(Uicons.crossSmall, size: 16, color: cs.onSurface.withValues(alpha: 0.4)),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Upload button
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: _isUploading ? null : _upload,
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: _isUploading
+                ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: cs.onPrimary))
+                : const Text('Upload Document', style: TextStyle(fontWeight: FontWeight.w600)),
+          ),
+        ),
+      ],
+    );
   }
 }
