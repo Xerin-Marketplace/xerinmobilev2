@@ -28,6 +28,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _selectedIndex = 0;
   late final AdminCubit _cubit;
   bool _isReloading = false;
+  String _period = '30d';
 
   @override
   void initState() {
@@ -49,7 +50,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   void _refresh() {
     switch (_selectedIndex) {
       case 0:
-        _cubit.loadDashboard(refresh: true);
+        _cubit.loadDashboard(refresh: true, period: _period);
         break;
       case 1:
         _cubit.loadOrders();
@@ -351,13 +352,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         if (state is AdminDashboardLoaded) {
           return AdminHomeTab(
             state: state,
-            onRefresh: () => _cubit.loadDashboard(refresh: true),
+            onRefresh: () => _cubit.loadDashboard(refresh: true, period: _period),
+            onPeriodChange: (p) {
+              setState(() => _period = p);
+              _cubit.loadDashboard(period: p);
+            },
           );
         }
         if (!_isReloading) {
           _isReloading = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _cubit.loadDashboard();
+            _cubit.loadDashboard(period: _period);
             _isReloading = false;
           });
         }

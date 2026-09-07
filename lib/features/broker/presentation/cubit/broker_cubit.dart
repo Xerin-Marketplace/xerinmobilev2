@@ -76,11 +76,15 @@ class BrokerWalletLoaded extends BrokerState {
   final BrokerWalletModel wallet;
   final BrokerCommissionSummaryModel? commissionSummary;
   final List<BrokerPayoutAccountModel> payoutAccounts;
+  final List<Map<String, dynamic>> payouts;
+  final List<Map<String, dynamic>> walletTransactions;
 
   const BrokerWalletLoaded({
     required this.wallet,
     this.commissionSummary,
     required this.payoutAccounts,
+    this.payouts = const [],
+    this.walletTransactions = const [],
   });
 }
 
@@ -214,6 +218,26 @@ class BrokerCubit extends Cubit<BrokerState> {
     }
   }
 
+  Future<void> uploadKycDocument({
+    required String documentType,
+    required String filePath,
+    String? fileName,
+  }) async {
+    try {
+      await _dataSource.uploadKycDocument(
+        documentType: documentType,
+        filePath: filePath,
+        fileName: fileName,
+      );
+      _logger.i('KYC document uploaded: $documentType');
+      emit(const BrokerActionSuccess(message: 'Document uploaded'));
+      await loadKyc();
+    } on ServerException catch (e) {
+      _logger.e('Upload KYC document error: ${e.message}');
+      emit(BrokerError(message: e.message));
+    }
+  }
+
   Future<void> loadOpportunities() async {
     emit(const BrokerLoading());
     try {
@@ -264,14 +288,24 @@ class BrokerCubit extends Cubit<BrokerState> {
         _dataSource.getPayoutAccounts(),
       ]);
       BrokerCommissionSummaryModel? commissionSummary;
+      List<Map<String, dynamic>> payouts = [];
+      List<Map<String, dynamic>> walletTransactions = [];
       try {
         commissionSummary = await _dataSource.getCommissionSummary();
+      } catch (_) {}
+      try {
+        payouts = await _dataSource.getPayouts();
+      } catch (_) {}
+      try {
+        walletTransactions = await _dataSource.getWalletTransactions();
       } catch (_) {}
 
       emit(BrokerWalletLoaded(
         wallet: results[0] as BrokerWalletModel,
         commissionSummary: commissionSummary,
         payoutAccounts: results[1] as List<BrokerPayoutAccountModel>,
+        payouts: payouts,
+        walletTransactions: walletTransactions,
       ));
     } on ServerException catch (e) {
       _logger.e('Broker wallet error: ${e.message}');
@@ -323,6 +357,18 @@ class BrokerCubit extends Cubit<BrokerState> {
     }
   }
 
+  Future<void> cancelPayout(String id) async {
+    try {
+      await _dataSource.cancelPayout(id);
+      _logger.i('Payout cancelled: $id');
+      emit(const BrokerActionSuccess(message: 'Payout cancelled'));
+      await loadWallet();
+    } on ServerException catch (e) {
+      _logger.e('Cancel payout error: ${e.message}');
+      emit(BrokerError(message: e.message));
+    }
+  }
+
   Future<void> loadProducts() async {
     emit(const BrokerLoading());
     try {
@@ -342,6 +388,18 @@ class BrokerCubit extends Cubit<BrokerState> {
       await loadProducts();
     } on ServerException catch (e) {
       _logger.e('Publish product error: ${e.message}');
+      emit(BrokerError(message: e.message));
+    }
+  }
+
+  Future<void> createProduct(Map<String, dynamic> data) async {
+    try {
+      await _dataSource.createProduct(data);
+      _logger.i('Product created');
+      emit(const BrokerActionSuccess(message: 'Product created & published'));
+      await loadProducts();
+    } on ServerException catch (e) {
+      _logger.e('Create product error: ${e.message}');
       emit(BrokerError(message: e.message));
     }
   }

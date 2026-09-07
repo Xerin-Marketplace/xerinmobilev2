@@ -79,6 +79,26 @@ class AdminAccess {
     'Payments': [
       'admin_dashboard_finance:read',
     ],
+    'Brokers': [
+      'admin_dashboard:read',
+    ],
+    'Promotions': [
+      'admin_dashboard:read',
+    ],
+    'Communications': [
+      'admin_dashboard:read',
+    ],
+    'Logistics': [
+      'admin_dashboard:read',
+    ],
+    'SystemManagement': [
+      'admin_activity_logs:read',
+      'audit_logs:read',
+      'admin_dashboard_security:read',
+    ],
+    'Account': [
+      'admin_dashboard:read',
+    ],
   };
 
   // ─── Item-level / action-level permissions ───────────────────

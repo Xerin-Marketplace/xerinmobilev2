@@ -18,7 +18,6 @@ import 'tabs/broker_more_tab.dart';
 // Color palette for Mawinga Hub
 const _mawingaPrimary = Color(0xFF6D28D9);
 const _mawingaLight = Color(0xFF8B5CF6);
-const _mawingaAccent = Color(0xFFA78BFA);
 
 class BrokerDashboardPage extends StatefulWidget {
   const BrokerDashboardPage({super.key});
@@ -289,80 +288,144 @@ class _BrokerDashboardPageState extends State<BrokerDashboardPage> {
     final initials = name.isNotEmpty
         ? name.split(' ').take(2).map((e) => e[0].toUpperCase()).join()
         : '?';
+    final isSeller = user?.isSeller ?? false;
+    final sellerStatus = user?.sellerStatus ?? 'none';
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: cs.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const SizedBox(height: 12),
               Container(
-                width: 40, height: 4,
+                width: 36, height: 4,
                 decoration: BoxDecoration(
-                  color: cs.onSurface.withValues(alpha: 0.15),
+                  color: cs.onSurface.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(height: 20),
               Container(
-                padding: const EdgeInsets.all(3),
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [_mawingaPrimary, _mawingaLight],
-                  ),
+                  gradient: const LinearGradient(colors: [_mawingaPrimary, _mawingaLight]),
                   shape: BoxShape.circle,
+                  boxShadow: [BoxShadow(color: _mawingaPrimary.withValues(alpha: 0.25), blurRadius: 16, offset: const Offset(0, 6))],
                 ),
                 child: CircleAvatar(
-                  radius: 32,
+                  radius: 36,
                   backgroundColor: cs.surface,
                   child: Text(initials,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: _mawingaPrimary),
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: _mawingaPrimary),
                   ),
                 ),
               ),
               const SizedBox(height: 14),
               Text(name,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: cs.onSurface),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: cs.onSurface),
               ),
               if (email.isNotEmpty) ...[
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(email,
                   style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4)),
                 ),
               ],
-              const SizedBox(height: 20),
-              Divider(color: cs.onSurface.withValues(alpha: 0.06), height: 1),
               const SizedBox(height: 16),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  width: 38, height: 38,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE53935).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Uicons.rightFromBracket, color: Color(0xFFE53935), size: 18),
-                ),
-                title: const Text('Logout',
-                  style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFE53935)),
-                ),
-                trailing: const Icon(Uicons.angleRight, size: 14, color: Color(0xFFE53935)),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _showLogoutConfirmation(context);
-                },
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(children: [
+                  _accountChip(cs, 'Mawinga', _mawingaPrimary, Uicons.user),
+                  const SizedBox(width: 8),
+                  if (isSeller)
+                    _accountChip(cs, sellerStatus == 'approved' ? 'Seller' : 'Seller (Pending)',
+                        sellerStatus == 'approved' ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
+                        Uicons.shop),
+                ]),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Divider(color: cs.onSurface.withValues(alpha: 0.06), height: 1),
               ),
               const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _accountTile(cs, 'Account settings', Uicons.gear, _mawingaPrimary, () {
+                  Navigator.pop(ctx);
+                }),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _accountTile(cs, 'Help & support', Uicons.headset, const Color(0xFF3B82F6), () {
+                  Navigator.pop(ctx);
+                }),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _accountTile(cs, 'About Mawinga', Uicons.circleInfo, const Color(0xFF64748B), () {
+                  Navigator.pop(ctx);
+                }),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                child: _accountTile(cs, 'Logout', Uicons.rightFromBracket, const Color(0xFFEF4444), () {
+                  Navigator.pop(ctx);
+                  _showLogoutConfirmation(context);
+                }, isDestructive: true),
+              ),
+              const SizedBox(height: 12),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _accountChip(ColorScheme cs, String label, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 5),
+        Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+      ]),
+    );
+  }
+
+  Widget _accountTile(ColorScheme cs, String title, IconData icon, Color color, VoidCallback onTap, {bool isDestructive = false}) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      onTap: onTap,
+      leading: Container(
+        width: 38, height: 38,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: color, size: 18),
+      ),
+      title: Text(title,
+        style: TextStyle(
+          fontSize: 14, fontWeight: FontWeight.w600,
+          color: isDestructive ? const Color(0xFFEF4444) : cs.onSurface,
+        ),
+      ),
+      trailing: Icon(Uicons.angleRight, size: 14,
+          color: isDestructive ? const Color(0xFFEF4444) : cs.onSurface.withValues(alpha: 0.3)),
     );
   }
 

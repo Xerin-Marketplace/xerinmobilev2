@@ -1165,4 +1165,188 @@ class AdminRemoteDataSource {
       throw ServerException(_client.getErrorMessage(e));
     }
   }
+
+  // ─── Brokers (Admin) ───
+  Future<List<Map<String, dynamic>>> getAdminBrokers({
+    int page = 1,
+    int pageSize = 20,
+    String? status,
+    String? search,
+  }) async {
+    try {
+      final params = <String, dynamic>{
+        'page': page,
+        'page_size': pageSize,
+      };
+      if (status != null) params['status'] = status;
+      if (search != null && search.isNotEmpty) params['search'] = search;
+      final response = await _client.get(
+        ApiConstants.brokerAdminList,
+        queryParameters: params,
+      );
+      final data = response.data;
+      if (data is List) return data.cast<Map<String, dynamic>>();
+      if (data is Map && data['results'] != null) {
+        return (data['results'] as List).cast<Map<String, dynamic>>();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> approveBroker(String brokerId) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.brokerAdminApprove(brokerId),
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> rejectBroker(String brokerId) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.brokerAdminReject(brokerId),
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // ─── Promotions / Campaigns ───
+  Future<List<Map<String, dynamic>>> getAdminCampaigns({
+    int page = 1,
+    int pageSize = 20,
+    String? status,
+  }) async {
+    try {
+      final params = <String, dynamic>{
+        'page': page,
+        'page_size': pageSize,
+      };
+      if (status != null) params['status'] = status;
+      final response = await _client.get(
+        ApiConstants.adminCampaigns,
+        queryParameters: params,
+      );
+      final data = response.data;
+      if (data is List) return data.cast<Map<String, dynamic>>();
+      if (data is Map && data['results'] != null) {
+        return (data['results'] as List).cast<Map<String, dynamic>>();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> createCampaign(Map<String, dynamic> data) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.adminCampaigns,
+        data: data,
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // ─── Communications / Notification Templates ───
+  Future<List<Map<String, dynamic>>> getNotificationTemplates() async {
+    try {
+      final response = await _client.get(
+        ApiConstants.adminNotificationTemplates,
+      );
+      final data = response.data;
+      if (data is List) return data.cast<Map<String, dynamic>>();
+      if (data is Map && data['results'] != null) {
+        return (data['results'] as List).cast<Map<String, dynamic>>();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<Map<String, dynamic>> createNotificationTemplate(
+      Map<String, dynamic> data) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.adminNotificationTemplates,
+        data: data,
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // ─── Logistics (Admin view) ───
+  Future<List<Map<String, dynamic>>> getLogisticsCompanies({
+    int page = 1,
+    int pageSize = 20,
+    String? status,
+  }) async {
+    try {
+      final params = <String, dynamic>{
+        'page': page,
+        'page_size': pageSize,
+      };
+      if (status != null) params['status'] = status;
+      final response = await _client.get(
+        ApiConstants.logisticsCompanies,
+        queryParameters: params,
+      );
+      final data = response.data;
+      if (data is List) return data.cast<Map<String, dynamic>>();
+      if (data is Map && data['results'] != null) {
+        return (data['results'] as List).cast<Map<String, dynamic>>();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  // ─── System Management (Audit Logs, Security Events) ───
+  Future<List<Map<String, dynamic>>> getAuditLogs({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final response = await _client.get(
+        ApiConstants.auditLogs,
+        queryParameters: {'page': page, 'page_size': pageSize},
+      );
+      final data = response.data;
+      if (data is List) return data.cast<Map<String, dynamic>>();
+      if (data is Map && data['results'] != null) {
+        return (data['results'] as List).cast<Map<String, dynamic>>();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getSecurityEvents() async {
+    try {
+      final response = await _client.get(
+        ApiConstants.auditLogSecurityEvents,
+      );
+      final data = response.data;
+      if (data is List) return data.cast<Map<String, dynamic>>();
+      if (data is Map && data['results'] != null) {
+        return (data['results'] as List).cast<Map<String, dynamic>>();
+      }
+      return [];
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
 }

@@ -17,18 +17,27 @@ class AdminMoreTab extends StatelessWidget {
     final user = GetIt.instance<TokenStorage>().currentUser;
 
     final sections = <_AdminSection>[
+      _AdminSection('Catalog', Uicons.category, const Color(0xFF00BCD4), AppConstants.adminCatalogRoute, 'Catalog'),
+      _AdminSection('Orders', Uicons.truckBox, const Color(0xFF03A9F4), AppConstants.adminOrdersRoute, 'Orders'),
+      _AdminSection('Customers', Uicons.users, const Color(0xFF3B82F6), AppConstants.adminUsersRoute, 'Users'),
+      _AdminSection('Sellers', Uicons.storeAlt, const Color(0xFFF59E0B), AppConstants.adminSellersRoute, 'Sellers'),
+      _AdminSection('Brokers', Uicons.userShield, const Color(0xFF795548), AppConstants.adminBrokersRoute, 'Brokers'),
+      _AdminSection('Payments', Uicons.creditCard, const Color(0xFFCDDC39), AppConstants.adminPaymentsRoute, 'Payments'),
+      _AdminSection('Advertising', Uicons.tags, const Color(0xFF8BC34A), AppConstants.adminAdvertisementsRoute, 'Advertisements'),
+      _AdminSection('Promotions', Uicons.gift, const Color(0xFFE91E63), AppConstants.adminPromotionsRoute, 'Promotions'),
+      _AdminSection('Communications', Uicons.bell, const Color(0xFFE91E63), AppConstants.adminCommunicationsRoute, 'Communications'),
+      _AdminSection('User Management', Uicons.userShield, const Color(0xFF795548), AppConstants.adminRolesRoute, 'Roles'),
+      _AdminSection('Reports & Analytics', Uicons.barChart, const Color(0xFF3F51B5), AppConstants.adminAnalyticsRoute, 'Analytics'),
+      _AdminSection('Marketplace Settings', Uicons.settings, const Color(0xFF009688), AppConstants.adminMarketplaceSettingsRoute, 'MarketplaceSettings'),
+      _AdminSection('Logistics', Uicons.truck, const Color(0xFF607D8B), AppConstants.adminLogisticsRoute, 'Logistics'),
+      _AdminSection('Finance', Uicons.accountBalance, const Color(0xFF4CAF50), AppConstants.adminFinanceRoute, 'Finance'),
+      _AdminSection('System Management', Uicons.server, const Color(0xFF607D8B), AppConstants.adminSystemManagementRoute, 'SystemManagement'),
+      _AdminSection('Account', Uicons.user, const Color(0xFF9C27B0), AppConstants.adminAccountRoute, 'Account'),
       _AdminSection('Alerts', Uicons.bell, const Color(0xFFE91E63), AppConstants.adminAlertsRoute, 'Alerts'),
       _AdminSection('Activity Logs', Uicons.clock, const Color(0xFF607D8B), AppConstants.adminActivityLogsRoute, 'ActivityLogs'),
-      _AdminSection('Roles', Uicons.userShield, const Color(0xFF795548), AppConstants.adminRolesRoute, 'Roles'),
-      _AdminSection('Finance', Uicons.accountBalance, const Color(0xFF4CAF50), AppConstants.adminFinanceRoute, 'Finance'),
-      _AdminSection('Analytics', Uicons.barChart, const Color(0xFF3F51B5), AppConstants.adminAnalyticsRoute, 'Analytics'),
-      _AdminSection('Catalog', Uicons.category, const Color(0xFF00BCD4), AppConstants.adminCatalogRoute, 'Catalog'),
-      _AdminSection('Payments', Uicons.creditCard, const Color(0xFFCDDC39), AppConstants.adminPaymentsRoute, 'Payments'),
       _AdminSection('All Orders', Uicons.truckBox, const Color(0xFF03A9F4), AppConstants.adminAllOrdersRoute, 'Orders'),
       _AdminSection('Refunds', Uicons.rotateLeft, const Color(0xFFE53935), AppConstants.adminRefundsRoute, 'Refunds'),
       _AdminSection('Reviews', Uicons.star, const Color(0xFFFFC107), AppConstants.adminReviewsRoute, 'Reviews'),
-      _AdminSection('Advertisements', Uicons.tags, const Color(0xFF8BC34A), AppConstants.adminAdvertisementsRoute, 'Advertisements'),
-      _AdminSection('Marketplace', Uicons.settings, const Color(0xFF009688), AppConstants.adminMarketplaceSettingsRoute, 'MarketplaceSettings'),
     ];
 
     final visibleSections = sections

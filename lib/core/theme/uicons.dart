@@ -195,6 +195,8 @@ class Uicons {
   static const IconData triangleWarning = Icons.warning;
   static const IconData trophy = Icons.emoji_events;
   static const IconData truckBox = Icons.local_shipping;
+  static const IconData truck = Icons.local_shipping;
+  static const IconData server = Icons.dns;
   static const IconData unlock = Icons.lock_open;
   static const IconData upload = Icons.upload;
   static const IconData user = Icons.person;

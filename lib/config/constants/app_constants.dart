@@ -140,6 +140,12 @@ abstract class AppConstants {
   static const String adminPaymentsRoute = '/admin-payments';
   static const String adminAllOrdersRoute = '/admin-all-orders';
   static const String adminOrderDetailRoute = '/admin-order-detail';
+  static const String adminBrokersRoute = '/admin-brokers';
+  static const String adminPromotionsRoute = '/admin-promotions';
+  static const String adminCommunicationsRoute = '/admin-communications';
+  static const String adminLogisticsRoute = '/admin-logistics';
+  static const String adminSystemManagementRoute = '/admin-system-management';
+  static const String adminAccountRoute = '/admin-account';
 
   // Logistics panel routes
   static const String logisticsDashboardRoute = '/logistics-dashboard';

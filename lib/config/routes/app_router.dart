@@ -115,6 +115,12 @@ import '../../features/admin/presentation/pages/admin_catalog_page.dart';
 import '../../features/admin/presentation/pages/admin_payments_page.dart';
 import '../../features/admin/presentation/pages/admin_all_orders_page.dart';
 import '../../features/admin/presentation/pages/admin_order_detail_page.dart';
+import '../../features/admin/presentation/pages/admin_brokers_page.dart';
+import '../../features/admin/presentation/pages/admin_promotions_page.dart';
+import '../../features/admin/presentation/pages/admin_communications_page.dart';
+import '../../features/admin/presentation/pages/admin_logistics_page.dart';
+import '../../features/admin/presentation/pages/admin_system_management_page.dart';
+import '../../features/admin/presentation/pages/admin_account_page.dart';
 import '../../features/logistics/presentation/pages/logistics_dashboard_page.dart';
 import '../../features/logistics/presentation/pages/logistics_shipments_page.dart';
 import '../../features/logistics/presentation/pages/logistics_wallet_page.dart';
@@ -735,6 +741,30 @@ class AppRouter {
           final orderId = state.uri.queryParameters['id'] ?? '';
           return AdminOrderDetailPage(orderId: orderId);
         },
+      ),
+      GoRoute(
+        path: AppConstants.adminBrokersRoute,
+        builder: (context, state) => const AdminBrokersPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminPromotionsRoute,
+        builder: (context, state) => const AdminPromotionsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminCommunicationsRoute,
+        builder: (context, state) => const AdminCommunicationsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminLogisticsRoute,
+        builder: (context, state) => const AdminLogisticsPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminSystemManagementRoute,
+        builder: (context, state) => const AdminSystemManagementPage(),
+      ),
+      GoRoute(
+        path: AppConstants.adminAccountRoute,
+        builder: (context, state) => const AdminAccountPage(),
       ),
       // Logistics panel routes
       GoRoute(

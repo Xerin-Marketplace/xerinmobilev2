@@ -30,6 +30,11 @@ class AdminDashboardLoaded extends AdminState {
   final AdminDashboardRefundsModel? refunds;
   final List<AdminSystemAlertModel> alerts;
   final bool refreshing;
+  final String period;
+  final AdminAnalyticsOverviewModel? analyticsOverview;
+  final List<AdminAnalyticsSalesPointModel> salesTrend;
+  final List<AdminAnalyticsSellerRankingModel> topSellers;
+  final List<Map<String, dynamic>> recentOrders;
 
   const AdminDashboardLoaded({
     required this.summary,
@@ -41,6 +46,11 @@ class AdminDashboardLoaded extends AdminState {
     this.refunds,
     this.alerts = const [],
     this.refreshing = false,
+    this.period = '30d',
+    this.analyticsOverview,
+    this.salesTrend = const [],
+    this.topSellers = const [],
+    this.recentOrders = const [],
   });
 
   AdminDashboardLoaded copyWith({
@@ -53,6 +63,11 @@ class AdminDashboardLoaded extends AdminState {
     AdminDashboardRefundsModel? refunds,
     List<AdminSystemAlertModel>? alerts,
     bool? refreshing,
+    String? period,
+    AdminAnalyticsOverviewModel? analyticsOverview,
+    List<AdminAnalyticsSalesPointModel>? salesTrend,
+    List<AdminAnalyticsSellerRankingModel>? topSellers,
+    List<Map<String, dynamic>>? recentOrders,
   }) {
     return AdminDashboardLoaded(
       summary: summary ?? this.summary,
@@ -64,6 +79,11 @@ class AdminDashboardLoaded extends AdminState {
       refunds: refunds ?? this.refunds,
       alerts: alerts ?? this.alerts,
       refreshing: refreshing ?? this.refreshing,
+      period: period ?? this.period,
+      analyticsOverview: analyticsOverview ?? this.analyticsOverview,
+      salesTrend: salesTrend ?? this.salesTrend,
+      topSellers: topSellers ?? this.topSellers,
+      recentOrders: recentOrders ?? this.recentOrders,
     );
   }
 }
@@ -334,11 +354,11 @@ class AdminCubit extends Cubit<AdminState> {
   }
 
   // ─── Dashboard ───
-  Future<void> loadDashboard({bool refresh = false}) async {
+  Future<void> loadDashboard({bool refresh = false, String period = '30d'}) async {
     if (!refresh) emit(const AdminLoading());
     try {
-      final summary = await _dataSource.getDashboardSummary();
-      final orders = await _safeCall(() => _dataSource.getDashboardOrders());
+      final summary = await _dataSource.getDashboardSummary(period: period);
+      final orders = await _safeCall(() => _dataSource.getDashboardOrders(period: period));
       final sellers = await _safeCall(() => _dataSource.getDashboardSellers());
       final products =
           await _safeCall(() => _dataSource.getDashboardProducts());
@@ -348,6 +368,11 @@ class AdminCubit extends Cubit<AdminState> {
           await _safeCall(() => _dataSource.getDashboardPayments());
       final refunds = await _safeCall(() => _dataSource.getDashboardRefunds());
       final alerts = await _safeCall(() => _dataSource.getAlerts(limit: 10)) ?? [];
+
+      final analyticsOverview = await _safeCall(() => _dataSource.getAnalyticsOverview());
+      final salesTrend = await _safeCall(() => _dataSource.getAnalyticsSales()) ?? [];
+      final topSellers = await _safeCall(() => _dataSource.getAnalyticsSellers()) ?? [];
+      final recentOrders = await _safeCall(() => _dataSource.getAdminAllOrders(pageSize: 5)) ?? [];
 
       emit(AdminDashboardLoaded(
         summary: summary,
@@ -359,6 +384,11 @@ class AdminCubit extends Cubit<AdminState> {
         refunds: refunds,
         alerts: alerts,
         refreshing: refresh,
+        period: period,
+        analyticsOverview: analyticsOverview,
+        salesTrend: salesTrend,
+        topSellers: topSellers,
+        recentOrders: recentOrders,
       ));
     } catch (e) {
       _logger.e('AdminCubit.loadDashboard error: $e');

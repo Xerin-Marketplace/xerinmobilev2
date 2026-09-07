@@ -69,6 +69,28 @@ class BrokerRemoteDataSource {
     }
   }
 
+  Future<BrokerKycDocumentModel> uploadKycDocument({
+    required String documentType,
+    required String filePath,
+    String? fileName,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        'document_type': documentType,
+        'file': await MultipartFile.fromFile(filePath, filename: fileName),
+      });
+      final response = await _client.post(
+        ApiConstants.brokerKycDocuments,
+        data: formData,
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
+      );
+      return BrokerKycDocumentModel.fromJson(
+          response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
   Future<BrokerAnalyticsOverviewModel> getAnalyticsOverview(
       {int days = 30}) async {
     try {
@@ -208,6 +230,34 @@ class BrokerRemoteDataSource {
       final response =
           await _client.post(ApiConstants.brokerPayouts, data: data);
       return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getPayouts() async {
+    try {
+      final response = await _client.get(ApiConstants.brokerPayouts);
+      final list = response.data as List<dynamic>? ?? [];
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getWalletTransactions() async {
+    try {
+      final response = await _client.get(ApiConstants.brokerWalletTransactions);
+      final list = response.data as List<dynamic>? ?? [];
+      return list.cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
+  Future<void> cancelPayout(String id) async {
+    try {
+      await _client.post(ApiConstants.brokerPayoutCancel(id));
     } on DioException catch (e) {
       throw ServerException(_client.getErrorMessage(e));
     }

@@ -44,30 +44,31 @@ class ModernBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final active = activeColor ?? colorScheme.primary;
-    final inactive = inactiveColor ?? colorScheme.onSurface.withValues(alpha: 0.4);
+    final inactive = inactiveColor ?? colorScheme.onSurface.withValues(alpha: 0.35);
 
     return SafeArea(
+      top: false,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
           color: backgroundColor ?? colorScheme.surface,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: colorScheme.primary.withValues(alpha: 0.12),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
+              color: active.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
             ),
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: List.generate(items.length, (index) {
             final item = items[index];
             final isActive = index == selectedIndex;
@@ -75,28 +76,29 @@ class ModernBottomNav extends StatelessWidget {
               onTap: () => _handleTap(index),
               behavior: HitTestBehavior.opaque,
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
+                duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOutCubic,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isActive ? 16 : 12,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
-                  color: isActive
-                      ? active.withValues(alpha: 0.1)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
+                  color: isActive ? active : Colors.transparent,
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     AnimatedScale(
-                      scale: isActive ? 1.1 : 1.0,
+                      scale: isActive ? 1.05 : 1.0,
                       duration: const Duration(milliseconds: 200),
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
                           Icon(
                             isActive ? (item.activeIcon ?? item.icon) : item.icon,
-                            color: isActive ? active : inactive,
-                            size: 22,
+                            color: isActive ? Colors.white : inactive,
+                            size: 20,
                           ),
                           if (item.badgeCount > 0)
                             Positioned(
@@ -108,17 +110,17 @@ class ModernBottomNav extends StatelessWidget {
                       ),
                     ),
                     AnimatedSize(
-                      duration: const Duration(milliseconds: 250),
+                      duration: const Duration(milliseconds: 300),
                       curve: Curves.easeOutCubic,
                       child: isActive
                           ? Padding(
-                              padding: const EdgeInsets.only(left: 8),
+                              padding: const EdgeInsets.only(left: 7),
                               child: Text(
                                 item.label,
-                                style: TextStyle(
-                                  fontSize: 12,
+                                style: const TextStyle(
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w700,
-                                  color: active,
+                                  color: Colors.white,
                                 ),
                               ),
                             )
