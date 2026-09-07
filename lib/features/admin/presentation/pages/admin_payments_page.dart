@@ -128,54 +128,111 @@ class _AdminPaymentsPageState extends State<AdminPaymentsPage> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: () =>
-          context.read<AdminCubit>().loadPayments(status: _statusFilter),
-      child: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: state.payments.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 8),
-        itemBuilder: (context, index) {
-          final payment = state.payments[index];
-          final status = payment['status']?.toString() ?? 'pending';
-          final amount = payment['amount']?.toString() ?? '0';
-          final currency = payment['currency']?.toString() ?? 'TZS';
-          final method = payment['method']?.toString() ?? '';
-          final orderId = payment['order_id']?.toString() ?? '';
+    return Column(children: [
+      _summaryRow(cs, state),
+      Expanded(child: RefreshIndicator(
+        onRefresh: () =>
+            context.read<AdminCubit>().loadPayments(status: _statusFilter),
+        child: ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: state.payments.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, index) {
+            final payment = state.payments[index];
+            final status = payment['status']?.toString() ?? 'pending';
+            final amount = payment['amount']?.toString() ?? '0';
+            final currency = payment['currency']?.toString() ?? 'TZS';
+            final method = payment['method']?.toString() ?? '';
+            final orderId = payment['order_id']?.toString() ?? '';
+            final createdAt = payment['created_at']?.toString() ?? payment['date']?.toString() ?? '';
+            final txnId = payment['transaction_id']?.toString() ?? payment['reference']?.toString() ?? '';
 
-          return Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: cs.onSurface.withValues(alpha: 0.08)),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              title: Text('Order #$orderId',
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: cs.onSurface)),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
+            return Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: cs.onSurface.withValues(alpha: 0.08)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    Expanded(child: Text('Order #$orderId',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: cs.onSurface))),
+                    _statusBadge(status),
+                  ]),
+                  const SizedBox(height: 6),
                   Text('$amount $currency',
                       style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                           color: cs.primary)),
-                  if (method.isNotEmpty)
+                  if (method.isNotEmpty) ...[
+                    const SizedBox(height: 4),
                     Text(method,
                         style: TextStyle(
                             fontSize: 12,
                             color: cs.onSurface.withValues(alpha: 0.5))),
-                ],
+                  ],
+                  if (txnId.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text('Txn: $txnId',
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: cs.onSurface.withValues(alpha: 0.3))),
+                  ],
+                  if (createdAt.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(createdAt.substring(0, createdAt.length > 10 ? 10 : createdAt.length),
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: cs.onSurface.withValues(alpha: 0.3))),
+                  ],
+                ]),
               ),
-              trailing: _statusBadge(status),
-            ),
-          );
-        },
+            );
+          },
+        ),
+      )),
+    ]);
+  }
+
+  Widget _summaryRow(ColorScheme cs, AdminPaymentsLoaded state) {
+    final total = state.payments.length;
+    final completed = state.payments.where((p) => (p['status']?.toString() ?? '') == 'completed').length;
+    final pending = state.payments.where((p) => (p['status']?.toString() ?? '') == 'pending').length;
+    final failed = state.payments.where((p) => (p['status']?.toString() ?? '') == 'failed').length;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Row(children: [
+        _statBox(cs, 'Total', total, cs.primary),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Completed', completed, Colors.green),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Pending', pending, Colors.orange),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Failed', failed, Colors.red),
+      ]),
+    );
+  }
+
+  Widget _statBox(ColorScheme cs, String label, int count, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(children: [
+          Text('$count', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5))),
+        ]),
       ),
     );
   }

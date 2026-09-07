@@ -43,6 +43,11 @@ class _AdminCommunicationsPageState extends State<AdminCommunicationsPage> {
     }
   }
 
+  int _countChannel(String channel) =>
+      _templates.where((t) => (t['channel']?.toString() ?? t['type']?.toString() ?? '') == channel).length;
+  int _countActive() =>
+      _templates.where((t) => t['is_active'] == true || t['active'] == true).length;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -61,7 +66,10 @@ class _AdminCommunicationsPageState extends State<AdminCommunicationsPage> {
           ),
         ],
       ),
-      body: _body(cs),
+      body: Column(children: [
+        if (!_loading && _error == null) _summaryRow(cs),
+        Expanded(child: _body(cs)),
+      ]),
     );
   }
 
@@ -75,7 +83,11 @@ class _AdminCommunicationsPageState extends State<AdminCommunicationsPage> {
       ]));
     }
     if (_templates.isEmpty) {
-      return Center(child: Text('No notification templates', style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3))));
+      return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Icon(Uicons.bell, size: 48, color: cs.onSurface.withValues(alpha: 0.2)),
+        const SizedBox(height: 12),
+        Text('No notification templates', style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3))),
+      ]));
     }
     return RefreshIndicator(
       onRefresh: _load,
@@ -87,12 +99,55 @@ class _AdminCommunicationsPageState extends State<AdminCommunicationsPage> {
     );
   }
 
+  Widget _summaryRow(ColorScheme cs) {
+    final total = _templates.length;
+    final active = _countActive();
+    final inactive = total - active;
+    final sms = _countChannel('sms');
+    final email = _countChannel('email');
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Row(children: [
+        _statBox(cs, 'Total', total, cs.primary),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Active', active, Colors.green),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Inactive', inactive, Colors.grey),
+        const SizedBox(width: 8),
+        _statBox(cs, 'SMS', sms, Colors.blue),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Email', email, Colors.orange),
+      ]),
+    );
+  }
+
+  Widget _statBox(ColorScheme cs, String label, int count, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(children: [
+          Text('$count', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5))),
+        ]),
+      ),
+    );
+  }
+
   Widget _templateTile(ColorScheme cs, Map<String, dynamic> t) {
     final name = t['name']?.toString() ?? 'Untitled';
     final channel = t['channel']?.toString() ?? t['type']?.toString() ?? '';
     final subject = t['subject']?.toString() ?? '';
     final body = t['body']?.toString() ?? t['content']?.toString() ?? '';
     final active = t['is_active'] == true || t['active'] == true;
+    final trigger = t['trigger']?.toString() ?? t['event']?.toString() ?? '';
+    final lastSent = t['last_sent_at']?.toString() ?? t['last_used']?.toString() ?? '';
+    final sentCount = t['sent_count']?.toString() ?? t['total_sent']?.toString() ?? '';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -126,6 +181,27 @@ class _AdminCommunicationsPageState extends State<AdminCommunicationsPage> {
             const SizedBox(height: 4),
             Text(body, maxLines: 3, overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
+          ],
+          if (trigger.isNotEmpty || sentCount.isNotEmpty || lastSent.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(children: [
+              if (trigger.isNotEmpty) ...[
+                Icon(Icons.flash_on, size: 12, color: cs.onSurface.withValues(alpha: 0.3)),
+                const SizedBox(width: 4),
+                Text(trigger, style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5))),
+                const SizedBox(width: 12),
+              ],
+              if (sentCount.isNotEmpty) ...[
+                Icon(Icons.send, size: 12, color: cs.onSurface.withValues(alpha: 0.3)),
+                const SizedBox(width: 4),
+                Text('$sentCount sent', style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5))),
+              ],
+            ]),
+            if (lastSent.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text('Last sent: ${lastSent.substring(0, lastSent.length > 10 ? 10 : lastSent.length)}',
+                  style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.3))),
+            ],
           ],
         ]),
       ),

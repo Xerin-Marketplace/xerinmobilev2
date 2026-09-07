@@ -66,14 +66,17 @@ class _AdminCatalogPageState extends State<AdminCatalogPage>
               return const Center(child: CircularProgressIndicator());
             }
             if (state is AdminCatalogLoaded) {
-              return TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildList(cs, state.brands, 'brand'),
-                  _buildList(cs, state.productCategories, 'product category'),
-                  _buildList(cs, state.businessCategories, 'business category'),
-                ],
-              );
+              return Column(children: [
+                _summaryRow(cs, state),
+                Expanded(child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildList(cs, state.brands, 'brand'),
+                    _buildList(cs, state.productCategories, 'product category'),
+                    _buildList(cs, state.businessCategories, 'business category'),
+                  ],
+                )),
+              ]);
             }
             if (!_isReloading) {
               _isReloading = true;
@@ -85,6 +88,36 @@ class _AdminCatalogPageState extends State<AdminCatalogPage>
             return const Center(child: CircularProgressIndicator());
           },
         ),
+      ),
+    );
+  }
+
+  Widget _summaryRow(ColorScheme cs, AdminCatalogLoaded state) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Row(children: [
+        _statBox(cs, 'Brands', state.brands.length, cs.primary),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Product Cats', state.productCategories.length, Colors.blue),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Business Cats', state.businessCategories.length, Colors.green),
+      ]),
+    );
+  }
+
+  Widget _statBox(ColorScheme cs, String label, int count, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(children: [
+          Text('$count', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5))),
+        ]),
       ),
     );
   }

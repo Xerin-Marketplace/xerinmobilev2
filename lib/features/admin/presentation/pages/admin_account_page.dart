@@ -73,9 +73,66 @@ class AdminAccountPage extends StatelessWidget {
               _detailRow(cs, 'Role', user?.accountType ?? 'admin'),
               const Divider(height: 1),
               _detailRow(cs, 'Status', user?.status ?? 'active'),
+              const Divider(height: 1),
+              _detailRow(cs, 'Verified', user?.isVerified == true ? 'Yes' : 'No'),
+              const Divider(height: 1),
+              _detailRow(cs, 'Is Seller', user?.isSeller == true ? 'Yes' : 'No'),
+              const Divider(height: 1),
+              _detailRow(cs, 'Is Broker', user?.isBroker == true ? 'Yes' : 'No'),
             ]),
           ),
           const SizedBox(height: 16),
+          // Permissions summary
+          if (user != null && user.permissions.isNotEmpty) ...[
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Permissions (${user.permissions.length})',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.onSurface)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: user.permissions.take(10).map((p) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(color: cs.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(6)),
+                      child: Text(p, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: cs.primary)),
+                    )).toList(),
+                  ),
+                  if (user.permissions.length > 10) ...[
+                    const SizedBox(height: 4),
+                    Text('+${user.permissions.length - 10} more',
+                        style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4))),
+                  ],
+                ]),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          // Roles
+          if (user != null && user.roles.isNotEmpty) ...[
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Roles',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.onSurface)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: user.roles.map((r) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(6)),
+                      child: Text(r, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.blue)),
+                    )).toList(),
+                  ),
+                ]),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           // Quick links
           Card(
             child: Column(children: [
@@ -84,6 +141,10 @@ class AdminAccountPage extends StatelessWidget {
               _linkTile(cs, context, 'Activity Logs', '/admin-activity-logs'),
               const Divider(height: 1),
               _linkTile(cs, context, 'Alerts', '/admin-alerts'),
+              const Divider(height: 1),
+              _linkTile(cs, context, 'System Management', '/admin-system-management'),
+              const Divider(height: 1),
+              _linkTile(cs, context, 'Marketplace Settings', '/admin-marketplace-settings'),
             ]),
           ),
           const SizedBox(height: 16),

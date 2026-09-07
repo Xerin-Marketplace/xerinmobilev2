@@ -44,6 +44,9 @@ class _AdminPromotionsPageState extends State<AdminPromotionsPage> {
     }
   }
 
+  int _countStatus(String status) =>
+      _campaigns.where((c) => (c['status']?.toString() ?? '') == status).length;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -63,6 +66,7 @@ class _AdminPromotionsPageState extends State<AdminPromotionsPage> {
         ],
       ),
       body: Column(children: [
+        if (!_loading && _error == null) _summaryRow(cs),
         SizedBox(
           height: 44,
           child: ListView(
@@ -80,6 +84,43 @@ class _AdminPromotionsPageState extends State<AdminPromotionsPage> {
         const SizedBox(height: 4),
         Expanded(child: _body(cs)),
       ]),
+    );
+  }
+
+  Widget _summaryRow(ColorScheme cs) {
+    final total = _campaigns.length;
+    final active = _countStatus('active');
+    final scheduled = _countStatus('scheduled');
+    final expired = _countStatus('expired');
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Row(children: [
+        _statBox(cs, 'Total', total, cs.primary),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Active', active, Colors.green),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Scheduled', scheduled, Colors.blue),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Expired', expired, Colors.red),
+      ]),
+    );
+  }
+
+  Widget _statBox(ColorScheme cs, String label, int count, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(children: [
+          Text('$count', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5))),
+        ]),
+      ),
     );
   }
 
@@ -108,7 +149,11 @@ class _AdminPromotionsPageState extends State<AdminPromotionsPage> {
       ]));
     }
     if (_campaigns.isEmpty) {
-      return Center(child: Text('No promotions found', style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3))));
+      return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Icon(Uicons.gift, size: 48, color: cs.onSurface.withValues(alpha: 0.2)),
+        const SizedBox(height: 12),
+        Text('No promotions found', style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3))),
+      ]));
     }
     return RefreshIndicator(
       onRefresh: _load,
@@ -129,6 +174,9 @@ class _AdminPromotionsPageState extends State<AdminPromotionsPage> {
     final endDate = c['end_date']?.toString() ?? '';
     final budget = c['budget']?.toString() ?? '';
     final spent = c['spent']?.toString() ?? c['total_spent']?.toString() ?? '';
+    final usageCount = c['usage_count']?.toString() ?? c['used_count']?.toString() ?? '';
+    final maxUsage = c['max_usage']?.toString() ?? c['usage_limit']?.toString() ?? '';
+    final code = c['code']?.toString() ?? c['coupon_code']?.toString() ?? '';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -139,30 +187,53 @@ class _AdminPromotionsPageState extends State<AdminPromotionsPage> {
             Expanded(child: Text(name, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: cs.onSurface))),
             _statusBadge(cs, status),
           ]),
+          if (code.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(color: cs.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(6)),
+              child: Text('Code: $code', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: cs.primary)),
+            ),
+          ],
           if (discountType.isNotEmpty || discountValue.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text('Discount: $discountType ${discountValue.isNotEmpty ? '($discountValue)' : ''}',
                 style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
           ],
-          if (startDate.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text('Start: ${startDate.substring(0, startDate.length > 10 ? 10 : startDate.length)}',
-                style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
-          ],
-          if (endDate.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text('End: ${endDate.substring(0, endDate.length > 10 ? 10 : endDate.length)}',
-                style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
-          ],
-          if (budget.isNotEmpty) ...[
+          if (startDate.isNotEmpty || endDate.isNotEmpty) ...[
             const SizedBox(height: 6),
             Row(children: [
-              Text('Budget: $budget', style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
-              if (spent.isNotEmpty) ...[
-                const SizedBox(width: 12),
-                Text('Spent: $spent', style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
-              ],
+              if (startDate.isNotEmpty)
+                Text('From: ${startDate.substring(0, startDate.length > 10 ? 10 : startDate.length)}',
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
+              if (startDate.isNotEmpty && endDate.isNotEmpty) const SizedBox(width: 12),
+              if (endDate.isNotEmpty)
+                Text('To: ${endDate.substring(0, endDate.length > 10 ? 10 : endDate.length)}',
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
             ]),
+          ],
+          if (budget.isNotEmpty || spent.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Row(children: [
+              if (budget.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(6)),
+                  child: Text('Budget: $budget', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.blue)),
+                ),
+              if (budget.isNotEmpty && spent.isNotEmpty) const SizedBox(width: 8),
+              if (spent.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(6)),
+                  child: Text('Spent: $spent', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.orange)),
+                ),
+            ]),
+          ],
+          if (usageCount.isNotEmpty || maxUsage.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text('Usage: $usageCount${maxUsage.isNotEmpty ? ' / $maxUsage' : ''}',
+                style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
           ],
         ]),
       ),

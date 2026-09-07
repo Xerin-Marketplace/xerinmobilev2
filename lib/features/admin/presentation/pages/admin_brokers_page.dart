@@ -48,6 +48,9 @@ class _AdminBrokersPageState extends State<AdminBrokersPage> {
     }
   }
 
+  int _countStatus(String status) =>
+      _brokers.where((b) => (b['status']?.toString() ?? b['kyc_status']?.toString() ?? '') == status).length;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -80,8 +83,9 @@ class _AdminBrokersPageState extends State<AdminBrokersPage> {
             onSubmitted: (_) => _load(),
           ),
         ),
+        if (!_loading && _error == null) _summaryRow(cs),
         SizedBox(
-          height: 40,
+          height: 44,
           child: ListView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -98,6 +102,43 @@ class _AdminBrokersPageState extends State<AdminBrokersPage> {
         const SizedBox(height: 4),
         Expanded(child: _body(cs)),
       ]),
+    );
+  }
+
+  Widget _summaryRow(ColorScheme cs) {
+    final total = _brokers.length;
+    final pending = _countStatus('pending') + _countStatus('under_review');
+    final approved = _countStatus('approved');
+    final suspended = _countStatus('suspended');
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+      child: Row(children: [
+        _statBox(cs, 'Total', total, cs.primary),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Pending', pending, Colors.orange),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Approved', approved, Colors.green),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Suspended', suspended, Colors.red),
+      ]),
+    );
+  }
+
+  Widget _statBox(ColorScheme cs, String label, int count, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(children: [
+          Text('$count', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5))),
+        ]),
+      ),
     );
   }
 
@@ -126,7 +167,11 @@ class _AdminBrokersPageState extends State<AdminBrokersPage> {
       ]));
     }
     if (_brokers.isEmpty) {
-      return Center(child: Text('No brokers found', style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3))));
+      return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Icon(Uicons.userShield, size: 48, color: cs.onSurface.withValues(alpha: 0.2)),
+        const SizedBox(height: 12),
+        Text('No brokers found', style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3))),
+      ]));
     }
     return RefreshIndicator(
       onRefresh: _load,
@@ -145,6 +190,10 @@ class _AdminBrokersPageState extends State<AdminBrokersPage> {
     final status = b['status']?.toString() ?? b['kyc_status']?.toString() ?? 'unknown';
     final nida = b['nida_number']?.toString() ?? '';
     final brokerId = b['id']?.toString() ?? '';
+    final region = b['region']?.toString() ?? b['city']?.toString() ?? '';
+    final createdAt = b['created_at']?.toString() ?? '';
+    final productsCount = b['products_count']?.toString() ?? b['products']?.toString() ?? '';
+    final commissions = b['total_commissions']?.toString() ?? b['commission_earned']?.toString() ?? '';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -152,37 +201,78 @@ class _AdminBrokersPageState extends State<AdminBrokersPage> {
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Expanded(child: Text(name, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: cs.onSurface))),
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: cs.primary.withValues(alpha: 0.1),
+              child: Text(name[0].toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold, color: cs.primary)),
+            ),
+            const SizedBox(width: 10),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(name, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: cs.onSurface)),
+              if (email.isNotEmpty)
+                Text(email, style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
+            ])),
             _statusBadge(cs, status),
           ]),
-          if (email.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(email, style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
-          ],
-          if (phone.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(phone, style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
-          ],
+          const SizedBox(height: 10),
+          Row(children: [
+            if (phone.isNotEmpty) ...[
+              Icon(Icons.phone, size: 12, color: cs.onSurface.withValues(alpha: 0.3)),
+              const SizedBox(width: 4),
+              Text(phone, style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
+              const SizedBox(width: 12),
+            ],
+            if (region.isNotEmpty) ...[
+              Icon(Icons.location_on, size: 12, color: cs.onSurface.withValues(alpha: 0.3)),
+              const SizedBox(width: 4),
+              Text(region, style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
+            ],
+          ]),
           if (nida.isNotEmpty) ...[
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text('NIDA: $nida', style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
+          ],
+          if (productsCount.isNotEmpty || commissions.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(children: [
+              if (productsCount.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: cs.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(6)),
+                  child: Text('$productsCount products', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: cs.primary)),
+                ),
+              if (productsCount.isNotEmpty && commissions.isNotEmpty) const SizedBox(width: 8),
+              if (commissions.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(6)),
+                  child: Text('TSh $commissions', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.green)),
+                ),
+            ]),
+          ],
+          if (createdAt.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text('Joined: ${createdAt.substring(0, createdAt.length > 10 ? 10 : createdAt.length)}',
+                style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.3))),
           ],
           if (status == 'pending' || status == 'under_review') ...[
             const SizedBox(height: 10),
             Row(children: [
-              TextButton(
+              FilledButton.tonal(
                 onPressed: () async {
                   await _ds.approveBroker(brokerId);
                   _load();
                 },
-                child: const Text('Approve'),
+                child: const Text('Approve', style: TextStyle(fontSize: 12)),
               ),
-              TextButton(
+              const SizedBox(width: 8),
+              OutlinedButton(
                 onPressed: () async {
                   await _ds.rejectBroker(brokerId);
                   _load();
                 },
-                child: const Text('Reject', style: TextStyle(color: Colors.red)),
+                style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Reject', style: TextStyle(fontSize: 12)),
               ),
             ]),
           ],

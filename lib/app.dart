@@ -10,6 +10,7 @@ import 'core/connectivity/no_internet_page.dart';
 import 'core/currency/currency_cubit.dart';
 import 'core/network/api_client.dart';
 import 'core/theme/app_theme_cubit.dart';
+import 'core/widgets/in_app_update_checker.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/customer/presentation/cubit/cart_cubit.dart';
 import 'features/customer/presentation/cubit/customer_cubit.dart';
@@ -88,7 +89,9 @@ class _XerinAppState extends State<XerinApp> {
                           sl<ConnectivityCubit>().check(),
                     );
                   }
-                  return child ?? const SizedBox.shrink();
+                  return InAppUpdateChecker(
+                    child: child ?? const SizedBox.shrink(),
+                  );
                 },
               );
             },

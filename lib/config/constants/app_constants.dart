@@ -3,7 +3,15 @@ import '../../features/auth/data/models/user_model.dart';
 /// General app constants.
 abstract class AppConstants {
   static const String appName = 'XerinMarket';
-  static const String appVersion = '1.0.11';
+  static const String appVersion = '1.0.13';
+
+  // App Store / Play Store identifiers
+  static const String iosAppStoreId = '6738499510';
+  static const String androidPackageName = 'com.xerinmarket.com';
+  static const String iosAppStoreUrl =
+      'https://apps.apple.com/app/id6738499510';
+  static const String androidPlayStoreUrl =
+      'https://play.google.com/store/apps/details?id=com.xerinmarket.com';
 
   // Routes
   static const String splashRoute = '/splash';

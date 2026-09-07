@@ -48,6 +48,11 @@ class _AdminSystemManagementPageState extends State<AdminSystemManagementPage> {
     }
   }
 
+  int _countSeverity(String severity) =>
+      _securityEvents.where((e) => (e['severity']?.toString() ?? 'low') == severity).length;
+  int _countUnresolved() =>
+      _securityEvents.where((e) => e['resolved'] != true && e['is_resolved'] != true).length;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -82,17 +87,61 @@ class _AdminSystemManagementPageState extends State<AdminSystemManagementPage> {
                     const SizedBox(height: 12),
                     FilledButton(onPressed: _load, child: const Text('Retry')),
                   ]))
-                : TabBarView(children: [
-                    _auditLogsView(cs),
-                    _securityEventsView(cs),
+                : Column(children: [
+                    _summaryRow(cs),
+                    Expanded(child: TabBarView(children: [
+                      _auditLogsView(cs),
+                      _securityEventsView(cs),
+                    ])),
                   ]),
+      ),
+    );
+  }
+
+  Widget _summaryRow(ColorScheme cs) {
+    final totalLogs = _auditLogs.length;
+    final totalEvents = _securityEvents.length;
+    final critical = _countSeverity('critical');
+    final unresolved = _countUnresolved();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Row(children: [
+        _statBox(cs, 'Audit Logs', totalLogs, cs.primary),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Security Events', totalEvents, Colors.blue),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Critical', critical, Colors.red),
+        const SizedBox(width: 8),
+        _statBox(cs, 'Unresolved', unresolved, Colors.orange),
+      ]),
+    );
+  }
+
+  Widget _statBox(ColorScheme cs, String label, int count, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(children: [
+          Text('$count', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5))),
+        ]),
       ),
     );
   }
 
   Widget _auditLogsView(ColorScheme cs) {
     if (_auditLogs.isEmpty) {
-      return Center(child: Text('No audit logs', style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3))));
+      return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Icon(Uicons.clock, size: 48, color: cs.onSurface.withValues(alpha: 0.2)),
+        const SizedBox(height: 12),
+        Text('No audit logs', style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3))),
+      ]));
     }
     return RefreshIndicator(
       onRefresh: _load,
@@ -110,6 +159,7 @@ class _AdminSystemManagementPageState extends State<AdminSystemManagementPage> {
     final resource = log['resource']?.toString() ?? log['entity']?.toString() ?? '';
     final timestamp = log['created_at']?.toString() ?? log['timestamp']?.toString() ?? '';
     final ip = log['ip_address']?.toString() ?? log['ip']?.toString() ?? '';
+    final details = log['details']?.toString() ?? log['metadata']?.toString() ?? '';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -126,6 +176,11 @@ class _AdminSystemManagementPageState extends State<AdminSystemManagementPage> {
             Text('IP: $ip', style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
           if (timestamp.isNotEmpty)
             Text(timestamp, style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.3))),
+          if (details.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(details, maxLines: 2, overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.3))),
+          ],
         ]),
       ),
     );
@@ -133,7 +188,11 @@ class _AdminSystemManagementPageState extends State<AdminSystemManagementPage> {
 
   Widget _securityEventsView(ColorScheme cs) {
     if (_securityEvents.isEmpty) {
-      return Center(child: Text('No security events', style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3))));
+      return Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Icon(Uicons.shield, size: 48, color: cs.onSurface.withValues(alpha: 0.2)),
+        const SizedBox(height: 12),
+        Text('No security events', style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3))),
+      ]));
     }
     return RefreshIndicator(
       onRefresh: _load,
@@ -151,6 +210,8 @@ class _AdminSystemManagementPageState extends State<AdminSystemManagementPage> {
     final description = e['description']?.toString() ?? e['message']?.toString() ?? '';
     final resolved = e['resolved'] == true || e['is_resolved'] == true;
     final timestamp = e['created_at']?.toString() ?? e['timestamp']?.toString() ?? '';
+    final source = e['source']?.toString() ?? e['source_ip']?.toString() ?? '';
+    final user = e['user']?.toString() ?? e['user_id']?.toString() ?? '';
 
     final color = severity == 'critical'
         ? Colors.red
@@ -184,6 +245,22 @@ class _AdminSystemManagementPageState extends State<AdminSystemManagementPage> {
           if (description.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(description, style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
+          ],
+          if (user.isNotEmpty || source.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Row(children: [
+              if (user.isNotEmpty) ...[
+                Icon(Icons.person, size: 12, color: cs.onSurface.withValues(alpha: 0.3)),
+                const SizedBox(width: 4),
+                Text(user, style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5))),
+                const SizedBox(width: 12),
+              ],
+              if (source.isNotEmpty) ...[
+                Icon(Icons.computer, size: 12, color: cs.onSurface.withValues(alpha: 0.3)),
+                const SizedBox(width: 4),
+                Text(source, style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5))),
+              ],
+            ]),
           ],
           if (timestamp.isNotEmpty) ...[
             const SizedBox(height: 4),
