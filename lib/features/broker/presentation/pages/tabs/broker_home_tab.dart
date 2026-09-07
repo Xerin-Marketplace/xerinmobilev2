@@ -34,12 +34,12 @@ class BrokerHomeTab extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
         _welcomeCard(cs, broker),
-        if (!approved) ...[const SizedBox(height: 16), _kycBanner(cs, broker)],
+        if (!approved) ...[const SizedBox(height: 16), _kycBanner(context, cs, broker)],
         if (approved && analytics != null) ...[const SizedBox(height: 16), _levelCard(cs, analytics)],
         const SizedBox(height: 20),
         _sectionTitle('Quick actions', cs),
         const SizedBox(height: 10),
-        _quickActions(cs, approved),
+        _quickActions(context, cs, approved),
         if (approved && analytics != null) ...[
           const SizedBox(height: 20),
           _sectionTitle('Performance', cs),
@@ -92,7 +92,7 @@ class BrokerHomeTab extends StatelessWidget {
     );
   }
 
-  Widget _kycBanner(ColorScheme cs, broker) {
+  Widget _kycBanner(BuildContext context, ColorScheme cs, broker) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -199,7 +199,7 @@ class BrokerHomeTab extends StatelessWidget {
     );
   }
 
-  Widget _quickActions(ColorScheme cs, bool approved) {
+  Widget _quickActions(BuildContext context, ColorScheme cs, bool approved) {
     final actions = [
       {'title': 'KYC', 'desc': approved ? 'Verified' : 'Verify', 'icon': Uicons.shieldCheck, 'route': AppConstants.brokerKycRoute},
       {'title': 'Wallet', 'desc': 'Balance & payouts', 'icon': Uicons.wallet, 'route': AppConstants.brokerWalletRoute},
