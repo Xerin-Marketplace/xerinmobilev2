@@ -40,6 +40,7 @@ abstract class ApiConstants {
   // Address endpoints
   static const String addresses = '/addresses';
   static String addressById(String id) => '/addresses/$id';
+  static String confirmMapPin(String addressId) => '/addresses/$addressId/confirm-map-pin';
 
   // Seller endpoints
   static const String sellerRegister = '/sellers/register';

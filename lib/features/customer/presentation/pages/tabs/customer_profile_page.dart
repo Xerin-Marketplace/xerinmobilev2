@@ -6,8 +6,6 @@ import 'package:get_it/get_it.dart';
 import '../../../../../config/constants/app_constants.dart';
 import '../../../../../core/storage/token_storage.dart';
 import '../../../../auth/presentation/cubit/auth_cubit.dart';
-import '../../cubit/home_cubit.dart';
-import '../../cubit/home_state.dart';
 
 class CustomerProfilePage extends StatelessWidget {
   const CustomerProfilePage({super.key});
@@ -61,50 +59,11 @@ class CustomerProfilePage extends StatelessWidget {
       );
     }
 
-    final state = context.watch<HomeCubit>().state;
-    final user = state is HomeLoaded ? state.user : null;
-
     return Scaffold(
       appBar: AppBar(title: const Text('My Xerin')),
       body: ListView(
         children: [
-          const SizedBox(height: 16),
-          // Avatar + name
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 36,
-                  backgroundColor: cs.primary.withValues(alpha: 0.1),
-                  child: Text(
-                    _getInitials(user?.fullName ?? 'User'),
-                    style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: cs.primary),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  user?.fullName ?? 'User',
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: cs.onSurface),
-                ),
-                if (user != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    user.email,
-                    style: TextStyle(
-                        fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4)),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const Divider(),
+          _sectionHeader('Account', cs),
           _tile(context, Icons.dashboard_outlined, 'Dashboard',
               AppConstants.customerDashboardRoute, cs),
           _tile(context, Icons.person_outline, 'Personal Information',
@@ -113,16 +72,19 @@ class CustomerProfilePage extends StatelessWidget {
               AppConstants.addressesRoute, cs),
           _tile(context, Icons.credit_card_outlined, 'Payments',
               AppConstants.paymentMethodsRoute, cs),
+          _sectionHeader('Orders', cs),
           _tile(context, Icons.receipt_long_outlined, 'My Orders',
               AppConstants.orderHistoryRoute, cs),
           _tile(context, Icons.shield_outlined, 'Delivery Protection',
               AppConstants.deliveryProtectionRoute, cs),
+          _sectionHeader('Support', cs),
           _tile(context, Icons.help_outline, 'Help Center',
               AppConstants.helpSupportRoute, cs),
           _tile(context, Icons.privacy_tip_outlined, 'Privacy & Terms',
               AppConstants.privacyTermsRoute, cs),
           _tile(context, Icons.settings_outlined, 'Settings',
               AppConstants.settingsRoute, cs),
+          const SizedBox(height: 8),
           const Divider(),
           _tile(context, Icons.logout, 'Logout', null, cs, isLogout: true),
           const SizedBox(height: 32),
@@ -194,12 +156,18 @@ class CustomerProfilePage extends StatelessWidget {
     );
   }
 
-  String _getInitials(String name) {
-    if (name.isEmpty) return '?';
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return parts[0][0].toUpperCase();
+  Widget _sectionHeader(String title, ColorScheme cs) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: cs.primary,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
   }
 }

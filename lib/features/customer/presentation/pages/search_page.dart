@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/constants/api_constants.dart';
+import '../../../../../shared/widgets/product_location_chip.dart';
 import '../cubit/search_cubit.dart';
 import '../../data/models/product_model.dart';
-import 'product_detail_page.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -166,13 +166,64 @@ class _SearchProductCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (product.categoryName != null)
+                        Expanded(
+                          child: Text(
+                            product.categoryName!,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      if (product.isActive)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF22C55E).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Available',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF22C55E),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
                   Text(
                     product.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                   ),
-                  const SizedBox(height: 4),
+                  if (product.displayLocation != null || product.displayCountry != null) ...[
+                    const SizedBox(height: 5),
+                    ProductLocationChip(
+                      location: product.displayLocation,
+                      country: product.displayCountry,
+                    ),
+                  ],
+                  const SizedBox(height: 6),
+                  Text(
+                    'Price',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
                   Text(
                     product.formattedPrice,
                     style: TextStyle(

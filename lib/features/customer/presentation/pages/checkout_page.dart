@@ -14,6 +14,7 @@ import '../cubit/customer_cubit.dart';
 import '../cubit/customer_state.dart';
 import '../../data/models/address_model.dart';
 import '../../data/models/cart_model.dart';
+import 'map_picker_page.dart';
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
@@ -27,8 +28,27 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final _phoneController = TextEditingController();
   final _recipientNameController = TextEditingController();
   final _recipientPhoneController = TextEditingController();
+  final _logisticsSearchController = TextEditingController();
   String? _selectedAddressId;
   String _selectedPaymentMethod = 'mobile_money';
+  String _selectedProvider = 'M-Pesa';
+  static const List<String> _mnoProviders = ['M-Pesa', 'Airtel Money', 'Mixx by Yas', 'HaloPesa'];
+
+  static const Map<String, Map<String, dynamic>> _mnoInfo = {
+    'M-Pesa':       {'flag': '🇹🇿', 'country': 'Tanzania', 'color': Color(0xFFFF6633)},
+    'Airtel Money':  {'flag': '🇹🇿', 'country': 'Tanzania', 'color': Color(0xFFE40000)},
+    'Mixx by Yas':   {'flag': '🇹🇿', 'country': 'Tanzania', 'color': Color(0xFF0066B3)},
+    'HaloPesa':      {'flag': '🇹🇿', 'country': 'Tanzania', 'color': Color(0xFF00A651)},
+  };
+
+  String _normalizePhone(String input) {
+    final digits = input.replaceAll(RegExp(r'\D'), '');
+    if (digits.startsWith('255') && digits.length == 12) return digits;
+    if (digits.startsWith('0') && digits.length == 10) return '255${digits.substring(1)}';
+    if (digits.length == 9) return '255$digits';
+    return digits;
+  }
+
   bool _isProcessing = false;
 
   String _deliveryMode = 'local';
@@ -43,17 +63,37 @@ class _CheckoutPageState extends State<CheckoutPage> {
   Map<String, dynamic>? _selectedRate;
   bool _isLoadingPricing = false;
 
-  Map<String, dynamic>? _frozenQuote;
-  bool _isFreezingQuote = false;
 
   String? _appliedCouponCode;
 
+  bool _didAutoSelect = false;
+
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<CustomerCubit>().refreshAddresses();
-    });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _autoSelectAddress();
+  }
+
+  void _autoSelectAddress() {
+    if (_didAutoSelect) return;
+    final cubit = context.read<CustomerCubit>();
+    final state = cubit.state;
+    final addresses = state is CustomerLoaded ? state.addresses : <AddressModel>[];
+    if (_selectedAddressId == null && addresses.isNotEmpty) {
+      final defaultAddr = addresses.where((a) => a.isDefault).firstOrNull;
+      final addr = defaultAddr ?? addresses.first;
+      _selectedAddressId = addr.id;
+      if (_recipientNameController.text.isEmpty && addr.recipientName != null) {
+        _recipientNameController.text = addr.recipientName!;
+      }
+      if (_recipientPhoneController.text.isEmpty && addr.recipientPhone != null) {
+        _recipientPhoneController.text = addr.recipientPhone!;
+      }
+      _didAutoSelect = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _detectDeliveryMode();
+      });
+    }
   }
 
   @override
@@ -62,6 +102,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     _phoneController.dispose();
     _recipientNameController.dispose();
     _recipientPhoneController.dispose();
+    _logisticsSearchController.dispose();
     super.dispose();
   }
 
@@ -72,7 +113,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   double get _shippingAmount {
-    if (_frozenQuote != null) return _parsePrice(_frozenQuote!['delivery_amount']);
     if (_selectedRate != null) return _parsePrice(_selectedRate!['delivery_amount']);
     return 0.0;
   }
@@ -108,7 +148,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
           _selectedCompanyId = null;
           _pricingOptions = [];
           _selectedRate = null;
-          _frozenQuote = null;
         }
       });
       if (mounted && result != null) _fetchEligibleLogistics();
@@ -159,7 +198,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
       _isLoadingPricing = true;
       _pricingOptions = [];
       _selectedRate = null;
-      _frozenQuote = null;
     });
     try {
       final result = await context.read<CustomerCubit>().getMultiSellerPricing(
@@ -184,34 +222,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
-  Future<void> _freezeQuote() async {
-    if (_selectedAddressId == null || _selectedCompanyId == null || _selectedRate == null) return;
-    final rateId = _selectedRate!['rate_id']?.toString();
-    if (rateId == null) return;
-    setState(() => _isFreezingQuote = true);
-    try {
-      final result = await context.read<CustomerCubit>().freezeDeliveryQuote(
-        addressId: _selectedAddressId!,
-        logisticsCompanyId: _selectedCompanyId!,
-        rateId: rateId,
-        deliveryMode: _deliveryMode,
-      );
-      setState(() {
-        _frozenQuote = result;
-        _isFreezingQuote = false;
-      });
-    } catch (e) {
-      setState(() => _isFreezingQuote = false);
-      if (mounted) NotificationService().error('Failed to lock delivery quote: $e');
-    }
-  }
-
   void _onCompanyChanged(String companyId) {
     setState(() {
       _selectedCompanyId = companyId;
       _pricingOptions = [];
       _selectedRate = null;
-      _frozenQuote = null;
     });
     _fetchMultiSellerPricing();
   }
@@ -219,9 +234,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
   void _onRateSelected(Map<String, dynamic> rate) {
     setState(() {
       _selectedRate = rate;
-      _frozenQuote = null;
     });
-    _freezeQuote();
   }
 
   Future<void> _placeOrder() async {
@@ -229,54 +242,66 @@ class _CheckoutPageState extends State<CheckoutPage> {
       NotificationService().warning('Please select a delivery address');
       return;
     }
+
+    final cubit = context.read<CustomerCubit>();
+    final state = cubit.state;
+    final addresses = state is CustomerLoaded ? state.addresses : <AddressModel>[];
+    final selectedAddr = addresses.where((a) => a.id == _selectedAddressId).firstOrNull;
+
+    if (selectedAddr != null && !selectedAddr.hasGps) {
+      NotificationService().warning('This address has no GPS coordinates. Please add GPS or confirm the map pin on the Addresses page.');
+      return;
+    }
+
     if (_selectedRate == null) {
       NotificationService().warning('Please select a delivery service');
       return;
     }
-    if (_frozenQuote == null) {
-      NotificationService().warning('Please wait for the delivery quote to lock');
-      return;
-    }
-    if (_phoneController.text.trim().isEmpty) {
-      NotificationService().warning('Please enter your mobile money number');
-      return;
+    if (_selectedPaymentMethod == 'mobile_money') {
+      if (_phoneController.text.trim().isEmpty) {
+        NotificationService().warning('Please enter your mobile money number');
+        return;
+      }
+      if (_selectedProvider.isEmpty) {
+        NotificationService().warning('Please select your mobile network');
+        return;
+      }
     }
 
     setState(() => _isProcessing = true);
 
-    final cubit = context.read<CustomerCubit>();
     final rateId = _selectedRate!['rate_id']?.toString();
-    final quoteId = _frozenQuote!['id']?.toString();
 
     await cubit.placeOrderAndPay(
       shippingAddressId: _selectedAddressId!,
       shippingRateId: rateId,
-      deliveryQuoteId: quoteId,
+      deliveryQuoteId: null,
       deliveryMode: _deliveryMode,
       couponCode: _appliedCouponCode,
       notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
       paymentMethod: _selectedPaymentMethod,
-      phoneNumber: _phoneController.text.trim(),
+      provider: _selectedPaymentMethod == 'mobile_money' ? _selectedProvider : null,
+      phoneNumber: _selectedPaymentMethod == 'mobile_money' ? _normalizePhone(_phoneController.text.trim()) : null,
     );
 
     if (!mounted) return;
     setState(() => _isProcessing = false);
 
-    final state = cubit.state;
+    final postState = cubit.state;
 
-    if (state is PaymentFailed) {
-      NotificationService().error(state.message);
+    if (postState is PaymentFailed) {
+      NotificationService().error(postState.message);
       return;
     }
 
-    if (state is PaymentSuccess) {
+    if (postState is PaymentSuccess) {
       context.read<CartCubit>().clearCart();
       NotificationService().success('Order placed successfully!');
 
-      if (state.checkoutUrl != null) {
-        context.go('/payment-processing?payment_id=${state.paymentId}&order_id=${state.orderId}&checkout_url=${Uri.encodeComponent(state.checkoutUrl!)}');
+      if (postState.checkoutUrl != null) {
+        context.go('/payment-processing?payment_id=${postState.paymentId}&order_id=${postState.orderId}&checkout_url=${Uri.encodeComponent(postState.checkoutUrl!)}');
       } else {
-        context.go('/payment-processing?payment_id=${state.paymentId}&order_id=${state.orderId}');
+        context.go('/payment-processing?payment_id=${postState.paymentId}&order_id=${postState.orderId}');
       }
     }
   }
@@ -289,142 +314,120 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final cartItems = cartState is CartLoaded ? cartState.cart.items : <CartItemModel>[];
     final cartTotal = cartState is CartLoaded ? cartState.cart.total : 0.0;
 
+    final addresses = context.select<CustomerCubit, List<AddressModel>>(
+      (cubit) => cubit.state is CustomerLoaded
+          ? (cubit.state as CustomerLoaded).addresses
+          : <AddressModel>[],
+    );
+
+    final isLoading = context.select<CustomerCubit, bool>(
+      (cubit) => cubit.state is CustomerLoading,
+    );
+
+    if (isLoading && addresses.isEmpty) {
+      return Scaffold(
+        appBar: _buildAppBar(colorScheme),
+        body: _buildLoadingState(colorScheme),
+      );
+    }
+
+    if (_selectedAddressId != null && addresses.isNotEmpty &&
+        !addresses.any((a) => a.id == _selectedAddressId)) {
+      final addr = addresses.first;
+      _selectedAddressId = addr.id;
+      _logisticsCompanies = [];
+      _selectedCompanyId = null;
+      _pricingOptions = [];
+      _selectedRate = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _detectDeliveryMode();
+      });
+    }
+
+    if (cartItems.isEmpty) {
+      return Scaffold(
+        appBar: _buildAppBar(colorScheme),
+        body: _buildEmptyCart(colorScheme),
+      );
+    }
+
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: BlocBuilder<CustomerCubit, CustomerState>(
-          builder: (context, state) {
-            final addresses = state is CustomerLoaded ? state.addresses : <AddressModel>[];
-            final isLoading = state is CustomerLoading;
-
-            if (isLoading && addresses.isEmpty) {
-              return _buildLoadingState(colorScheme);
-            }
-
-            if (_selectedAddressId == null && addresses.isNotEmpty) {
-              final defaultAddr = addresses.where((a) => a.isDefault).firstOrNull;
-              final addr = defaultAddr ?? addresses.first;
-              _selectedAddressId = addr.id;
-              if (_recipientNameController.text.isEmpty && addr.recipientName != null) {
-                _recipientNameController.text = addr.recipientName!;
-              }
-              if (_recipientPhoneController.text.isEmpty && addr.recipientPhone != null) {
-                _recipientPhoneController.text = addr.recipientPhone!;
-              }
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) _detectDeliveryMode();
-              });
-            }
-
-            final validSelectedId = addresses.any((a) => a.id == _selectedAddressId)
-                ? _selectedAddressId
-                : (addresses.isNotEmpty ? addresses.first.id : null);
-            if (_selectedAddressId != validSelectedId) {
-              _selectedAddressId = validSelectedId;
-            }
-
-            if (cartItems.isEmpty) {
-              return _buildEmptyCart(colorScheme);
-            }
-
-            return _buildCheckoutSheet(
-              colorScheme,
-              isDark,
-              cartItems,
-              cartTotal,
-              addresses,
-            );
-          },
-        ),
+      appBar: _buildAppBar(colorScheme),
+      body: _buildCheckoutBody(
+        colorScheme,
+        isDark,
+        cartItems,
+        cartTotal,
+        addresses,
       ),
     );
+  }
+
+  PreferredSizeWidget _buildAppBar(ColorScheme cs) {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => context.pop(),
+      ),
+      title: const Text('Checkout'),
+      centerTitle: false,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      actions: [
+        IconButton(
+          icon: _isRefreshing
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              : const Icon(Icons.refresh),
+          onPressed: _isRefreshing ? null : _refreshCheckout,
+          tooltip: 'Refresh',
+        ),
+      ],
+    );
+  }
+
+  bool _isRefreshing = false;
+
+  Future<void> _refreshCheckout() async {
+    setState(() => _isRefreshing = true);
+    try {
+      final cubit = context.read<CustomerCubit>();
+      await cubit.loadAll();
+      if (_selectedAddressId != null) {
+        _logisticsCompanies = [];
+        _selectedCompanyId = null;
+        _pricingOptions = [];
+        _selectedRate = null;
+        _detectDeliveryMode();
+      }
+    } finally {
+      if (mounted) setState(() => _isRefreshing = false);
+    }
   }
 
   Widget _buildLoadingState(ColorScheme cs) {
-    return Column(
-      children: [
-        _buildHeader(cs),
-        const Expanded(child: Center(child: CircularProgressIndicator())),
-      ],
-    );
+    return const Center(child: CircularProgressIndicator());
   }
 
   Widget _buildEmptyCart(ColorScheme cs) {
-    return Column(
-      children: [
-        _buildHeader(cs),
-        Expanded(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Your cart is empty',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
-                ),
-                const SizedBox(height: 8),
-                Text('Add items to checkout',
-                  style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3)),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHeader(ColorScheme cs) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [cs.primary, cs.primary.withValues(alpha: 0.75)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
-      ),
+    return Center(
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => context.pop(),
-                child: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Checkout',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
-                    ),
-                    Text('Review and complete your order',
-                      style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.8)),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          Icon(Icons.shopping_cart_outlined, size: 64, color: cs.onSurface.withValues(alpha: 0.2)),
+          const SizedBox(height: 16),
+          Text('Your cart is empty',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
+          ),
+          const SizedBox(height: 8),
+          Text('Add items to checkout',
+            style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.3)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCheckoutSheet(
+  Widget _buildCheckoutBody(
     ColorScheme cs,
     bool isDark,
     List<CartItemModel> cartItems,
@@ -434,43 +437,41 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        Column(
-          children: [
-            _buildHeader(cs),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionTitle('Items', cs, icon: Icons.shopping_bag_outlined),
-                    ...cartItems.map((item) => _buildCartItemRow(item, cs)),
-                    _buildDivider(cs),
-                    _buildSectionTitle('Delivery Address', cs, icon: Icons.location_on_outlined),
-                    _buildDeliverySection(cs, isDark, addresses),
-                    _buildDivider(cs),
-                    _buildSectionTitle('Customer', cs, icon: Icons.person_outline),
-                    _buildCustomerSection(cs, isDark, addresses),
-                    _buildDivider(cs),
-                    _buildSectionTitle('Delivery Route', cs, icon: Icons.route),
-                    _buildDeliveryModeSection(cs, isDark),
-                    _buildDivider(cs),
-                    _buildSectionTitle('Delivery Service', cs, icon: Icons.local_shipping_outlined),
-                    _buildLogisticsSection(cs, isDark),
-                    _buildDivider(cs),
-                    _buildSectionTitle('Payment', cs, icon: Icons.payment),
-                    _buildPaymentSection(cs, isDark),
-                    _buildDivider(cs),
-                    _buildSectionTitle('Notes', cs, icon: Icons.note_outlined),
-                    _buildNotesSection(cs, isDark),
-                    _buildDivider(cs),
-                    _buildSummaryContent(cartTotal, cs),
-                  ],
-                ),
-              ),
-            ),
-            _buildBottomBar(cs, isDark, cartTotal),
-          ],
+        SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle('Items', cs, icon: Icons.shopping_bag_outlined),
+              ...cartItems.map((item) => _buildCartItemRow(item, cs)),
+              _buildDivider(cs),
+              _buildSectionTitle('Delivery Address', cs, icon: Icons.location_on_outlined),
+              _buildDeliverySection(cs, isDark, addresses),
+              _buildDivider(cs),
+              _buildSectionTitle('Customer', cs, icon: Icons.person_outline),
+              _buildCustomerSection(cs, isDark, addresses),
+              _buildDivider(cs),
+              _buildSectionTitle('Delivery Route', cs, icon: Icons.route),
+              _buildDeliveryModeSection(cs, isDark),
+              _buildDivider(cs),
+              _buildSectionTitle('Delivery Service', cs, icon: Icons.local_shipping_outlined),
+              _buildLogisticsSection(cs, isDark),
+              _buildDivider(cs),
+              _buildSectionTitle('Payment', cs, icon: Icons.payment),
+              _buildPaymentSection(cs, isDark),
+              _buildDivider(cs),
+              _buildSectionTitle('Notes', cs, icon: Icons.note_outlined),
+              _buildNotesSection(cs, isDark),
+              _buildDivider(cs),
+              _buildSummaryContent(cartTotal, cs),
+            ],
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: _buildBottomBar(cs, isDark, cartTotal),
         ),
         if (_isProcessing) _buildProcessingOverlay(cs),
       ],
@@ -502,6 +503,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildDeliverySection(ColorScheme cs, bool isDark, List<AddressModel> addresses) {
+    final selectedAddr = addresses.where((a) => a.id == _selectedAddressId).firstOrNull;
+
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -561,11 +564,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   _selectedCompanyId = null;
                   _pricingOptions = [];
                   _selectedRate = null;
-                  _frozenQuote = null;
                 });
                 _detectDeliveryMode();
               },
             ),
+            if (selectedAddr != null) ...[
+              const SizedBox(height: 10),
+              _buildAddressInfoCard(selectedAddr, cs, isDark),
+            ],
             const SizedBox(height: 8),
             TextButton.icon(
               onPressed: () => _showAddAddressDrawer(cs, isDark),
@@ -579,6 +585,141 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ),
           ],
         ],
+    );
+  }
+
+  Widget _buildAddressInfoCard(AddressModel addr, ColorScheme cs, bool isDark) {
+    final hasGps = addr.hasGps;
+    final isVerified = addr.isVerified;
+    final isReady = addr.deliveryReady;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isReady
+            ? const Color(0xFF22C55E).withValues(alpha: 0.04)
+            : cs.onSurface.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isReady
+              ? const Color(0xFF22C55E).withValues(alpha: 0.2)
+              : cs.onSurface.withValues(alpha: 0.06),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.location_on, size: 14, color: cs.primary),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  addr.formattedAddress ?? addr.fullAddress,
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface, height: 1.4),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          if (addr.recipientName != null && addr.recipientName!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Icon(Icons.person_outline, size: 12, color: cs.onSurface.withValues(alpha: 0.4)),
+                const SizedBox(width: 4),
+                Text(addr.recipientName!,
+                  style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
+                ),
+                if (addr.recipientPhone != null && addr.recipientPhone!.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Icon(Icons.phone_outlined, size: 12, color: cs.onSurface.withValues(alpha: 0.4)),
+                  const SizedBox(width: 4),
+                  Text(addr.recipientPhone!,
+                    style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.5)),
+                  ),
+                ],
+              ],
+            ),
+          ],
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _buildMiniChip(
+                icon: hasGps ? Icons.gps_fixed : Icons.gps_off,
+                label: hasGps ? 'GPS' : 'No GPS',
+                color: hasGps ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
+              ),
+              const SizedBox(width: 6),
+              _buildMiniChip(
+                icon: isVerified ? Icons.verified : Icons.pending,
+                label: isVerified ? 'Verified' : 'Unverified',
+                color: isVerified ? const Color(0xFF22C55E) : const Color(0xFFF59E0B),
+              ),
+              if (isReady) ...[
+                const SizedBox(width: 6),
+                _buildMiniChip(
+                  icon: Icons.check_circle,
+                  label: 'Delivery Ready',
+                  color: const Color(0xFF22C55E),
+                ),
+              ],
+            ],
+          ),
+          if (hasGps) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Icon(Icons.my_location, size: 11, color: cs.onSurface.withValues(alpha: 0.3)),
+                const SizedBox(width: 4),
+                Text(addr.coordinates,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: cs.onSurface.withValues(alpha: 0.4),
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (!hasGps || !isVerified) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                if (!hasGps)
+                  Text('GPS coordinates needed for delivery',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFF59E0B)),
+                  )
+                else if (!isVerified)
+                  Text('Address not verified — confirm pin on Addresses page',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFF59E0B)),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniChip({required IconData icon, required String label, required Color color}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color),
+          const SizedBox(width: 3),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
+        ],
+      ),
     );
   }
 
@@ -640,6 +781,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
           cs: cs,
           isMissing: selectedAddr == null,
         ),
+        if (selectedAddr != null && selectedAddr.hasGps) ...[
+          const SizedBox(height: 6),
+          _buildCustomerInfoRow(
+            label: 'GPS',
+            value: selectedAddr.coordinates,
+            cs: cs,
+            isMissing: false,
+          ),
+        ],
       ],
     );
   }
@@ -655,6 +805,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       case 'Phone': icon = Icons.phone_outlined; break;
       case 'Address': icon = Icons.location_on_outlined; break;
       case 'Recipient': icon = Icons.person_outline; break;
+      case 'GPS': icon = Icons.my_location; break;
       default: icon = Icons.info_outline;
     }
     return Row(
@@ -721,7 +872,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   _selectedCompanyId = null;
                   _pricingOptions = [];
                   _selectedRate = null;
-                  _frozenQuote = null;
                 });
                 _detectDeliveryMode();
                 Navigator.pop(ctx);
@@ -829,65 +979,130 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildLogisticsSection(ColorScheme cs, bool isDark) {
+    final searchQuery = _logisticsSearchController.text.trim().toLowerCase();
+    final filteredCompanies = searchQuery.isEmpty
+        ? _logisticsCompanies
+        : _logisticsCompanies.where((c) {
+            final name = (c['name'] as String? ?? '').toLowerCase();
+            final code = (c['code'] as String? ?? '').toLowerCase();
+            return name.contains(searchQuery) || code.contains(searchQuery);
+          }).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_isLoadingLogistics) ...[
-          Row(
-            children: [
-              SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary)),
-              const SizedBox(width: 8),
-              Text('Finding delivery services...',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: cs.onSurface.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary)),
+                const SizedBox(width: 12),
+                Text('Finding delivery services...',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
+                ),
+              ],
+            ),
           ),
         ] else if (_logisticsCompanies.isEmpty) ...[
-          Row(
-            children: [
-              Icon(Icons.local_shipping_outlined, size: 18, color: cs.onSurface.withValues(alpha: 0.3)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  _selectedAddressId == null
-                    ? 'Select a delivery address to see available services'
-                    : 'No delivery services available for this route',
-                  style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: cs.onSurface.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.local_shipping_outlined, size: 20, color: cs.onSurface.withValues(alpha: 0.3)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _selectedAddressId == null
+                      ? 'Select a delivery address to see available services'
+                      : 'No delivery services available for this route',
+                    style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ] else ...[
+          TextField(
+            controller: _logisticsSearchController,
+            onChanged: (_) => setState(() {}),
+            onSubmitted: (_) => _fetchEligibleLogistics(),
+            decoration: InputDecoration(
+              hintText: 'Search delivery services...',
+              hintStyle: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.3)),
+              prefixIcon: Icon(Icons.search, size: 20, color: cs.onSurface.withValues(alpha: 0.4)),
+              suffixIcon: _logisticsSearchController.text.isNotEmpty
+                ? IconButton(
+                    icon: Icon(Icons.close, size: 18, color: cs.onSurface.withValues(alpha: 0.4)),
+                    onPressed: () {
+                      _logisticsSearchController.clear();
+                      setState(() {});
+                    },
+                  )
+                : null,
+              filled: true,
+              fillColor: cs.onSurface.withValues(alpha: 0.03),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.08)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.08)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: cs.primary, width: 1.5),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (filteredCompanies.isEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cs.onSurface.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Text('No services match "$searchQuery"',
+                  style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4)),
                 ),
               ),
-            ],
-          ),
+            ),
           ] else ...[
-            Text('Logistics Company',
+            Text('${filteredCompanies.length} delivery service${filteredCompanies.length == 1 ? '' : 's'} available',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+            const SizedBox(height: 10),
+            ...filteredCompanies.map((company) => _buildLogisticsCompanyCard(company, cs, isDark)),
+          ],
+          if (_selectedCompanyId != null) ...[
+            const SizedBox(height: 16),
+            Text('Delivery Options',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
             ),
             const SizedBox(height: 10),
-            ..._logisticsCompanies.map((company) => _buildLogisticsCompanyCard(company, cs, isDark)),
-            if (_selectedCompanyId != null) ...[
-              const SizedBox(height: 16),
-              Text('Delivery Options',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
-              ),
-              const SizedBox(height: 10),
-              if (_isLoadingPricing)
-                const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
-              else if (_pricingOptions.isEmpty)
-                Text('No pricing available', style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.5)))
-              else
-                ..._pricingOptions.map((option) => _buildPricingOption(option, cs, isDark)),
-              if (_frozenQuote != null) ...[
-                const SizedBox(height: 8),
-                Text('Delivery quote locked',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF22C55E)),
-                ),
-              ] else if (_selectedRate != null && _isFreezingQuote)
-                const Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))),
-                ),
-            ],
-            ],
+            if (_isLoadingPricing)
+              const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+            else if (_pricingOptions.isEmpty)
+              Text('No pricing available', style: TextStyle(fontSize: 14, color: cs.onSurface.withValues(alpha: 0.5)))
+            else
+              ..._pricingOptions.map((option) => _buildPricingOption(option, cs, isDark)),
           ],
+        ],
+      ],
     );
   }
 
@@ -896,28 +1111,107 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final name = company['name'] as String? ?? 'Logistics Company';
     final coveredSellers = company['covered_seller_count'] as int? ?? 0;
     final totalSellers = company['seller_count'] as int? ?? 0;
+    final supportsTracking = company['supports_tracking'] as bool? ?? false;
+    final supportsCod = company['supports_cod'] as bool? ?? false;
+    final serviceCount = (company['services'] as List?)?.length ?? 0;
 
-    return GestureDetector(
-      onTap: () => _onCompanyChanged(company['logistics_company_id']?.toString() ?? ''),
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isSelected ? cs.primary : cs.onSurface),
-                  ),
-                  Text('Covers $coveredSellers of $totalSellers sellers',
-                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
-                  ),
-                ],
-              ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GestureDetector(
+        onTap: () => _onCompanyChanged(company['logistics_company_id']?.toString() ?? ''),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? cs.primary.withValues(alpha: 0.06)
+                : cs.onSurface.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.08),
+              width: isSelected ? 1.5 : 1,
             ),
-            _buildRadioDot(isSelected, cs.primary),
-          ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? cs.primary.withValues(alpha: 0.12)
+                      : cs.onSurface.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.local_shipping,
+                  size: 20,
+                  color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.4),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                        color: isSelected ? cs.primary : cs.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        _buildMiniChip(
+                          icon: Icons.store,
+                          label: '$coveredSellers/$totalSellers sellers',
+                          color: cs.onSurface.withValues(alpha: 0.5),
+                        ),
+                        if (serviceCount > 0)
+                          _buildMiniChip(
+                            icon: Icons.local_shipping,
+                            label: '$serviceCount service${serviceCount == 1 ? '' : 's'}',
+                            color: cs.onSurface.withValues(alpha: 0.5),
+                          ),
+                        if (supportsTracking)
+                          _buildMiniChip(
+                            icon: Icons.location_on,
+                            label: 'Tracking',
+                            color: const Color(0xFF22C55E),
+                          ),
+                        if (supportsCod)
+                          _buildMiniChip(
+                            icon: Icons.payments_outlined,
+                            label: 'COD',
+                            color: const Color(0xFFF59E0B),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.15),
+                    width: 2,
+                  ),
+                ),
+                child: isSelected
+                    ? Center(child: Container(width: 10, height: 10, decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle)))
+                    : null,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -930,36 +1224,85 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final minDays = option['min_delivery_days'] as int? ?? 1;
     final maxDays = option['max_delivery_days'] as int? ?? 7;
     final isFree = amount == 0;
+    final billableKm = _parsePrice(option['billable_distance_km']);
 
-    return GestureDetector(
-      onTap: () => _onRateSelected(option),
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(methodName,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isSelected ? cs.primary : cs.onSurface),
-                  ),
-                  Text('$minDays-$maxDays business days',
-                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
-                  ),
-                ],
-              ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GestureDetector(
+        onTap: () => _onRateSelected(option),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? cs.primary.withValues(alpha: 0.06)
+                : cs.onSurface.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.08),
+              width: isSelected ? 1.5 : 1,
             ),
-            const SizedBox(width: 8),
-            Text(isFree ? 'FREE' : _formatCurrency(amount),
-              style: TextStyle(
-                fontSize: 14, fontWeight: FontWeight.bold,
-                color: isFree ? const Color(0xFF22C55E) : cs.onSurface,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(methodName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                        color: isSelected ? cs.primary : cs.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        _buildMiniChip(
+                          icon: Icons.schedule,
+                          label: '$minDays-$maxDays days',
+                          color: cs.onSurface.withValues(alpha: 0.5),
+                        ),
+                        if (billableKm > 0)
+                          _buildMiniChip(
+                            icon: Icons.route,
+                            label: '${billableKm.toStringAsFixed(1)} km',
+                            color: cs.onSurface.withValues(alpha: 0.5),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            _buildRadioDot(isSelected, cs.primary),
-          ],
+              const SizedBox(width: 8),
+              Text(isFree ? 'FREE'
+                : _formatCurrency(amount),
+                style: TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.bold,
+                  color: isFree ? const Color(0xFF22C55E) : cs.onSurface,
+                ),
+              ),
+              const SizedBox(width: 8),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected ? cs.primary : cs.onSurface.withValues(alpha: 0.15),
+                    width: 2,
+                  ),
+                ),
+                child: isSelected
+                    ? Center(child: Container(width: 10, height: 10, decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle)))
+                    : null,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -984,9 +1327,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
             Text('Mobile Money',
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF22C55E)),
             ),
+            const SizedBox(width: 6),
+            const Text('🇹🇿', style: TextStyle(fontSize: 14)),
           ],
         ),
         const SizedBox(height: 8),
+        _buildProviderSelector(cs),
+        const SizedBox(height: 10),
         _buildPhoneInput(cs),
         const SizedBox(height: 10),
         Row(
@@ -1176,6 +1523,120 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
+  Widget _buildProviderSelector(ColorScheme cs) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text('Mobile Network',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+            const SizedBox(width: 6),
+            const Text('🇹🇿', style: TextStyle(fontSize: 14)),
+            const SizedBox(width: 4),
+            Text('Tanzania',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: cs.onSurface.withValues(alpha: 0.4)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Column(
+          children: _mnoProviders.map((provider) {
+            final isSelected = _selectedProvider == provider;
+            final info = _mnoInfo[provider] ?? {};
+            final brandColor = info['color'] as Color? ?? const Color(0xFF22C55E);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: GestureDetector(
+                onTap: () => setState(() => _selectedProvider = provider),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? brandColor.withValues(alpha: 0.08)
+                        : cs.onSurface.withValues(alpha: 0.03),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected ? brandColor : cs.onSurface.withValues(alpha: 0.08),
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: brandColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Center(
+                          child: Text(
+                            provider[0],
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: brandColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(provider,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                                color: isSelected ? brandColor : cs.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                const Text('🇹🇿', style: TextStyle(fontSize: 10)),
+                                const SizedBox(width: 4),
+                                Text('Tanzania',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: cs.onSurface.withValues(alpha: 0.4),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected ? brandColor : cs.onSurface.withValues(alpha: 0.15),
+                            width: 2,
+                          ),
+                        ),
+                        child: isSelected
+                            ? Center(child: Container(width: 10, height: 10, decoration: BoxDecoration(color: brandColor, shape: BoxShape.circle)))
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
   Widget _buildPhoneInput(ColorScheme cs) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1304,6 +1765,43 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                   ),
                                 ),
                               ),
+                              const SizedBox(height: 8),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 48,
+                                child: OutlinedButton.icon(
+                                  onPressed: () async {
+                                    final result = await Navigator.of(ctx).push<MapPickerResult>(
+                                      MaterialPageRoute(
+                                        builder: (_) => MapPickerPage(
+                                          initialLatitude: savedLatitude,
+                                          initialLongitude: savedLongitude,
+                                        ),
+                                      ),
+                                    );
+                                    if (result != null) {
+                                      setModalState(() {
+                                        savedLatitude = result.latitude;
+                                        savedLongitude = result.longitude;
+                                        savedCountry = result.country ?? 'Tanzania';
+                                        savedRegion = result.region;
+                                        savedCity = result.city;
+                                        savedStreet = result.street;
+                                        locationFetched = true;
+                                      });
+                                    }
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    side: BorderSide(color: cs.primary.withValues(alpha: 0.3)),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                  icon: Icon(Icons.map_outlined, size: 20, color: cs.primary),
+                                  label: Text(
+                                    'Select on Map',
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.primary),
+                                  ),
+                                ),
+                              ),
                             ] else ...[
                               Container(
                                 width: double.infinity,
@@ -1313,26 +1811,55 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(color: cs.primary.withValues(alpha: 0.15)),
                                 ),
-                                child: Row(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(Icons.check_circle, size: 18, color: cs.primary),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        '${savedStreet ?? 'Unknown street'}, ${savedCity ?? ''}, ${savedRegion ?? ''}',
-                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: cs.onSurface),
-                                        maxLines: 2, overflow: TextOverflow.ellipsis,
+                                    Row(
+                                      children: [
+                                        Icon(Icons.check_circle, size: 18, color: cs.primary),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            '${savedStreet ?? 'Unknown street'}, ${savedCity ?? ''}, ${savedRegion ?? ''}',
+                                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: cs.onSurface),
+                                            maxLines: 2, overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        GestureDetector(
+                                          onTap: () => setModalState(() {
+                                            locationFetched = false;
+                                            savedStreet = null;
+                                            savedCity = null;
+                                            savedRegion = null;
+                                          }),
+                                          child: Icon(Icons.refresh, size: 16, color: cs.onSurface.withValues(alpha: 0.4)),
+                                        ),
+                                      ],
+                                    ),
+                                    if (savedLatitude != null && savedLongitude != null) ...[
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.my_location, size: 12, color: cs.onSurface.withValues(alpha: 0.4)),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            '${savedLatitude!.toStringAsFixed(6)}, ${savedLongitude!.toStringAsFixed(6)}',
+                                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: cs.onSurface.withValues(alpha: 0.4), fontFamily: 'monospace'),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF22C55E).withValues(alpha: 0.1),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: const Text('GPS Set',
+                                              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF22C55E)),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                    ),
-                                    GestureDetector(
-                                      onTap: () => setModalState(() {
-                                        locationFetched = false;
-                                        savedStreet = null;
-                                        savedCity = null;
-                                        savedRegion = null;
-                                      }),
-                                      child: Icon(Icons.refresh, size: 16, color: cs.onSurface.withValues(alpha: 0.4)),
-                                    ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -1402,7 +1929,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                           _selectedCompanyId = null;
                                           _pricingOptions = [];
                                           _selectedRate = null;
-                                          _frozenQuote = null;
                                         });
                                         _detectDeliveryMode();
                                       }
@@ -1591,7 +2117,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
           _selectedCompanyId = null;
           _pricingOptions = [];
           _selectedRate = null;
-          _frozenQuote = null;
         });
         _detectDeliveryMode();
       },

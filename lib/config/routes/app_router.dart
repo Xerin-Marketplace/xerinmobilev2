@@ -324,12 +324,16 @@ class AppRouter {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final order = extra?['order'] as OrderModel?;
-          if (order == null) {
-            return const Scaffold(
-              body: Center(child: Text('Order not found')),
-            );
+          if (order != null) {
+            return OrderDetailPage(order: order);
           }
-          return OrderDetailPage(order: order);
+          final orderId = extra?['orderId'] as String?;
+          if (orderId != null && orderId.isNotEmpty) {
+            return OrderDetailPage.fromId(orderId: orderId);
+          }
+          return const Scaffold(
+            body: Center(child: Text('Order not found')),
+          );
         },
       ),
       GoRoute(

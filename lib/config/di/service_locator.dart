@@ -14,6 +14,7 @@ import '../../core/security/security_service.dart';
 import '../../core/services/app_version_service.dart';
 import '../../core/services/in_app_update_service.dart';
 import '../../core/services/location_service.dart';
+import '../../core/services/map_api_service.dart';
 import '../../core/storage/token_storage.dart';
 import '../../core/theme/app_theme_cubit.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
@@ -128,6 +129,7 @@ Future<void> initServiceLocator({bool reset = false}) async {
   sl.registerLazySingleton<TokenStorage>(() => tokenStorage);
   sl.registerLazySingleton<ApiClient>(
       () => ApiClient(sl<Dio>(), sl<TokenStorage>(), sl<Logger>()));
+  sl.registerLazySingleton<MapApiService>(() => MapApiService(sl<ApiClient>()));
 
   // Security
   final securityService = SecurityService(sharedPreferences, sl<FlutterSecureStorage>());

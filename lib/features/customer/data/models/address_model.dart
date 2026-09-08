@@ -13,7 +13,12 @@ class AddressModel {
   final String? postalCode;
   final double? latitude;
   final double? longitude;
+  final String? formattedAddress;
+  final String? deliveryInstructions;
   final bool isDefault;
+  final bool isActive;
+  final bool isVerified;
+  final bool deliveryReady;
 
   const AddressModel({
     required this.id,
@@ -30,7 +35,12 @@ class AddressModel {
     this.postalCode,
     this.latitude,
     this.longitude,
+    this.formattedAddress,
+    this.deliveryInstructions,
     this.isDefault = false,
+    this.isActive = true,
+    this.isVerified = false,
+    this.deliveryReady = false,
   });
 
   String get fullAddress => '$street, $city, $region, $country';
@@ -59,7 +69,12 @@ class AddressModel {
         postalCode: json['postal_code'] as String?,
         latitude: _parseDouble(json['latitude']),
         longitude: _parseDouble(json['longitude']),
+        formattedAddress: json['formatted_address'] as String?,
+        deliveryInstructions: json['delivery_instructions'] as String?,
         isDefault: json['is_default'] as bool? ?? false,
+        isActive: json['is_active'] as bool? ?? true,
+        isVerified: json['is_verified'] as bool? ?? false,
+        deliveryReady: json['delivery_ready'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -76,6 +91,16 @@ class AddressModel {
         'postal_code': postalCode,
         'latitude': latitude,
         'longitude': longitude,
+        'formatted_address': formattedAddress,
+        'delivery_instructions': deliveryInstructions,
         'is_default': isDefault,
+        'is_active': isActive,
       };
+
+  String get coordinates =>
+      latitude != null && longitude != null
+          ? '${latitude!.toStringAsFixed(6)}, ${longitude!.toStringAsFixed(6)}'
+          : '';
+
+  bool get hasGps => latitude != null && longitude != null;
 }

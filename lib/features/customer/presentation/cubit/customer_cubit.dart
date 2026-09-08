@@ -29,7 +29,11 @@ class CustomerCubit extends Cubit<CustomerState> {
         super(const CustomerInitial());
 
   Future<void> loadAll() async {
-    emit(const CustomerLoading());
+    final current = state;
+    final hasData = current is CustomerLoaded;
+    if (!hasData) {
+      emit(const CustomerLoading());
+    }
     try {
       final ordersFuture = _dataSource.getOrders(pageSize: 50).then<dynamic>((v) {
         _logger.i('✅ Orders future completed: ${v.length} orders');
@@ -43,9 +47,15 @@ class CustomerCubit extends Cubit<CustomerState> {
 
       final results = await Future.wait([ordersFuture, addressesFuture, notifFuture]);
 
-      final orders = results[0] is List ? (results[0] as List).whereType<OrderModel>().toList() : <OrderModel>[];
-      final addresses = results[1] is List ? (results[1] as List).whereType<AddressModel>().toList() : <AddressModel>[];
-      final notifications = results[2] is List ? (results[2] as List).whereType<NotificationModel>().toList() : <NotificationModel>[];
+      final orders = results[0] is List
+          ? (results[0] as List).whereType<OrderModel>().toList()
+          : (hasData ? current.orders : <OrderModel>[]);
+      final addresses = results[1] is List
+          ? (results[1] as List).whereType<AddressModel>().toList()
+          : (hasData ? current.addresses : <AddressModel>[]);
+      final notifications = results[2] is List
+          ? (results[2] as List).whereType<NotificationModel>().toList()
+          : (hasData ? current.notifications : <NotificationModel>[]);
 
       _logger.i(
         '✅ Customer data loaded — orders: ${orders.length}, '
@@ -56,11 +66,16 @@ class CustomerCubit extends Cubit<CustomerState> {
       emit(CustomerLoaded(
         orders: orders,
         addresses: addresses,
+        paymentMethods: hasData ? current.paymentMethods : const [],
         notifications: notifications,
       ));
     } catch (e) {
       _logger.e('❌ Failed to load customer data: $e');
-      emit(CustomerError(e.toString()));
+      // Keep any already-loaded data visible instead of wiping the UI with
+      // a hard error screen when this is a background refresh.
+      if (!hasData) {
+        emit(CustomerError(e.toString()));
+      }
     }
   }
 
@@ -253,6 +268,33 @@ class CustomerCubit extends Cubit<CustomerState> {
       emit(CustomerActionError(e.message));
     } catch (e) {
       emit(CustomerActionError('Failed to delete address: $e'));
+    }
+  }
+
+  Future<bool> confirmMapPin({
+    required String addressId,
+    required double latitude,
+    required double longitude,
+    String? language,
+  }) async {
+    emit(const CustomerActionInProgress());
+    try {
+      await _dataSource.confirmMapPin(
+        addressId: addressId,
+        latitude: latitude,
+        longitude: longitude,
+        language: language,
+      );
+      _logger.i('✅ Map pin confirmed for address: $addressId');
+      await refreshAddresses();
+      emit(const CustomerActionSuccess('Delivery location confirmed'));
+      return true;
+    } on ServerException catch (e) {
+      emit(CustomerActionError(e.message));
+      return false;
+    } catch (e) {
+      emit(CustomerActionError('Failed to confirm map pin: $e'));
+      return false;
     }
   }
 

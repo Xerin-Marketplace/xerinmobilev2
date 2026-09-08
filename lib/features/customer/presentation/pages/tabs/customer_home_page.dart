@@ -16,9 +16,12 @@ import '../../cubit/recommendation_state.dart';
 import '../../../domain/services/recommendation_engine.dart';
 import '../../../../../shared/widgets/shimmer_skeleton.dart';
 import '../../../../../shared/widgets/voice_search_button.dart';
+import '../../../../../shared/widgets/product_location_chip.dart';
 
 class CustomerHomePage extends StatefulWidget {
-  const CustomerHomePage({super.key});
+  final void Function(int)? onNavigateToTab;
+
+  const CustomerHomePage({super.key, this.onNavigateToTab});
 
   @override
   State<CustomerHomePage> createState() => _CustomerHomePageState();
@@ -192,6 +195,26 @@ class _CustomerHomePageState extends State<CustomerHomePage>
                       width: 24,
                       height: 24,
                     ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: () {
+                if (widget.onNavigateToTab != null) {
+                  widget.onNavigateToTab!(4);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: colorScheme.onSurface.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.favorite_outline,
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+                  size: 20,
+                ),
+              ),
             ),
             const SizedBox(width: 10),
             GestureDetector(
@@ -775,28 +798,68 @@ class _CustomerHomePageState extends State<CustomerHomePage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (product.categoryName != null)
-                    Text(
-                      product.categoryName!,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: colorScheme.onSurface.withValues(alpha: 0.4),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  const SizedBox(height: 3),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (product.categoryName != null)
+                        Expanded(
+                          child: Text(
+                            product.categoryName!,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.primary.withValues(alpha: 0.7),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      if (product.isActive)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF22C55E).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Available',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF22C55E),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
                   Text(
                     product.name,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: colorScheme.onSurface,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  if (product.displayLocation != null || product.displayCountry != null) ...[
+                    const SizedBox(height: 5),
+                    ProductLocationChip(
+                      location: product.displayLocation,
+                      country: product.displayCountry,
+                    ),
+                  ],
                   const SizedBox(height: 6),
+                  Text(
+                    'Price',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w500,
+                      color: colorScheme.onSurface.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
                   Row(
                     children: [
                       if (hasDiscount) ...[

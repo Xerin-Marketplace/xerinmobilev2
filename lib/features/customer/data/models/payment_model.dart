@@ -102,7 +102,7 @@ class PaymentTransactionModel {
       transactionType: json['transaction_type'] as String? ?? '',
       status: json['status'] as String? ?? '',
       amount: json['amount'] != null
-          ? (json['amount'] as num?)?.toDouble()
+          ? PaymentModel._parsePrice(json['amount'])
           : null,
       providerResponse: json['provider_response'] as Map<String, dynamic>?,
       createdAt: json['created_at'] as String?,

@@ -30,16 +30,46 @@ class PaymentProcessingPage extends StatefulWidget {
   State<PaymentProcessingPage> createState() => _PaymentProcessingPageState();
 }
 
-enum _PaymentUIState { processing, success, failed }
+enum _PaymentUIState { processing, success, failed, timedOut }
 
 class _PaymentProcessingPageState extends State<PaymentProcessingPage>
     with TickerProviderStateMixin {
   _PaymentUIState _uiState = _PaymentUIState.processing;
   String _statusMessage = 'Confirming your payment...';
   Timer? _pollTimer;
-  int _attempts = 0;
-  static const int _maxAttempts = 30;
   bool _isRetrying = false;
+  bool _isRefreshing = false;
+
+  String _paymentStatus = 'processing';
+  String _orderStatus = '';
+  bool _retryable = false;
+  bool _terminal = false;
+  String _stateMessage = '';
+  String _paymentMethod = '';
+  String _lastProvider = '';
+  int _pollAfterSeconds = 5;
+  DateTime? _pollStartTime;
+  static const Duration _maxPollDuration = Duration(minutes: 5);
+
+  final _retryPhoneController = TextEditingController();
+  String _retryProvider = '';
+
+  static const List<String> _mnoProviders = ['M-Pesa', 'Airtel Money', 'Mixx by Yas', 'HaloPesa'];
+
+  static const Map<String, Map<String, dynamic>> _mnoInfo = {
+    'M-Pesa':       {'flag': '🇹🇿', 'country': 'Tanzania', 'color': Color(0xFFFF6633)},
+    'Airtel Money':  {'flag': '🇹🇿', 'country': 'Tanzania', 'color': Color(0xFFE40000)},
+    'Mixx by Yas':   {'flag': '🇹🇿', 'country': 'Tanzania', 'color': Color(0xFF0066B3)},
+    'HaloPesa':      {'flag': '🇹🇿', 'country': 'Tanzania', 'color': Color(0xFF00A651)},
+  };
+
+  String _normalizePhone(String input) {
+    final digits = input.replaceAll(RegExp(r'\D'), '');
+    if (digits.startsWith('255') && digits.length == 12) return digits;
+    if (digits.startsWith('0') && digits.length == 10) return '255${digits.substring(1)}';
+    if (digits.length == 9) return '255$digits';
+    return digits;
+  }
 
   late AnimationController _successController;
   late AnimationController _failController;
@@ -80,6 +110,7 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
     _pollTimer?.cancel();
     _successController.dispose();
     _failController.dispose();
+    _retryPhoneController.dispose();
     super.dispose();
   }
 
@@ -93,32 +124,128 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
   }
 
   void _pollPaymentStatus() {
-    _pollTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
-      _attempts++;
-      if (_attempts > _maxAttempts) {
+    _pollTimer?.cancel();
+    _pollStartTime = DateTime.now();
+    _pollTimer = Timer.periodic(Duration(seconds: _pollAfterSeconds), (timer) async {
+      if (_pollStartTime != null &&
+          DateTime.now().difference(_pollStartTime!) > _maxPollDuration) {
         timer.cancel();
         _onPaymentTimeout();
         return;
       }
+      await _refreshPaymentState(quiet: true);
+    });
+    _refreshPaymentState(quiet: false);
+  }
 
+  Future<void> _refreshPaymentState({required bool quiet}) async {
+    if (!mounted) return;
+    if (!quiet) setState(() => _isRefreshing = true);
+
+    try {
       final cubit = context.read<CustomerCubit>();
-      final payment = await cubit.verifyPaymentStatus(widget.paymentId!);
 
-      if (!mounted) return;
+      if (widget.orderId != null && widget.orderId!.isNotEmpty) {
+        final state = await cubit.getOrderPaymentState(widget.orderId!);
+        if (!mounted) return;
 
-      if (payment == null) return;
+        if (state != null) {
+          _paymentStatus = state['payment_status'] as String? ?? 'processing';
+          _orderStatus = state['order_status'] as String? ?? '';
+          _retryable = state['retryable'] as bool? ?? false;
+          _terminal = state['terminal'] as bool? ?? false;
+          _stateMessage = state['message'] as String? ?? '';
+          final pollAfter = state['poll_after_seconds'] as int?;
+          if (pollAfter != null && pollAfter > 0 && pollAfter != _pollAfterSeconds) {
+            _pollAfterSeconds = pollAfter;
+            _pollTimer?.cancel();
+            _pollTimer = Timer.periodic(Duration(seconds: _pollAfterSeconds), (timer) async {
+              if (_pollStartTime != null &&
+                  DateTime.now().difference(_pollStartTime!) > _maxPollDuration) {
+                timer.cancel();
+                _onPaymentTimeout();
+                return;
+              }
+              await _refreshPaymentState(quiet: true);
+            });
+          }
 
-      if (payment.isCompleted) {
-        timer.cancel();
+          final latestPayment = state['latest_payment'] as Map<String, dynamic>?;
+          final provider = (latestPayment?['provider'] as String?) ?? '';
+          final providerLower = provider.toLowerCase();
+          _paymentMethod = (latestPayment?['method'] as String?) ?? '';
+          _lastProvider = provider;
+
+          if (latestPayment != null &&
+              latestPayment['id'] != null &&
+              (providerLower == 'zenopay' || providerLower == 'selcom') &&
+              (_paymentStatus == 'pending' || _paymentStatus == 'processing')) {
+            try {
+              await cubit.verifyPaymentStatus(latestPayment['id'].toString());
+              if (!mounted) return;
+              final updatedState = await cubit.getOrderPaymentState(widget.orderId!);
+              if (!mounted) return;
+              if (updatedState != null) {
+                _paymentStatus = updatedState['payment_status'] as String? ?? _paymentStatus;
+                _orderStatus = updatedState['order_status'] as String? ?? _orderStatus;
+                _retryable = updatedState['retryable'] as bool? ?? _retryable;
+                _terminal = updatedState['terminal'] as bool? ?? _terminal;
+                _stateMessage = updatedState['message'] as String? ?? _stateMessage;
+              }
+            } catch (_) {}
+          }
+
+          _handleStatusUpdate();
+        }
+      } else if (widget.paymentId != null) {
+        final payment = await cubit.verifyPaymentStatus(widget.paymentId!);
+        if (!mounted) return;
+        if (payment != null) {
+          _paymentStatus = payment.status;
+          _handleStatusUpdate();
+        }
+      }
+    } catch (_) {
+    } finally {
+      if (mounted && !quiet) setState(() => _isRefreshing = false);
+    }
+  }
+
+  void _handleStatusUpdate() {
+    if (_terminal) {
+      _pollTimer?.cancel();
+      if (_paymentStatus == 'completed') {
         _onPaymentSuccess();
-      } else if (payment.isFailed) {
-        timer.cancel();
+      } else if (_paymentStatus == 'failed') {
         _onPaymentFailed('Payment was declined. Please try again.');
-      } else if (payment.isCancelled) {
-        timer.cancel();
+      } else if (_paymentStatus == 'cancelled') {
+        if (_orderStatus == 'cancelled') {
+          _onPaymentTimeout();
+        } else {
+          _onPaymentFailed('Payment was cancelled.');
+        }
+      } else {
+        _onPaymentTimeout();
+      }
+      return;
+    }
+    if (_paymentStatus == 'completed') {
+      _pollTimer?.cancel();
+      _onPaymentSuccess();
+    } else if (_paymentStatus == 'failed') {
+      _pollTimer?.cancel();
+      _onPaymentFailed('Payment was declined. Please try again.');
+    } else if (_paymentStatus == 'cancelled') {
+      _pollTimer?.cancel();
+      if (_orderStatus == 'cancelled') {
+        _onPaymentTimeout();
+      } else {
         _onPaymentFailed('Payment was cancelled.');
       }
-    });
+    } else if (_orderStatus == 'cancelled') {
+      _pollTimer?.cancel();
+      _onPaymentTimeout();
+    }
   }
 
   void _onPaymentSuccess() {
@@ -131,6 +258,13 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
   }
 
   void _onPaymentFailed(String message) {
+    if (_retryProvider.isEmpty && _lastProvider.isNotEmpty) {
+      final match = _mnoProviders.where((p) =>
+        p.toLowerCase() == _lastProvider.toLowerCase() ||
+        _lastProvider.toLowerCase().contains(p.toLowerCase().split(' ').first),
+      ).firstOrNull;
+      if (match != null) _retryProvider = match;
+    }
     setState(() {
       _uiState = _PaymentUIState.failed;
       _statusMessage = message;
@@ -141,26 +275,43 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
 
   void _onPaymentTimeout() {
     setState(() {
-      _uiState = _PaymentUIState.failed;
-      _statusMessage = 'Payment confirmation timed out. Check your order history for updates.';
+      _uiState = _PaymentUIState.timedOut;
+      _statusMessage = _stateMessage.isNotEmpty
+          ? _stateMessage
+          : 'Payment confirmation timed out. Check your order history for updates.';
     });
     _failController.forward();
   }
 
   Future<void> _retryPayment() async {
     if (widget.paymentId == null || widget.paymentId!.isEmpty) return;
+
+    if (_paymentMethod == 'mobile_money') {
+      if (_retryProvider.isEmpty) {
+        NotificationService().error('Please select a mobile network.');
+        return;
+      }
+      if (_retryPhoneController.text.trim().isEmpty) {
+        NotificationService().error('Please enter a mobile money number.');
+        return;
+      }
+    }
+
     setState(() {
       _isRetrying = true;
       _uiState = _PaymentUIState.processing;
       _statusMessage = 'Retrying payment...';
-      _attempts = 0;
     });
     final cubit = context.read<CustomerCubit>();
-    final payment = await cubit.retryPayment(paymentId: widget.paymentId!);
+    final payment = await cubit.retryPayment(
+      paymentId: widget.paymentId!,
+      provider: _paymentMethod == 'mobile_money' ? _retryProvider : null,
+      phoneNumber: _paymentMethod == 'mobile_money' ? _normalizePhone(_retryPhoneController.text.trim()) : null,
+    );
     if (!mounted) return;
     setState(() => _isRetrying = false);
     if (payment == null) {
-      _onPaymentFailed('Retry failed. Please try again later.');
+      _onPaymentFailed('Retry failed. The payment may still be active. Please wait and try again.');
       return;
     }
     if (payment.isCompleted) {
@@ -278,64 +429,128 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
         return _buildSuccessState(cs, isDark);
       case _PaymentUIState.failed:
         return _buildFailedState(cs);
+      case _PaymentUIState.timedOut:
+        return _buildTimedOutState(cs);
     }
   }
 
   Widget _buildProcessingState(ColorScheme cs) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        SizedBox(
-          width: 80, height: 80,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              CircularProgressIndicator(
-                strokeWidth: 4,
-                color: cs.primary.withValues(alpha: 0.2),
-                value: 1,
-              ),
-              CircularProgressIndicator(
-                strokeWidth: 4,
-                color: cs.primary,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 32),
-        Text('Processing Payment',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: cs.onSurface),
-        ),
-        const SizedBox(height: 12),
-        Text(_statusMessage,
-          style: TextStyle(fontSize: 15, color: cs.onSurface.withValues(alpha: 0.5)),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 20),
-        if (widget.paymentId != null && widget.paymentId!.isNotEmpty) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: cs.onSurface.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(20),
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 80, height: 80,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                CircularProgressIndicator(
+                  strokeWidth: 4,
+                  color: cs.primary.withValues(alpha: 0.2),
+                  value: 1,
+                ),
+                CircularProgressIndicator(
+                  strokeWidth: 4,
+                  color: cs.primary,
+                ),
+              ],
             ),
+          ),
+          const SizedBox(height: 32),
+          Text('Processing Payment',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: cs.onSurface),
+          ),
+          const SizedBox(height: 12),
+          Text(_statusMessage,
+            style: TextStyle(fontSize: 15, color: cs.onSurface.withValues(alpha: 0.5)),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          if (widget.paymentId != null && widget.paymentId!.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: cs.onSurface.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.receipt_long, size: 14, color: cs.onSurface.withValues(alpha: 0.4)),
+                  const SizedBox(width: 6),
+                  Text('Ref: ${formatOrderRef(widget.paymentId!)}',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.4), fontFamily: 'monospace'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF3B82F6).withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.15)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.phone_android, size: 20, color: const Color(0xFF3B82F6)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Check your phone',
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF3B82F6)),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _stateMessage.isNotEmpty
+                                ? _stateMessage
+                                : 'Complete the payment authorization on your phone. This page checks automatically for confirmed payment.',
+                            style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5), height: 1.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 12, color: cs.onSurface.withValues(alpha: 0.3)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text('You can keep this page open or return later. Xerin will update automatically.',
+                        style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.3)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: _isRefreshing ? null : () => _refreshPaymentState(quiet: false),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.receipt_long, size: 14, color: cs.onSurface.withValues(alpha: 0.4)),
+                Icon(Icons.refresh, size: 14, color: cs.primary),
                 const SizedBox(width: 6),
-                Text('Ref: ${formatOrderRef(widget.paymentId!)}',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.4), fontFamily: 'monospace'),
+                Text('Check now',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.primary),
                 ),
               ],
             ),
           ),
         ],
-        const SizedBox(height: 24),
-        Text('This may take a few moments...',
-          style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.3)),
-        ),
-      ],
+      ),
     );
   }
 
@@ -495,68 +710,350 @@ class _PaymentProcessingPageState extends State<PaymentProcessingPage>
   }
 
   Widget _buildFailedState(ColorScheme cs) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        ScaleTransition(
-          scale: _failScale,
-          child: Container(
-            width: 88,
-            height: 88,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEF4444).withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.cancel,
-              color: Color(0xFFEF4444),
-              size: 64,
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ScaleTransition(
+            scale: _failScale,
+            child: Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.cancel,
+                color: Color(0xFFEF4444),
+                size: 64,
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 28),
-        Text('Payment Failed',
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: cs.onSurface),
+          const SizedBox(height: 28),
+          Text('Payment Failed',
+            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: cs.onSurface),
+          ),
+          const SizedBox(height: 10),
+          Text(_statusMessage,
+            style: TextStyle(fontSize: 15, color: cs.onSurface.withValues(alpha: 0.5)),
+            textAlign: TextAlign.center,
+          ),
+          if (_stateMessage.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(_stateMessage,
+              style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4)),
+              textAlign: TextAlign.center,
+            ),
+          ],
+          if (_retryable && _paymentMethod == 'mobile_money') ...[
+            const SizedBox(height: 24),
+            _buildRetryProviderSelector(cs),
+            const SizedBox(height: 12),
+            _buildRetryPhoneInput(cs),
+          ],
+          const SizedBox(height: 36),
+          if (_retryable)
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _isRetrying ? null : _retryPayment,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cs.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                child: _isRetrying
+                  ? const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+                        SizedBox(width: 12),
+                        Text('Retrying...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                      ],
+                    )
+                  : const Text('Retry Payment',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    ),
+              ),
+            )
+          else ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.15)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.access_time, size: 20, color: const Color(0xFFF59E0B)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text('This payment is still active. Please wait for the result before retrying.',
+                      style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.5)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => context.go('/'),
+            child: Text('Back to Home',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRetryProviderSelector(ColorScheme cs) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text('Mobile Network',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+            const SizedBox(width: 6),
+            const Text('🇹🇿', style: TextStyle(fontSize: 14)),
+            const SizedBox(width: 4),
+            Text('Tanzania',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: cs.onSurface.withValues(alpha: 0.4)),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
-        Text(_statusMessage,
-          style: TextStyle(fontSize: 15, color: cs.onSurface.withValues(alpha: 0.5)),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 36),
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: ElevatedButton(
-            onPressed: _isRetrying ? null : _retryPayment,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: cs.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              elevation: 0,
-            ),
-            child: _isRetrying
-              ? const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
-                    SizedBox(width: 12),
-                    Text('Retrying...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                  ],
-                )
-              : const Text('Retry Payment',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        Column(
+          children: _mnoProviders.map((provider) {
+            final isSelected = _retryProvider == provider;
+            final info = _mnoInfo[provider] ?? {};
+            final brandColor = info['color'] as Color? ?? const Color(0xFF22C55E);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: GestureDetector(
+                onTap: () => setState(() => _retryProvider = provider),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? brandColor.withValues(alpha: 0.08)
+                        : cs.onSurface.withValues(alpha: 0.03),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected ? brandColor : cs.onSurface.withValues(alpha: 0.08),
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: brandColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Center(
+                          child: Text(
+                            provider[0],
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: brandColor,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(provider,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                                color: isSelected ? brandColor : cs.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                const Text('🇹🇿', style: TextStyle(fontSize: 10)),
+                                const SizedBox(width: 4),
+                                Text('Tanzania',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: cs.onSurface.withValues(alpha: 0.4),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected ? brandColor : cs.onSurface.withValues(alpha: 0.15),
+                            width: 2,
+                          ),
+                        ),
+                        child: isSelected
+                            ? Center(child: Container(width: 10, height: 10, decoration: BoxDecoration(color: brandColor, shape: BoxShape.circle)))
+                            : null,
+                      ),
+                    ],
+                  ),
                 ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextButton(
-          onPressed: () => context.go('/'),
-          child: Text('Back to Home',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
-          ),
+              ),
+            );
+          }).toList(),
         ),
       ],
+    );
+  }
+
+  Widget _buildRetryPhoneInput(ColorScheme cs) {
+    return TextField(
+      controller: _retryPhoneController,
+      keyboardType: TextInputType.phone,
+      decoration: InputDecoration(
+        labelText: 'Mobile Money Number',
+        labelStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
+        hintText: 'e.g. 0712345678',
+        hintStyle: TextStyle(color: cs.onSurface.withValues(alpha: 0.3)),
+        prefixText: '+255 ',
+        prefixStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.6)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.primary, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+    );
+  }
+
+  Widget _buildTimedOutState(ColorScheme cs) {
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ScaleTransition(
+            scale: _failScale,
+            child: Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.access_time,
+                color: Color(0xFFF59E0B),
+                size: 64,
+              ),
+            ),
+          ),
+          const SizedBox(height: 28),
+          Text('Payment Window Expired',
+            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: cs.onSurface),
+          ),
+          const SizedBox(height: 10),
+          Text(_statusMessage,
+            style: TextStyle(fontSize: 15, color: cs.onSurface.withValues(alpha: 0.5)),
+            textAlign: TextAlign.center,
+          ),
+          if (_stateMessage.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(_stateMessage,
+              style: TextStyle(fontSize: 13, color: cs.onSurface.withValues(alpha: 0.4)),
+              textAlign: TextAlign.center,
+            ),
+          ],
+          if (_retryable && _paymentMethod == 'mobile_money') ...[
+            const SizedBox(height: 24),
+            _buildRetryProviderSelector(cs),
+            const SizedBox(height: 12),
+            _buildRetryPhoneInput(cs),
+          ],
+          const SizedBox(height: 36),
+          if (_retryable) ...[
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: _isRetrying ? null : _retryPayment,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: cs.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 0,
+                ),
+                child: _isRetrying
+                  ? const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+                        SizedBox(width: 12),
+                        Text('Retrying...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                      ],
+                    )
+                  : const Text('Retry Payment',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ] else ...[
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: _isRefreshing ? null : () => _refreshPaymentState(quiet: false),
+                icon: _isRefreshing
+                  ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary))
+                  : Icon(Icons.refresh, size: 20, color: cs.primary),
+                label: Text('Check Again',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: cs.primary),
+                ),
+                style: OutlinedButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  side: BorderSide(color: cs.primary.withValues(alpha: 0.3)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          TextButton(
+            onPressed: () => context.go('/'),
+            child: Text('Back to Home',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

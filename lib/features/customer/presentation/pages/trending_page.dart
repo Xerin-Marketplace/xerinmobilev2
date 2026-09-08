@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../config/constants/app_constants.dart';
+import '../../../../../shared/widgets/product_location_chip.dart';
 import '../cubit/recommendation_cubit.dart';
 import '../cubit/recommendation_state.dart';
 import '../../data/models/product_model.dart';
@@ -278,10 +279,52 @@ class _TrendingPageState extends State<TrendingPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (product.categoryName != null)
+                        Expanded(
+                          child: Text(
+                            product.categoryName!,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: cs.primary.withValues(alpha: 0.7),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      if (product.isActive)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF22C55E).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Available',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF22C55E),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
                   Text(product.name,
                       style: TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface),
-                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                          fontSize: 12, fontWeight: FontWeight.w700, color: cs.onSurface),
+                      maxLines: 2, overflow: TextOverflow.ellipsis),
+                  if (product.displayLocation != null || product.displayCountry != null) ...[
+                    const SizedBox(height: 5),
+                    ProductLocationChip(
+                      location: product.displayLocation,
+                      country: product.displayCountry,
+                    ),
+                  ],
                   if (product.rating > 0) ...[
                     const SizedBox(height: 4),
                     Text(product.rating.toStringAsFixed(1),
@@ -289,6 +332,11 @@ class _TrendingPageState extends State<TrendingPage> {
                             fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4))),
                   ],
                   const SizedBox(height: 4),
+                  Text('Price',
+                      style: TextStyle(
+                          fontSize: 9, fontWeight: FontWeight.w500,
+                          color: cs.onSurface.withValues(alpha: 0.35))),
+                  const SizedBox(height: 2),
                   Text(product.formattedPrice,
                       style: TextStyle(
                           fontSize: 14, fontWeight: FontWeight.bold, color: cs.primary)),

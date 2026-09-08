@@ -9,9 +9,12 @@ import '../../data/models/order_model.dart';
 import '../../data/models/escrow_model.dart';
 
 class OrderDetailPage extends StatefulWidget {
-  final OrderModel order;
+  final OrderModel? order;
+  final String? orderId;
 
-  const OrderDetailPage({super.key, required this.order});
+  const OrderDetailPage({super.key, required this.order}) : orderId = null;
+
+  const OrderDetailPage.fromId({super.key, required this.orderId}) : order = null;
 
   @override
   State<OrderDetailPage> createState() => _OrderDetailPageState();
@@ -26,17 +29,26 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   @override
   void initState() {
     super.initState();
+    if (widget.order != null) {
+      _freshOrder = widget.order;
+    }
     _refresh();
   }
 
   Future<void> _refresh() async {
+    if (!mounted) return;
     setState(() => _loading = true);
     final cubit = context.read<CustomerCubit>();
-    final order = await cubit.getOrderById(widget.order.id);
-    final escrowData = await cubit.getEscrowStatus(widget.order.id);
+    final id = widget.orderId ?? widget.order?.id ?? _freshOrder?.id;
+    if (id == null || id.isEmpty) {
+      if (mounted) setState(() => _loading = false);
+      return;
+    }
+    final order = await cubit.getOrderById(id);
+    final escrowData = await cubit.getEscrowStatus(id);
     if (mounted) {
       setState(() {
-        _freshOrder = order;
+        if (order != null) _freshOrder = order;
         _escrow = escrowData != null ? EscrowSummary.fromJson(escrowData) : null;
         _loading = false;
       });
@@ -44,15 +56,16 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Future<void> _approveReceipt() async {
+    final id = order.id;
     setState(() => _isApproving = true);
-    final success = await context.read<CustomerCubit>().approveReceipt(order.id);
+    final success = await context.read<CustomerCubit>().approveReceipt(id);
     if (mounted) {
       setState(() => _isApproving = false);
       if (success) _refresh();
     }
   }
 
-  OrderModel get order => _freshOrder ?? widget.order;
+  OrderModel get order => _freshOrder ?? widget.order!;
 
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
@@ -100,6 +113,15 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (order.id.isEmpty && _loading) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final statusColor = _statusColor(order.status);
     final canApprove = order.status.toLowerCase() == 'delivered' &&
         (_escrow == null || !_escrow!.canCustomerApprove);
@@ -107,6 +129,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Order ${order.orderRef}'),
+        centerTitle: false,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
           IconButton(
             onPressed: _loading ? null : _refresh,
@@ -117,62 +142,65 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          // Status header
-          _buildStatusHeader(cs, statusColor),
+          _buildStatusHero(cs, isDark, statusColor),
           const SizedBox(height: 16),
 
-          // Stepper for status history
           if (order.statusHistory.isNotEmpty) ...[
-            _buildStepper(cs),
+            _buildTimeline(cs, isDark),
             const SizedBox(height: 16),
           ],
 
-          // Order items
-          _buildSectionTitle('Order Items', cs),
-          const SizedBox(height: 8),
+          _buildSectionLabel('Order Items', cs, '${order.items.length} item${order.items.length == 1 ? '' : 's'}'),
+          const SizedBox(height: 10),
           ...order.items.map((item) => _buildItemCard(item, cs)),
           const SizedBox(height: 16),
 
-          // Shipments
           if (order.shipments.isNotEmpty) ...[
-            _buildSectionTitle('Shipments', cs),
-            const SizedBox(height: 8),
+            _buildSectionLabel('Shipments', cs, '${order.shipments.length} shipment${order.shipments.length == 1 ? '' : 's'}'),
+            const SizedBox(height: 10),
             ...order.shipments.map((s) => _buildShipmentCard(s, cs)),
             const SizedBox(height: 16),
           ],
 
-          // Escrow
           if (_escrow != null) ...[
-            _buildSectionTitle('Escrow', cs),
-            const SizedBox(height: 8),
+            _buildSectionLabel('Escrow Protection', cs, null),
+            const SizedBox(height: 10),
             _buildEscrowCard(_escrow!, cs),
             const SizedBox(height: 16),
           ],
 
-          // Order summary
-          _buildSectionTitle('Order Summary', cs),
-          const SizedBox(height: 8),
+          _buildSectionLabel('Order Summary', cs, null),
+          const SizedBox(height: 10),
           _buildSummaryCard(cs),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // Actions
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => context.push(AppConstants.orderTrackingRoute, extra: {'order': order}),
-                  icon: const Icon(Icons.local_shipping_outlined, size: 18),
-                  label: const Text('Track Order'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    side: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
+                  ),
+                  icon: Icon(Icons.local_shipping_outlined, size: 18, color: cs.primary),
+                  label: Text('Track Order', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface)),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => context.push(AppConstants.invoiceRoute, extra: {'order': order}),
-                  icon: const Icon(Icons.receipt_outlined, size: 18),
-                  label: const Text('Invoice'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    side: BorderSide(color: cs.onSurface.withValues(alpha: 0.1)),
+                  ),
+                  icon: Icon(Icons.receipt_outlined, size: 18, color: cs.primary),
+                  label: Text('Invoice', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface)),
                 ),
               ),
             ],
@@ -181,258 +209,346 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
-              height: 44,
+              height: 50,
               child: ElevatedButton(
                 onPressed: _isApproving ? null : _approveReceipt,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF22C55E),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   elevation: 0,
                 ),
                 child: _isApproving
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Confirm Receipt', style: TextStyle(fontWeight: FontWeight.w600)),
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text('Confirm Receipt', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
               ),
             ),
           ],
-          const SizedBox(height: 24),
         ],
       ),
     );
   }
 
-  Widget _buildStatusHeader(ColorScheme cs, Color statusColor) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+  Widget _buildStatusHero(ColorScheme cs, bool isDark, Color statusColor) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            statusColor.withValues(alpha: 0.08),
+            statusColor.withValues(alpha: 0.02),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: statusColor.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(Icons.receipt_long, size: 24, color: statusColor),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(order.displayStatus,
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: statusColor),
+                    ),
+                    const SizedBox(height: 2),
+                    Text('Placed ${_formatDate(order.createdAt)}',
+                      style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.45)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          GestureDetector(
+            onTap: () {
+              Clipboard.setData(ClipboardData(text: order.orderRef));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Order code copied'),
+                  duration: Duration(seconds: 1),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: cs.onSurface.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: cs.onSurface.withValues(alpha: 0.08)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Order Code', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: cs.onSurface.withValues(alpha: 0.4))),
+                  const SizedBox(width: 8),
+                  Text(order.orderRef, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: cs.onSurface)),
+                  const SizedBox(width: 6),
+                  Icon(Icons.copy, size: 13, color: cs.onSurface.withValues(alpha: 0.3)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeline(ColorScheme cs, bool isDark) {
+    final history = order.statusHistory.reversed.toList();
+    final accentColor = _statusColor(order.status);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Status Timeline', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: cs.onSurface)),
+          const SizedBox(height: 16),
+          ...history.asMap().entries.map((entry) {
+            final i = entry.key;
+            final h = entry.value;
+            final isLast = i == history.length - 1;
+            final color = _statusColor(h.status);
+
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 32,
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                            border: isLast ? Border.all(color: accentColor, width: 2) : null,
+                          ),
+                          child: Icon(
+                            isLast ? Icons.radio_button_checked : Icons.check_rounded,
+                            size: 16,
+                            color: color,
+                          ),
+                        ),
+                        if (!isLast) Container(width: 2, height: 36, color: cs.onSurface.withValues(alpha: 0.08)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: isLast ? 0 : 18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(_humanize(h.status),
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: cs.onSurface),
+                              ),
+                              if (isLast) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: accentColor.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text('Latest',
+                                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: accentColor),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          if (h.notes != null && h.notes!.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(h.notes!,
+                              style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4)),
+                            ),
+                          ],
+                          if (h.createdAt != null) ...[
+                            const SizedBox(height: 2),
+                            Text(_formatDate(h.createdAt),
+                              style: TextStyle(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.3)),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionLabel(String title, ColorScheme cs, String? subtitle) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: cs.onSurface)),
+        if (subtitle != null)
+          Text(subtitle, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: cs.onSurface.withValues(alpha: 0.4))),
+      ],
+    );
+  }
+
+  Widget _buildItemCard(OrderItemModel item, ColorScheme cs) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: cs.onSurface.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+        ),
         child: Row(
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(Icons.receipt_long, size: 22, color: statusColor),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: item.productImage != null && item.productImage!.isNotEmpty
+                  ? Image.network(item.productImage!, width: 48, height: 48, fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 48, height: 48,
+                        decoration: BoxDecoration(color: cs.onSurface.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(10)),
+                        child: Icon(Icons.shopping_bag_outlined, size: 22, color: cs.onSurface.withValues(alpha: 0.3)),
+                      ),
+                    )
+                  : Container(
+                      width: 48, height: 48,
+                      decoration: BoxDecoration(color: cs.onSurface.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(10)),
+                      child: Icon(Icons.shopping_bag_outlined, size: 22, color: cs.onSurface.withValues(alpha: 0.3)),
+                    ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(order.displayStatus,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: statusColor),
+                  Text(item.productName,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
                   ),
-                  Text('Created ${_formatDate(order.createdAt)}',
-                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4)),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: cs.onSurface.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text('Qty ${item.quantity}',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: cs.onSurface.withValues(alpha: 0.5)),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text('× ${item.formattedPrice}',
+                        style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4)),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            GestureDetector(
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: order.orderRef));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Order code copied'),
-                    duration: Duration(seconds: 1),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  border: Border.all(color: cs.onSurface.withValues(alpha: 0.15)),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(order.orderRef, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.onSurface)),
-                    const SizedBox(width: 4),
-                    Icon(Icons.copy, size: 12, color: cs.onSurface.withValues(alpha: 0.3)),
-                  ],
-                ),
-              ),
+            const SizedBox(width: 8),
+            Text(item.formattedTotal,
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: cs.onSurface),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildStepper(ColorScheme cs) {
-    final history = order.statusHistory.reversed.toList();
-    final accentColor = _statusColor(order.status);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Status Timeline', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: cs.onSurface)),
-            const SizedBox(height: 16),
-            ...history.asMap().entries.map((entry) {
-              final i = entry.key;
-              final h = entry.value;
-              final isLast = i == history.length - 1;
-              final color = _statusColor(h.status);
-
-              return IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 32,
-                      child: Column(
-                        children: [
-                          Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.12),
-                              borderRadius: BorderRadius.circular(8),
-                              border: isLast ? Border.all(color: accentColor, width: 2) : null,
-                            ),
-                            child: Icon(
-                              isLast ? Icons.radio_button_checked : Icons.check_rounded,
-                              size: 14,
-                              color: color,
-                            ),
-                          ),
-                          if (!isLast) Container(width: 2, height: 32, color: cs.onSurface.withValues(alpha: 0.08)),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(_humanize(h.status),
-                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.onSurface),
-                                ),
-                                if (isLast) ...[
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color: accentColor.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text('Latest',
-                                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: accentColor),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                            if (h.notes != null && h.notes!.isNotEmpty)
-                              Text(h.notes!,
-                                style: TextStyle(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.4)),
-                              ),
-                            if (h.createdAt != null)
-                              Text(_formatDate(h.createdAt),
-                                style: TextStyle(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.3)),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title, ColorScheme cs) {
-    return Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: cs.onSurface));
-  }
-
-  Widget _buildItemCard(OrderItemModel item, ColorScheme cs) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 6),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: cs.onSurface.withValues(alpha: 0.06)),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        leading: item.productImage != null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(item.productImage!, width: 40, height: 40, fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    width: 40, height: 40,
-                    decoration: BoxDecoration(color: cs.onSurface.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(8)),
-                    child: Icon(Icons.shopping_bag_outlined, size: 20, color: cs.onSurface.withValues(alpha: 0.3)),
-                  ),
-                ),
-              )
-            : Container(
-                width: 40, height: 40,
-                decoration: BoxDecoration(color: cs.onSurface.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(8)),
-                child: Icon(Icons.shopping_bag_outlined, size: 20, color: cs.onSurface.withValues(alpha: 0.3)),
-              ),
-        title: Text(item.productName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Text('Qty ${item.quantity} × ${item.formattedPrice}', style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.4))),
-        trailing: Text(item.formattedTotal, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurface)),
       ),
     );
   }
 
   Widget _buildShipmentCard(ShipmentModel shipment, ColorScheme cs) {
     final color = _statusColor(shipment.status);
-    return Card(
-      margin: const EdgeInsets.only(bottom: 6),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: cs.onSurface.withValues(alpha: 0.06)),
-      ),
-      child: Padding(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
         padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: cs.onSurface.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.local_shipping_outlined, size: 18, color: color),
-                const SizedBox(width: 8),
+                Container(
+                  width: 36, height: 36,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.local_shipping_outlined, size: 18, color: color),
+                ),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(shipment.carrierName ?? 'Xerin Express',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: cs.onSurface),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
-                  child: Text(_humanize(shipment.status), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color)),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+                  child: Text(_humanize(shipment.status), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
                 ),
               ],
             ),
             if (shipment.trackingNumber != null) ...[
-              const SizedBox(height: 8),
-              Text('Tracking: ${shipment.trackingNumber}',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary)),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Icon(Icons.numbers, size: 14, color: cs.onSurface.withValues(alpha: 0.4)),
+                  const SizedBox(width: 4),
+                  Text('Tracking: ${shipment.trackingNumber}',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: cs.primary)),
+                ],
+              ),
             ],
             if (shipment.estimatedDeliveryFrom != null || shipment.estimatedDeliveryTo != null) ...[
-              const SizedBox(height: 4),
-              Text('ETA: ${_formatDate(shipment.estimatedDeliveryFrom)} - ${_formatDate(shipment.estimatedDeliveryTo)}',
-                style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Icon(Icons.schedule, size: 14, color: cs.onSurface.withValues(alpha: 0.4)),
+                  const SizedBox(width: 4),
+                  Text('ETA: ${_formatDate(shipment.estimatedDeliveryFrom)} - ${_formatDate(shipment.estimatedDeliveryTo)}',
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5))),
+                ],
+              ),
             ],
           ],
         ),
@@ -444,70 +560,75 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     final isHeld = escrow.status.toLowerCase() == 'held' || escrow.status.toLowerCase() == 'funds_held';
     final escrowColor = isHeld ? const Color(0xFF3B82F6) : const Color(0xFF22C55E);
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: cs.onSurface.withValues(alpha: 0.06)),
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.shield_outlined, size: 18, color: escrowColor),
-                const SizedBox(width: 8),
-                Text(_humanize(escrow.status),
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: escrowColor)),
-              ],
-            ),
-            const Divider(height: 16),
-            _row('Seller entitlement', _formatMoney(escrow.sellerAmount, escrow.currency), cs),
-            _row('Commission', _formatMoney(escrow.commissionAmount, escrow.currency), cs),
-            _row('Protected', _formatMoney(escrow.remainingAmount, escrow.currency), cs),
-          ],
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36, height: 36,
+                decoration: BoxDecoration(
+                  color: escrowColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.shield_outlined, size: 18, color: escrowColor),
+              ),
+              const SizedBox(width: 10),
+              Text(_humanize(escrow.status),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: escrowColor)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          _summaryRow('Seller entitlement', _formatMoney(escrow.sellerAmount, escrow.currency), cs),
+          _summaryRow('Commission', _formatMoney(escrow.commissionAmount, escrow.currency), cs),
+          _summaryRow('Protected', _formatMoney(escrow.remainingAmount, escrow.currency), cs),
+        ],
       ),
     );
   }
 
   Widget _buildSummaryCard(ColorScheme cs) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-        side: BorderSide(color: cs.onSurface.withValues(alpha: 0.06)),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.onSurface.withValues(alpha: 0.06)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          children: [
-            _row('Subtotal', _formatMoney(order.subtotal, order.currency), cs),
-            if (order.shippingAmount > 0)
-              _row('Shipping', _formatMoney(order.shippingAmount, order.currency), cs),
-            if (order.taxAmount > 0)
-              _row('Tax', _formatMoney(order.taxAmount, order.currency), cs),
-            if (order.discountAmount > 0)
-              _row('Discount', '- ${_formatMoney(order.discountAmount, order.currency)}', cs),
-            const Divider(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Total', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: cs.onSurface)),
-                Text(order.formattedTotal, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: cs.primary)),
-              ],
-            ),
-          ],
-        ),
+      child: Column(
+        children: [
+          _summaryRow('Subtotal', _formatMoney(order.subtotal, order.currency), cs),
+          if (order.shippingAmount > 0)
+            _summaryRow('Shipping', _formatMoney(order.shippingAmount, order.currency), cs),
+          if (order.taxAmount > 0)
+            _summaryRow('Tax', _formatMoney(order.taxAmount, order.currency), cs),
+          if (order.discountAmount > 0)
+            _summaryRow('Discount', '- ${_formatMoney(order.discountAmount, order.currency)}', cs),
+          const SizedBox(height: 6),
+          Divider(height: 1, color: cs.onSurface.withValues(alpha: 0.08)),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: cs.onSurface)),
+              Text(order.formattedTotal, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: cs.primary)),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _row(String label, String value, ColorScheme cs) {
+  Widget _summaryRow(String label, String value, ColorScheme cs) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

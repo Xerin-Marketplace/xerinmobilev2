@@ -135,6 +135,27 @@ class CustomerRemoteDataSource {
     }
   }
 
+  Future<Map<String, dynamic>> confirmMapPin({
+    required String addressId,
+    required double latitude,
+    required double longitude,
+    String? language,
+  }) async {
+    try {
+      final response = await _client.post(
+        ApiConstants.confirmMapPin(addressId),
+        data: {
+          'latitude': latitude,
+          'longitude': longitude,
+          if (language != null) 'language': language,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ServerException(_client.getErrorMessage(e));
+    }
+  }
+
   Future<List<OrderModel>> getOrders({
     int page = 1,
     int pageSize = 20,

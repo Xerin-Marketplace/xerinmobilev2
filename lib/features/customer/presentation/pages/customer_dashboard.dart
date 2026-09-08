@@ -9,6 +9,7 @@ import '../cubit/cart_state.dart';
 import 'tabs/customer_cart_page.dart';
 import 'tabs/customer_explore_page.dart';
 import 'tabs/customer_home_page.dart';
+import 'tabs/customer_orders_tab.dart';
 import 'tabs/customer_profile_page.dart';
 import 'tabs/customer_wishlist_page.dart';
 
@@ -22,18 +23,20 @@ class CustomerDashboard extends StatefulWidget {
 class _CustomerDashboardState extends State<CustomerDashboard> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = const [
-    CustomerHomePage(),
-    CustomerExplorePage(),
-    CustomerCartPage(),
-    CustomerWishlistPage(),
-    CustomerProfilePage(),
+  late final List<Widget> _pages = [
+    CustomerHomePage(onNavigateToTab: _switchTab),
+    const CustomerExplorePage(),
+    const CustomerCartPage(),
+    const CustomerOrdersTab(),
+    const CustomerWishlistPage(),
+    const CustomerProfilePage(),
   ];
 
   static const _navItems = [
     _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Home'),
     _NavItem(icon: Icons.explore_outlined, activeIcon: Icons.explore, label: 'Explore'),
     _NavItem(icon: Icons.shopping_cart_outlined, activeIcon: Icons.shopping_cart, label: 'Cart'),
+    _NavItem(icon: Icons.receipt_long_outlined, activeIcon: Icons.receipt_long, label: 'Orders'),
     _NavItem(icon: Icons.favorite_outline, activeIcon: Icons.favorite, label: 'Wishlist'),
     _NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: 'My Xerin'),
   ];
@@ -43,14 +46,18 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     return !tokenStorage.isAuthenticated && tokenStorage.isGuest;
   }
 
+  void _switchTab(int index) {
+    setState(() => _selectedIndex = index);
+  }
+
   void _onNavTap(int index) {
-    if (_isGuest && (index == 2 || index == 3 || index == 4)) {
+    if (_isGuest && (index == 2 || index == 3 || index == 4 || index == 5)) {
       GuestAuthGate.showPrompt(
         context,
-        title: index == 4 ? 'Sign In to View Profile' : 'Sign In to Continue',
-        message: index == 4
+        title: index == 5 ? 'Sign In to View Profile' : 'Sign In to Continue',
+        message: index == 5
             ? 'Sign in to view your profile, orders, and settings.'
-            : 'Sign in to access your cart, wishlist, and checkout.',
+            : 'Sign in to access your cart, orders, wishlist, and checkout.',
       );
       return;
     }
